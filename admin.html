@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Master CMS Dashboard - KERTAGOSA Kejaksaan Negeri Klungkung</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: {
+              DEFAULT: '#0B3B24',
+              dark: '#072A19',
+              light: '#14532D',
+            },
+            gold: {
+              DEFAULT: '#EAB308',
+              dark: '#CA8A04',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['"Plus Jakarta Sans"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/css/styles.css?v=2.8">
+  <link rel="icon" type="image/svg+xml" href="/static/images/logo-kejari.svg">
+</head>
+<body class="admin-body bg-slate-100 font-sans text-slate-800 antialiased flex h-screen overflow-hidden relative">
+
+  <!-- MOBILE SIDEBAR BACKDROP (< 1024px) -->
+  <div id="admin-sidebar-backdrop" onclick="toggleAdminMobileSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden lg:hidden"></div>
+
+  <!-- SIDEBAR NAVIGATION -->
+  <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-50 w-64 bg-[#072A19] text-white flex flex-col justify-between border-r border-emerald-950 shrink-0 -translate-x-full lg:static lg:translate-x-0 transition-transform duration-300 overflow-y-auto">
+    <div>
+      <!-- Brand Logo & Header -->
+      <div class="p-4 sm:p-5 border-b border-emerald-900/60 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <img id="admin-top-logo" src="/static/images/logo-kejari.svg" alt="Logo" class="w-8 h-8 object-contain">
+          <div>
+            <div class="font-heading font-black text-sm text-white tracking-wide">KERTAGOSA CMS</div>
+            <div class="text-[10px] text-amber-300 font-medium">Master Site Controller</div>
+          </div>
+        </div>
+        <button type="button" onclick="toggleAdminMobileSidebar()" class="lg:hidden p-1.5 rounded-lg bg-emerald-900/80 text-emerald-200 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Menu -->
+      <nav class="p-3 space-y-1 text-xs font-semibold">
+        <button onclick="switchTab('tab-overview')" id="nav-overview" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-emerald-900/80 text-white shadow-sm">
+          <i data-lucide="layout-dashboard" class="w-4 h-4 text-amber-400"></i>
+          <span>Ringkasan &amp; Status</span>
+        </button>
+
+        <button onclick="switchTab('tab-page-contents')" id="nav-page-contents" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i>
+          <span>Pengaturan Konten Teks</span>
+        </button>
+
+        <button onclick="switchTab('tab-hero-kajari')" id="nav-hero-kajari" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <i data-lucide="user-check" class="w-4 h-4 text-emerald-400"></i>
+          <span>Hero &amp; Profil Kajari</span>
+        </button>
+
+        <button onclick="switchTab('tab-news')" id="nav-news" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <i data-lucide="newspaper" class="w-4 h-4 text-emerald-400"></i>
+          <span>Berita &amp; Ticker</span>
+        </button>
+
+        <button onclick="switchTab('tab-announcements')" id="nav-announcements" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <div class="flex items-center gap-3">
+            <i data-lucide="bell" class="w-4 h-4 text-amber-400"></i>
+            <span>Pengumuman Resmi</span>
+          </div>
+          <span id="nav-announcement-count" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300">5</span>
+        </button>
+
+        <button onclick="switchTab('tab-services')" id="nav-services" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <i data-lucide="grid" class="w-4 h-4 text-emerald-400"></i>
+          <span>4 Pilar Layanan</span>
+        </button>
+
+        <button onclick="switchTab('tab-jagadita')" id="nav-jagadita" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <i data-lucide="gavel" class="w-4 h-4 text-emerald-400"></i>
+          <span>Jadwal Sidang JAGADITA</span>
+        </button>
+
+        <button onclick="switchTab('tab-skm')" id="nav-skm" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <i data-lucide="award" class="w-4 h-4 text-emerald-400"></i>
+          <span>Skor SKM &amp; Survei</span>
+        </button>
+
+        <button onclick="switchTab('tab-inbox')" id="nav-inbox" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <i data-lucide="inbox" class="w-4 h-4 text-emerald-400"></i>
+          <span>Kotak Masuk Warga</span>
+        </button>
+
+        <button onclick="switchTab('tab-org')" id="nav-org" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <i data-lucide="network" class="w-4 h-4 text-emerald-400"></i>
+          <span>Struktur Organisasi</span>
+        </button>
+
+        <button onclick="switchTab('tab-profile-cms')" id="nav-profile-cms" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <div class="flex items-center gap-3">
+            <i data-lucide="book-open-check" class="w-4 h-4 text-emerald-400"></i>
+            <span>Kelola Profil Instansi</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">4 Menu</span>
+        </button>
+
+        <button onclick="switchTab('tab-accountability')" id="nav-accountability" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <div class="flex items-center gap-3">
+            <i data-lucide="file-check" class="w-4 h-4 text-emerald-400"></i>
+            <span>Akuntabilitas Kinerja</span>
+          </div>
+          <span id="nav-accountability-count" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">0</span>
+        </button>
+
+        <button onclick="switchTab('tab-admins')" id="nav-admins" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-emerald-200 hover:bg-emerald-900/50 hover:text-white transition-colors">
+          <div class="flex items-center gap-3">
+            <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+            <span>Manajemen Admin</span>
+          </div>
+          <span id="nav-admin-count" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">1</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Bottom Actions: Back to Front, Logout -->
+    <div class="p-4 border-t border-emerald-900/60 text-xs space-y-2">
+      <a href="/" class="flex items-center justify-center gap-2 w-full py-2 bg-emerald-800/80 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors">
+        <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+        <span>Lihat Website Depan</span>
+      </a>
+      <button onclick="logoutAdmin()" class="flex items-center justify-center gap-2 w-full py-2 text-red-300 hover:text-white font-semibold transition-colors">
+        <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+        <span>Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN DASHBOARD CONTENT AREA -->
+  <main class="flex-1 flex flex-col overflow-hidden bg-slate-100 w-full">
+    
+    <!-- Top Header -->
+    <header class="h-16 bg-white border-b border-slate-200 px-4 sm:px-8 flex items-center justify-between gap-3 shrink-0">
+      <div class="flex items-center gap-3 min-w-0">
+        <button type="button" onclick="toggleAdminMobileSidebar()" class="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-800 border border-slate-200 shrink-0" aria-label="Buka Menu Admin">
+          <i data-lucide="menu" class="w-5 h-5 text-[#0B3B24]"></i>
+        </button>
+        <div class="min-w-0">
+          <h1 id="dashboard-header-title" class="font-heading font-extrabold text-sm sm:text-lg text-slate-900 truncate">
+            Ringkasan &amp; Status Portal KERTAGOSA
+          </h1>
+          <p class="text-[10px] sm:text-[11px] text-slate-500 truncate">Dual-Mode CMS: Perubahan tersimpan seketika di database</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-4 text-xs shrink-0">
+        <span class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold text-[10px] sm:text-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="hidden sm:inline">Superadmin Mode</span>
+          <span class="sm:hidden">Admin</span>
+        </span>
+        <div class="font-bold text-slate-800 hidden md:block" id="admin-user-name">R. Indra Senjaya, S.H., M.H.</div>
+      </div>
+    </header>
+
+    <!-- Scrollable Tab Content Viewport -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+
+      <!-- =====================================================================
+           TAB 1: OVERVIEW & SYSTEM METRICS
+           ===================================================================== -->
+      <section id="tab-overview" class="space-y-6">
+        
+        <!-- Institutional Building Overview Banner -->
+        <div class="hero-forest-bg text-white rounded-3xl p-6 sm:p-8 border border-emerald-950 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="relative z-10 space-y-2">
+            <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+              KEJAKSAAN NEGERI KLUNGKUNG
+            </span>
+            <h2 class="font-serif font-black text-2xl sm:text-3xl text-white">
+              Pusat Kendali Portal Digital KERTAGOSA
+            </h2>
+            <p class="text-xs sm:text-sm text-emerald-100/90 max-w-2xl font-light">
+              Gedung Kantor Kejaksaan Negeri Klungkung, Jl. Gajah Mada No. 32, Semarapura. Seluruh layanan publik digital, jadwal sidang JAGADITA, aduan MASADU, transparansi SAKIP, dan survei kepuasan SKM terintegrasi dalam satu sistem komando.
+            </p>
+          </div>
+          <div class="relative z-10 shrink-0 flex items-center gap-3">
+            <a href="/" target="_blank" class="px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs flex items-center gap-2 shadow-lg transition-all hover:scale-105">
+              <i data-lucide="globe" class="w-4 h-4"></i>
+              <span>Buka Website Depan</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-5">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500 font-medium">Jadwal Sidang Aktif</div>
+              <div class="font-heading font-extrabold text-2xl text-slate-900 mt-1" id="stat-schedules-count">0</div>
+            </div>
+            <div class="w-12 h-12 bg-blue-50 text-blue-800 rounded-xl flex items-center justify-center"><i data-lucide="gavel" class="w-6 h-6"></i></div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500 font-medium">Artikel Berita Terbit</div>
+              <div class="font-heading font-extrabold text-2xl text-slate-900 mt-1" id="stat-news-count">0</div>
+            </div>
+            <div class="w-12 h-12 bg-emerald-50 text-emerald-800 rounded-xl flex items-center justify-center"><i data-lucide="newspaper" class="w-6 h-6"></i></div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500 font-medium">Skor Mutu IKM</div>
+              <div class="font-heading font-extrabold text-2xl text-amber-600 mt-1" id="stat-skm-score">88.31</div>
+            </div>
+            <div class="w-12 h-12 bg-amber-50 text-amber-800 rounded-xl flex items-center justify-center"><i data-lucide="star" class="w-6 h-6"></i></div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-500 font-medium">Aduan Warga (MASADU)</div>
+              <div class="font-heading font-extrabold text-2xl text-red-600 mt-1" id="stat-complaints-count">0</div>
+            </div>
+            <div class="w-12 h-12 bg-red-50 text-red-800 rounded-xl flex items-center justify-center"><i data-lucide="shield-alert" class="w-6 h-6"></i></div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <h3 class="font-heading font-bold text-base text-slate-900 mb-2">Dual-Mode Site Controller Active</h3>
+          <p class="text-xs text-slate-600 leading-relaxed mb-4">
+            Anda dapat mengubah teks, gambar, jadwal sidang, dan skor SKM melalui tab-tab di panel ini ATAU langsung membuka halaman depan 
+            <a href="/" target="_blank" class="text-emerald-800 font-bold underline">Website Utama</a> 
+            lalu mengaktifkan tombol <strong>"Mode Edit Langsung"</strong> pada bilah mengambang di bawah layar.
+          </p>
+          <div class="flex gap-3">
+            <a href="/" target="_blank" class="px-4 py-2 bg-[#0B3B24] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#072A19]">
+              Buka Halaman Depan &amp; Edit Visual
+            </a>
+          </div>
+        </div>
+      </section>
+
+
+
+
+      <!-- =====================================================================
+           TAB 2: GENERAL & HEADER/FOOTER CONTENTS
+           ===================================================================== -->
+      <section id="tab-page-contents" class="space-y-6 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="font-heading font-bold text-base text-slate-900">Pengaturan Teks &amp; Identitas Instansi</h3>
+              <p class="text-xs text-slate-500">Zero hardcoded: seluruh teks pada navigasi, kontak, dan footer dapat disesuaikan.</p>
+            </div>
+            <button onclick="saveBatchContents('form-general-contents')" class="px-4 py-2 bg-[#0B3B24] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#072A19]">
+              Simpan Semua Perubahan
+            </button>
+          </div>
+
+          <form id="form-general-contents" class="space-y-4 text-xs">
+            <!-- Logo Instansi / Header & Footer Logo -->
+            <div class="p-5 bg-gradient-to-br from-emerald-50/80 via-white to-amber-50/40 border border-emerald-300/80 rounded-2xl mb-6 shadow-sm space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-100 pb-3">
+                <div>
+                  <h4 class="font-heading font-extrabold text-sm text-emerald-950 flex items-center gap-2">
+                    <i data-lucide="shield" class="w-4 h-4 text-emerald-700"></i>
+                    Logo Resmi Instansi (Header, Navbar &amp; Footer)
+                  </h4>
+                  <p class="text-[11px] text-slate-600 mt-0.5">Ubah logo Kejaksaan Negeri Klungkung yang tampil terpusat di seluruh halaman publik (Top Bar, Mobile Drawer, dan Footer).</p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span id="logo-upload-status" class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-600"></span> 100% Dynamic Sync
+                  </span>
+                </div>
+              </div>
+
+              <!-- Dual Preview & Controls Grid -->
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+                <!-- Previews (5 cols): Light & Dark Previews -->
+                <div class="md:col-span-5 flex items-center gap-3">
+                  <!-- Light Preview (Header/Navbar representation) -->
+                  <div class="flex-1 text-center">
+                    <div class="w-full h-24 rounded-xl bg-white border-2 border-dashed border-emerald-300 p-2.5 flex items-center justify-center shadow-inner relative group">
+                      <img id="preview-header-logo" src="/static/images/logo-kejari.svg" alt="Preview Header" class="max-h-full max-w-full object-contain transition-transform group-hover:scale-105">
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-500 mt-1 block">Pratinjau Header (Latar Putih)</span>
+                  </div>
+
+                  <!-- Dark Preview (Footer representation) -->
+                  <div class="flex-1 text-center">
+                    <div class="w-full h-24 rounded-xl bg-[#072A19] border-2 border-dashed border-emerald-800 p-2.5 flex items-center justify-center shadow-inner relative group">
+                      <img id="preview-footer-logo" src="/static/images/logo-kejari.svg" alt="Preview Footer" class="max-h-full max-w-full object-contain transition-transform group-hover:scale-105">
+                    </div>
+                    <span class="text-[10px] font-bold text-slate-500 mt-1 block">Pratinjau Footer (Latar Hijau)</span>
+                  </div>
+                </div>
+
+                <!-- Inputs & Buttons (7 cols) -->
+                <div class="md:col-span-7 space-y-3">
+                  <div>
+                    <label class="block font-bold text-slate-700 text-xs mb-1">URL / Path Logo Instansi Aktif:</label>
+                    <div class="flex gap-2">
+                      <input type="text" id="header-logo-url-input" data-key="header_logo_url" class="flex-1 px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 font-semibold text-slate-800" placeholder="/static/images/logo-kejari.svg">
+                      <label id="btn-upload-logo-label" class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0B3B24] hover:bg-[#072A19] text-white rounded-xl cursor-pointer font-bold text-xs transition-all shrink-0 shadow-md">
+                        <i data-lucide="upload-cloud" class="w-4 h-4 text-amber-400"></i>
+                        <span id="btn-upload-logo-text">Pilih File Logo</span>
+                        <input type="file" id="input-site-logo-file" accept="image/*,.svg" class="hidden" onchange="uploadSiteLogo(event)">
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <div class="flex items-center gap-1.5 text-[11px] text-slate-500">
+                      <i data-lucide="info" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+                      <span>Format: SVG (Direkomendasikan), PNG, WebP, JPG.</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button type="button" onclick="setPresetSiteLogo('/static/images/logo-kejaksaan.png')" class="px-3 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 font-bold text-[11px] transition-colors flex items-center gap-1">
+                        <i data-lucide="shield-check" class="w-3 h-3 text-amber-800"></i>
+                        <span>Logo Resmi HD PNG</span>
+                      </button>
+                      <button type="button" onclick="setPresetSiteLogo('/static/images/logo-kejari.svg')" class="px-3 py-1 rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-950 font-bold text-[11px] transition-colors flex items-center gap-1">
+                        <i data-lucide="rotate-ccw" class="w-3 h-3 text-emerald-800"></i>
+                        <span>Reset Logo Default</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nama Instansi Header</label>
+                <input type="text" data-key="header_title" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Badge Zona Integritas</label>
+                <input type="text" data-key="header_wbk_badge" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Jam Operasional Header</label>
+                <input type="text" data-key="header_hours" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Hotline Badge PTSP</label>
+                <input type="text" data-key="header_hotline_badge" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Alamat Kantor Lengkap</label>
+                <input type="text" data-key="office_address_text" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Jam Operasional PTSP (Seksi Kantor)</label>
+                <input type="text" data-key="office_hours_text" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">No. WhatsApp PTSP</label>
+                <input type="text" data-key="office_whatsapp_number" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">No. Telepon Kantor</label>
+                <input type="text" data-key="office_phone_number" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Email Resmi</label>
+                <input type="text" data-key="office_email" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Teks Copyright Footer</label>
+              <input type="text" data-key="footer_copyright" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            </div>
+          </form>
+        </div>
+      </section>
+
+
+
+
+      <!-- =====================================================================
+           TAB 3: HERO SECTION & KAJARI PROFILE
+           ===================================================================== -->
+      <section id="tab-hero-kajari" class="space-y-6 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="font-heading font-bold text-base text-slate-900">Hero Section "KERTAGOSA" &amp; Profil Kajari</h3>
+              <p class="text-xs text-slate-500">Ubah teks judul, komitmen, 3 statistik, dan foto resmi Kepala Kejaksaan Negeri.</p>
+            </div>
+            <button onclick="saveBatchContents('form-hero-contents')" class="px-4 py-2 bg-[#0B3B24] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#072A19]">
+              Simpan Perubahan Hero
+            </button>
+          </div>
+
+          <form id="form-hero-contents" class="space-y-4 text-xs">
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Badge Kiri Hero</label>
+                <input type="text" data-key="hero_badge_1" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Badge Kanan Hero</label>
+                <input type="text" data-key="hero_badge_2" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Judul Utama Hero</label>
+              <input type="text" data-key="hero_main_title" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold text-base">
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Deskripsi Komitmen Pelayanan</label>
+              <textarea data-key="hero_description" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></textarea>
+            </div>
+
+            <!-- 3 Stat Cards -->
+            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+              <div class="font-bold text-slate-800">3 Kotak Statistik (Glassmorphism Stat Cards)</div>
+              <div class="grid grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-500 mb-1">Angka Stat 1</label>
+                  <input type="text" data-key="hero_stat_1_value" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg">
+                  <input type="text" data-key="hero_stat_1_label" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg mt-1 text-[11px]">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-500 mb-1">Angka Stat 2</label>
+                  <input type="text" data-key="hero_stat_2_value" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg">
+                  <input type="text" data-key="hero_stat_2_label" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg mt-1 text-[11px]">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-500 mb-1">Angka Stat 3</label>
+                  <input type="text" data-key="hero_stat_3_value" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg">
+                  <input type="text" data-key="hero_stat_3_label" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg mt-1 text-[11px]">
+                </div>
+              </div>
+            </div>
+
+            <!-- Kajari Profile -->
+            <div class="p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-3">
+              <div class="font-bold text-amber-950">Profil Kepala Kejaksaan Negeri Klungkung</div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Nama Lengkap &amp; Gelar</label>
+                  <input type="text" data-key="kajari_full_name" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-1">Badge Jabatan</label>
+                  <input type="text" data-key="kajari_position_badge" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+
+
+
+      <!-- =====================================================================
+           TAB 4: MANAJEMEN BERITA & TICKER PENGUMUMAN
+           ===================================================================== -->
+      <section id="tab-news" class="space-y-6 hidden">
+        <!-- Ticker Settings -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-heading font-bold text-base text-slate-900">Running Text / Ticker Pengumuman Berjalan</h3>
+            <button onclick="saveTickerContent()" class="px-3.5 py-1.5 bg-[#0B3B24] text-white text-xs font-bold rounded-lg hover:bg-[#072A19]">
+              Simpan Ticker
+            </button>
+          </div>
+          <div class="grid grid-cols-4 gap-3 text-xs">
+            <div class="col-span-1">
+              <label class="block font-semibold text-slate-700 mb-1">Label Ticker</label>
+              <input type="text" id="admin-ticker-badge" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            </div>
+            <div class="col-span-3">
+              <label class="block font-semibold text-slate-700 mb-1">Isi Pesan Berjalan</label>
+              <input type="text" id="admin-ticker-text" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            </div>
+          </div>
+        </div>
+
+        <!-- News Table CRUD -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex items-center justify-between mb-5">
+            <div>
+              <h3 class="font-heading font-bold text-base text-slate-900">Daftar Publikasi Berita (Bento Grid)</h3>
+              <p class="text-xs text-slate-500">Kelola artikel berita, kutipan highlight, dan tata letak tampilan.</p>
+            </div>
+            <button onclick="openNewsCreateModal()" class="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="plus" class="w-4 h-4"></i> Tambah Berita Baru
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+                  <th class="py-3 px-3">Thumbnail</th>
+                  <th class="py-3 px-3">Judul Berita</th>
+                  <th class="py-3 px-3">Kategori</th>
+                  <th class="py-3 px-3">Layout</th>
+                  <th class="py-3 px-3">Tanggal</th>
+                  <th class="py-3 px-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="admin-news-table-body" class="divide-y divide-slate-100">
+                <!-- Populated by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+
+
+      <!-- =====================================================================
+           TAB 5: 4 PILAR LAYANAN UNGGULAN
+           ===================================================================== -->
+      <section id="tab-services" class="space-y-6 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <h3 class="font-heading font-bold text-base text-slate-900 mb-2">Kelola 4 Pilar Layanan Unggulan KERTAGOSA</h3>
+          <p class="text-xs text-slate-500 mb-6">Ubah atribut kartu: judul, teks badge, warna tema, deskripsi, dan tombol aksi.</p>
+          
+          <div id="admin-services-list" class="space-y-6">
+            <!-- Populated by admin.js -->
+          </div>
+        </div>
+      </section>
+
+
+
+
+      <!-- =====================================================================
+           TAB 6: JADWAL SIDANG JAGADITA
+           ===================================================================== -->
+      <section id="tab-jagadita" class="space-y-6 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 class="font-heading font-bold text-base text-slate-900">Manajemen Jadwal Sidang Hari Ini (JAGADITA)</h3>
+              <p class="text-xs text-slate-500">Daftar persidangan perkara pidana umum &amp; khusus.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="exportJagaditaData('xlsx')" class="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
+                <i data-lucide="download" class="w-4 h-4 text-emerald-700"></i> Export Excel (.xlsx)
+              </button>
+              <button onclick="openJagaditaImportModal()" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-amber-700"></i> Import Excel (.xlsx)
+              </button>
+              <button onclick="openJagaditaCreateModal()" class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm">
+                <i data-lucide="plus" class="w-4 h-4"></i> Tambah Sidang
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+                  <th class="py-3 px-3">Waktu &amp; Ruang</th>
+                  <th class="py-3 px-3">No. Perkara &amp; Terdakwa</th>
+                  <th class="py-3 px-3">Jenis</th>
+                  <th class="py-3 px-3">Agenda</th>
+                  <th class="py-3 px-3">Jaksa (JPU)</th>
+                  <th class="py-3 px-3">Status</th>
+                  <th class="py-3 px-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="admin-jagadita-table-body" class="divide-y divide-slate-100">
+                <!-- Populated by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+
+
+      <!-- =====================================================================
+           TAB 7: SKOR SKM & SURVEI
+           ===================================================================== -->
+      <section id="tab-skm" class="space-y-6 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex items-center justify-between mb-5 pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="font-heading font-bold text-base text-slate-900">Kelola Skor Indeks Kepuasan Masyarakat (SKM)</h3>
+              <p class="text-xs text-slate-500">Pilih mode kalkulasi otomatis dari kuesioner warga atau manual override.</p>
+            </div>
+            <button onclick="saveSkmSettings()" class="px-4 py-2 bg-[#0B3B24] text-white text-xs font-bold rounded-xl shadow-sm hover:bg-[#072A19]">
+              Simpan Pengaturan SKM
+            </button>
+          </div>
+
+          <form id="form-skm-settings" class="space-y-5 text-xs">
+            <div class="grid grid-cols-3 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Mode Perhitungan SKM</label>
+                <select id="admin-skm-mode" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold">
+                  <option value="MANUAL">Manual Override (Admin Tetapkan Skor)</option>
+                  <option value="AUTO">Otomatis (Dihitung Real-time dari Survei Warga)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Skor Utama IKM (Angka Besar)</label>
+                <input type="text" id="admin-skm-score" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold text-base text-emerald-800">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Badge Periode</label>
+                <input type="text" id="admin-skm-period" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold">
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Teks Predikat Mutu</label>
+              <input type="text" id="admin-skm-predicate" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            </div>
+
+            <div class="space-y-3 pt-3">
+              <div class="font-bold text-slate-800">4 Indikator Progress Bar SKM (0 - 100):</div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-500 mb-1">1. Prosedur &amp; Persyaratan</label>
+                  <input type="number" step="0.1" id="admin-metric-0" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-500 mb-1">2. Kecepatan Waktu Pelayanan</label>
+                  <input type="number" step="0.1" id="admin-metric-1" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-500 mb-1">3. Bebas Biaya / Tarif (Gratis)</label>
+                  <input type="number" step="0.1" id="admin-metric-2" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-500 mb-1">4. Kompetensi &amp; Perilaku Petugas</label>
+                  <input type="number" step="0.1" id="admin-metric-3" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </section>
+
+
+
+
+      <!-- =====================================================================
+           TAB 8: KOTAK MASUK LAYANAN WARGA (MASADU & SEMARA BAKTI)
+           ===================================================================== -->
+      <section id="tab-inbox" class="space-y-6 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
+            <div>
+              <h3 class="font-heading font-bold text-base text-slate-900 flex items-center gap-2">
+                <i data-lucide="inbox" class="w-5 h-5 text-emerald-800"></i>
+                <span>Kotak Masuk Aduan MASADU &amp; SEMARA BAKTI</span>
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">Tanggapi tiket warga, ekspor laporan dalam bentuk Excel (.xlsx) / CSV, atau import data dari Excel.</p>
+            </div>
+
+            <!-- Export & Import Excel Toolbar -->
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="openInboxExcelImportModal()" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-sm">
+                <i data-lucide="file-up" class="w-4 h-4 text-amber-700"></i>
+                <span>Import Excel (.xlsx)</span>
+              </button>
+              <button onclick="exportInboxData('all', 'xlsx')" class="px-3.5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shadow-sm" title="Unduh Buku Kerja Excel (.xlsx) berisi 2 Sheet: MASADU &amp; SEMARA BAKTI">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4 text-amber-400"></i>
+                <span>Ekspor Excel Semua (.xlsx)</span>
+              </button>
+              <button onclick="exportInboxData('complaints', 'xlsx')" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
+                <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-700"></i>
+                <span>Ekspor MASADU (.xlsx)</span>
+              </button>
+              <button onclick="exportInboxData('deliveries', 'xlsx')" class="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 border border-emerald-300 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
+                <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-700"></i>
+                <span>Ekspor SEMARA BAKTI (.xlsx)</span>
+              </button>
+              <button onclick="exportInboxData(window.currentInboxSubtab || 'complaints', 'csv')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors" title="Unduh format CSV">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-slate-600"></i>
+                <span>CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sub-tabs: MASADU vs SEMARA BAKTI -->
+          <div class="flex gap-2 mb-4 border-b border-slate-200 pb-2">
+            <button onclick="switchInboxSubtab('complaints')" id="subtab-btn-complaints" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-[#0B3B24] text-white">
+              Aduan MASADU (<span id="inbox-complaints-count">0</span>)
+            </button>
+            <button onclick="switchInboxSubtab('deliveries')" id="subtab-btn-deliveries" class="px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600">
+              Antar BB SEMARA BAKTI (<span id="inbox-deliveries-count">0</span>)
+            </button>
+          </div>
+
+          <div id="inbox-complaints-view" class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+                  <th class="py-3 px-3">No. Tiket</th>
+                  <th class="py-3 px-3">Pelapor</th>
+                  <th class="py-3 px-3">Kategori &amp; Judul</th>
+                  <th class="py-3 px-3">Status</th>
+                  <th class="py-3 px-3">Catatan Admin</th>
+                  <th class="py-3 px-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="inbox-complaints-body" class="divide-y divide-slate-100">
+                <!-- Populated by admin.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <div id="inbox-deliveries-view" class="overflow-x-auto hidden">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+                  <th class="py-3 px-3">No. Tiket</th>
+                  <th class="py-3 px-3">No. Perkara &amp; Pemilik</th>
+                  <th class="py-3 px-3">Barang Bukti</th>
+                  <th class="py-3 px-3">Tujuan</th>
+                  <th class="py-3 px-3">Status</th>
+                  <th class="py-3 px-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="inbox-deliveries-body" class="divide-y divide-slate-100">
+                <!-- Populated by admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- =====================================================================
+           TAB 9: STRUKTUR ORGANISASI & MANAJEMEN PEGAWAI (CRUD)
+           ===================================================================== -->
+      <section id="tab-org" class="space-y-6 hidden">
+        
+        <!-- Subtab Navigation -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+          <div class="flex items-center gap-2">
+            <button onclick="switchOrgSubtab('members')" id="btn-org-subtab-members" class="px-4 py-2 rounded-xl text-xs font-bold bg-[#0B3B24] text-white shadow-sm flex items-center gap-2 transition-all">
+              <i data-lucide="users" class="w-4 h-4"></i>
+              <span>Daftar Pegawai &amp; Hierarki (<span id="org-total-count-badge">24</span>)</span>
+            </button>
+            <button onclick="switchOrgSubtab('settings')" id="btn-org-subtab-settings" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-2 transition-all">
+              <i data-lucide="sliders" class="w-4 h-4 text-emerald-800"></i>
+              <span>Pengaturan Tampilan &amp; Watermark</span>
+            </button>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button onclick="downloadAdminOrgChartJpg()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#0B3B24] hover:bg-[#072A19] text-white shadow-sm flex items-center gap-1.5 transition-colors">
+              <i data-lucide="image-down" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Unduh Bagan (JPG)</span>
+            </button>
+            <button onclick="resetOrgHierarchy()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 flex items-center gap-1.5 transition-colors">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-amber-700"></i>
+              <span>Reset Standar Kejari</span>
+            </button>
+            <a href="/profil/struktur-organisasi" target="_blank" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-300 hover:bg-emerald-100 flex items-center gap-1.5 transition-colors">
+              <i data-lucide="external-link" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Buka Halaman Publik ↗</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- VIEW 1: DAFTAR PEGAWAI (CRUD) -->
+        <div id="org-view-members" class="space-y-6">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+              <div>
+                <h3 class="font-heading font-bold text-base text-slate-900 flex items-center gap-2">
+                  <i data-lucide="network" class="w-5 h-5 text-emerald-800"></i>
+                  <span>Manajemen Pejabat &amp; Pegawai Struktur Organisasi</span>
+                </h3>
+                <p class="text-xs text-slate-500">Tambah, ubah nama, foto, jabatan, dan atasan hierarki secara realtime.</p>
+              </div>
+              <button onclick="openOrgMemberModal()" class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 self-start sm:self-auto transition-colors">
+                <i data-lucide="user-plus" class="w-4 h-4 text-amber-400"></i>
+                <span>+ Tambah Pegawai Baru</span>
+              </button>
+            </div>
+
+            <!-- Filter Pills by Level -->
+            <div class="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-slate-100 text-xs">
+              <span class="font-bold text-slate-500 mr-1">Filter Level:</span>
+              <button onclick="filterOrgLevel('all')" id="btn-org-filter-all" class="org-filter-btn px-3 py-1.5 rounded-lg font-bold bg-[#0B3B24] text-white">Semua (<span id="count-level-all">24</span>)</button>
+              <button onclick="filterOrgLevel(1)" id="btn-org-filter-1" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 1: Pimpinan (1)</button>
+              <button onclick="filterOrgLevel(2)" id="btn-org-filter-2" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 2: Kasi/Kabag (6)</button>
+              <button onclick="filterOrgLevel(3)" id="btn-org-filter-3" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 3: Sub-bagian (12)</button>
+              <button onclick="filterOrgLevel(4)" id="btn-org-filter-4" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 4: Fungsional (5)</button>
+            </div>
+
+            <!-- Members Table -->
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                    <th class="py-3 px-3">Pegawai / Foto</th>
+                    <th class="py-3 px-3">Jabatan &amp; Seksi</th>
+                    <th class="py-3 px-3 text-center">Level Hierarki</th>
+                    <th class="py-3 px-3">Atasan Langsung</th>
+                    <th class="py-3 px-3">NIP / Pangkat</th>
+                    <th class="py-3 px-3 text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="org-members-table-body" class="divide-y divide-slate-100">
+                  <!-- Populated dynamically via admin.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 2: PENGATURAN TAMPILAN & WATERMARK -->
+        <div id="org-view-settings" class="space-y-6 hidden">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-w-4xl">
+            <h3 class="font-heading font-bold text-base text-slate-900 mb-1 flex items-center gap-2">
+              <i data-lucide="palette" class="w-5 h-5 text-emerald-800"></i>
+              <span>Pengaturan Tampilan Header &amp; Watermark Bagan</span>
+            </h3>
+            <p class="text-xs text-slate-500 mb-6">Ubah logo kiri, logo kanan, gambar watermark transparan, dan teks judul halaman publik.</p>
+
+            <form id="org-settings-form" onsubmit="handleSaveOrgSettings(event)" class="space-y-5 text-xs">
+              
+              <!-- 1. Header Logos (Left & Right) -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                
+                <!-- Logo Kiri -->
+                <div class="space-y-2">
+                  <label class="block font-bold text-slate-800">Logo Sudut Kiri (Instansi / Kejaksaan)</label>
+                  <div class="flex items-center gap-3">
+                    <div class="w-16 h-16 rounded-xl bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 shadow-sm">
+                      <img id="preview-org-logo-left" src="/static/images/logo-kejari.svg" alt="Logo Kiri" class="max-h-full max-w-full object-contain">
+                    </div>
+                    <div class="flex-1 space-y-1.5">
+                      <input type="text" id="org-setting-logo-left" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono" placeholder="/static/images/logo-kejari.svg">
+                      <label class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg cursor-pointer font-semibold text-[11px] transition-colors">
+                        <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-700"></i>
+                        <span>Upload File Baru</span>
+                        <input type="file" accept="image/*" class="hidden" onchange="uploadOrgImage(event, 'org-setting-logo-left', 'preview-org-logo-left')">
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Logo Kanan -->
+                <div class="space-y-2">
+                  <label class="block font-bold text-slate-800">Logo Sudut Kanan (Zona Integritas / Pemda)</label>
+                  <div class="flex items-center gap-3">
+                    <div class="w-16 h-16 rounded-xl bg-white border border-slate-200 p-1 flex items-center justify-center shrink-0 shadow-sm">
+                      <img id="preview-org-logo-right" src="/static/images/logo-wbk.svg" alt="Logo Kanan" class="max-h-full max-w-full object-contain">
+                    </div>
+                    <div class="flex-1 space-y-1.5">
+                      <input type="text" id="org-setting-logo-right" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono" placeholder="/static/images/logo-wbk.svg">
+                      <label class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg cursor-pointer font-semibold text-[11px] transition-colors">
+                        <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-700"></i>
+                        <span>Upload File Baru</span>
+                        <input type="file" accept="image/*" class="hidden" onchange="uploadOrgImage(event, 'org-setting-logo-right', 'preview-org-logo-right')">
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- 2. Watermark Background Image & Opacity -->
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between">
+                  <label class="block font-bold text-slate-800">Latar Belakang Watermark Transparan (Di Tengah Halaman)</label>
+                  <span class="text-[11px] text-slate-500 font-mono">Tampil dengan efek opacity rendah di tengah chart</span>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                  <div class="w-20 h-20 rounded-xl bg-white border border-slate-200 p-2 flex items-center justify-center shrink-0 shadow-sm">
+                    <img id="preview-org-watermark" src="/static/images/logo-kejari.svg" alt="Watermark" class="max-h-full max-w-full object-contain">
+                  </div>
+                  <div class="flex-1 space-y-2 w-full">
+                    <div class="flex gap-2">
+                      <input type="text" id="org-setting-watermark-bg" class="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono" placeholder="/static/images/logo-kejari.svg">
+                      <label class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg cursor-pointer font-semibold text-[11px] transition-colors shrink-0">
+                        <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-700"></i>
+                        <span>Upload Watermark</span>
+                        <input type="file" accept="image/*" class="hidden" onchange="uploadOrgImage(event, 'org-setting-watermark-bg', 'preview-org-watermark')">
+                      </label>
+                    </div>
+                    
+                    <!-- Opacity Slider -->
+                    <div class="flex items-center gap-3 pt-1">
+                      <span class="font-semibold text-slate-600">Opasitas Watermark:</span>
+                      <input type="range" id="org-setting-watermark-opacity" min="3" max="40" value="12" oninput="document.getElementById('lbl-watermark-opacity').textContent = this.value + '%'" class="flex-1 accent-emerald-800">
+                      <span id="lbl-watermark-opacity" class="font-bold font-mono text-emerald-900 w-10 text-right">12%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 3. Titles & Legal Text -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Judul Utama Bagan *</label>
+                  <input type="text" id="org-setting-title" required class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold" value="STRUKTUR ORGANISASI">
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Sub-judul Instansi *</label>
+                  <input type="text" id="org-setting-subtitle" required class="w-full px-3 py-2 border border-slate-300 rounded-lg" value="KEJAKSAAN NEGERI KLUNGKUNG">
+                </div>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Dasar Hukum &amp; Landasan Organisasi</label>
+                <textarea id="org-setting-legal-basis" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg">Berdasarkan Peraturan Kejaksaan RI Nomor PER-006/A/JA/07/2017 tentang Organisasi dan Tata Kerja Kejaksaan Republik Indonesia</textarea>
+              </div>
+
+              <div class="pt-3 border-t border-slate-200 flex justify-end">
+                <button type="submit" id="btn-save-org-settings" class="px-6 py-2.5 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl shadow-md flex items-center gap-2 transition-colors">
+                  <i data-lucide="check" class="w-4 h-4 text-amber-400"></i>
+                  <span>Simpan Pengaturan Tampilan</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </section>
+
+
+
+      <!-- =====================================================================
+           TAB 10: MANAJEMEN ADMINISTRATOR & USER ACCESS (MFA ENABLED)
+           ===================================================================== -->
+      <section id="tab-admins" class="space-y-6 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-heading font-extrabold text-base text-slate-900">Manajemen Pengguna &amp; Administrator</h3>
+                <span id="badge-total-admins" class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300">1 Administrator</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">Kelola akun yang memiliki hak akses login ke CMS Master &amp; Live Visual Editor dengan proteksi MFA.</p>
+            </div>
+
+            <button onclick="openAdminUserModal()" class="px-4 py-2.5 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 transition-colors shrink-0">
+              <i data-lucide="user-plus" class="w-4 h-4 text-amber-400"></i>
+              <span>+ Tambah Admin Baru</span>
+            </button>
+          </div>
+
+          <!-- Security Callout Banner -->
+          <div class="p-4 bg-emerald-50/80 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs mb-6 text-emerald-950">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-emerald-200 text-emerald-900 flex items-center justify-center shrink-0">
+                <i data-lucide="smartphone" class="w-5 h-5 text-emerald-800"></i>
+              </div>
+              <div>
+                <span class="font-extrabold block">Otentikasi Dua Langkah: Google Authenticator &amp; Microsoft Authenticator (RFC 6238 TOTP)</span>
+                <span class="text-emerald-800 text-[11px]">Setiap administrator dilengkapi Kunci Rahasia Base32 &amp; Kode QR standar `otpauth://totp/` yang dapat dipindai melalui aplikasi Google Authenticator maupun Microsoft Authenticator di smartphone.</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <span class="px-2.5 py-1 bg-white border border-emerald-300 rounded-full font-bold text-[10px] text-emerald-900 shadow-sm">Google Auth</span>
+              <span class="px-2.5 py-1 bg-blue-50 border border-blue-200 rounded-full font-bold text-[10px] text-blue-900 shadow-sm">Microsoft Auth</span>
+            </div>
+          </div>
+
+          <!-- Admins Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                  <th class="py-3 px-3">Administrator / Nama Lengkap</th>
+                  <th class="py-3 px-3">Username &amp; Email</th>
+                  <th class="py-3 px-3 text-center">Peran / Hak Akses</th>
+                  <th class="py-3 px-3 text-center">Status Keamanan (MFA)</th>
+                  <th class="py-3 px-3">Tanggal Dibuat</th>
+                  <th class="py-3 px-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="admin-users-table-body" class="divide-y divide-slate-100">
+                <!-- Populated dynamically via admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- =====================================================================
+           TAB 11: AKUNTABILITAS KINERJA (SAKIP)
+           ===================================================================== -->
+      <section id="tab-accountability" class="space-y-6 hidden">
+        <!-- Overview Stats for SAKIP -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-[11px] text-slate-500 font-medium">Total Dokumen</div>
+              <div class="font-heading font-black text-2xl text-slate-900 mt-0.5" id="admin-stat-sakip-total">0</div>
+            </div>
+            <div class="w-10 h-10 bg-emerald-50 text-emerald-800 rounded-xl flex items-center justify-center font-bold">
+              <i data-lucide="folder-check" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-[11px] text-slate-500 font-medium">RENSTRA</div>
+              <div class="font-heading font-black text-2xl text-emerald-800 mt-0.5" id="admin-stat-sakip-renstra">0</div>
+            </div>
+            <div class="w-10 h-10 bg-emerald-100 text-emerald-900 rounded-xl flex items-center justify-center font-bold">
+              <i data-lucide="target" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-[11px] text-slate-500 font-medium">RENJA</div>
+              <div class="font-heading font-black text-2xl text-amber-700 mt-0.5" id="admin-stat-sakip-renja">0</div>
+            </div>
+            <div class="w-10 h-10 bg-amber-50 text-amber-800 rounded-xl flex items-center justify-center font-bold">
+              <i data-lucide="calendar-check" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-[11px] text-slate-500 font-medium">LKj (Tahunan)</div>
+              <div class="font-heading font-black text-2xl text-blue-800 mt-0.5" id="admin-stat-sakip-lkj">0</div>
+            </div>
+            <div class="w-10 h-10 bg-blue-50 text-blue-800 rounded-xl flex items-center justify-center font-bold">
+              <i data-lucide="file-check" class="w-5 h-5"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <div class="text-[11px] text-slate-500 font-medium">Triwulan</div>
+              <div class="font-heading font-black text-2xl text-purple-800 mt-0.5" id="admin-stat-sakip-triwulan">0</div>
+            </div>
+            <div class="w-10 h-10 bg-purple-50 text-purple-800 rounded-xl flex items-center justify-center font-bold">
+              <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Card: Table & Controls -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="font-heading font-extrabold text-base text-slate-900">Publikasi Dokumen Akuntabilitas Kinerja (SAKIP)</h3>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                  Google Drive Integrated
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                Kelola dokumen RENSTRA, RENJA, LKj, dan Laporan Kinerja Triwulan yang ditautkan langsung ke link Google Drive resmi.
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2 shrink-0">
+              <a href="/akuntabilitas-kinerja" target="_blank" class="px-3.5 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs rounded-xl flex items-center gap-1.5 transition-colors">
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                <span>Lihat Halaman Publik</span>
+              </a>
+              <button onclick="openAccountabilityModal()" class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2 transition-colors">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-amber-400"></i>
+                <span>+ Tambah Dokumen SAKIP</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Filter & Search Bar in Admin -->
+          <div class="flex flex-col sm:flex-row gap-3 items-center justify-between mb-4">
+            <!-- Search -->
+            <div class="relative w-full sm:w-80">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input 
+                type="text" 
+                id="admin-sakip-search" 
+                oninput="filterAdminAccountabilityTable()" 
+                placeholder="Cari nama dokumen / tahun..." 
+                class="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-700 bg-slate-50"
+              >
+            </div>
+
+            <!-- Category Pills -->
+            <div class="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto" id="admin-sakip-filter-container">
+              <button onclick="setAdminSakipFilter('ALL')" id="admin-sakip-filter-ALL" class="px-3 py-1 rounded-lg text-xs font-bold bg-[#0B3B24] text-white">Semua</button>
+              <button onclick="setAdminSakipFilter('RENSTRA')" id="admin-sakip-filter-RENSTRA" class="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">RENSTRA</button>
+              <button onclick="setAdminSakipFilter('RENJA')" id="admin-sakip-filter-RENJA" class="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">RENJA</button>
+              <button onclick="setAdminSakipFilter('LKJ')" id="admin-sakip-filter-LKJ" class="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">LKj</button>
+              <button onclick="setAdminSakipFilter('TRIWULAN')" id="admin-sakip-filter-TRIWULAN" class="px-3 py-1 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Triwulan</button>
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                  <th class="py-3 px-3 w-12 text-center">Urutan</th>
+                  <th class="py-3 px-3 w-28">Kategori</th>
+                  <th class="py-3 px-3">Nama / Judul Dokumen</th>
+                  <th class="py-3 px-3 w-24">Tahun</th>
+                  <th class="py-3 px-3 w-36">Format / Ukuran</th>
+                  <th class="py-3 px-3 w-48">Link Google Drive</th>
+                  <th class="py-3 px-3 w-20 text-center">Dilihat</th>
+                  <th class="py-3 px-3 w-24 text-center">Status</th>
+                  <th class="py-3 px-3 w-28 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="accountability-table-body" class="divide-y divide-slate-100">
+                <!-- Populated via admin.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- =====================================================================
+           TAB 12: KELOLA PROFIL INSTANSI (VISI MISI, SEJARAH, LOGO MAKNA, TUGAS WEWENANG)
+           ===================================================================== -->
+      <section id="tab-profile-cms" class="space-y-6 hidden">
+        <!-- Sub-navigation Tabs -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="font-heading font-extrabold text-base text-slate-900">Kelola Seluruh Halaman Profil Instansi</h3>
+              <p class="text-xs text-slate-500 mt-0.5">Edit konten teks, upload foto/logo resmi, dan kelola item pada 4 halaman profil instansi.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="switchProfileSubTab('visi-misi')" id="subnav-visi-misi" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#0B3B24] text-white shadow-sm flex items-center gap-1.5 transition-all">
+                <i data-lucide="compass" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>1. Visi &amp; Misi</span>
+              </button>
+              <button onclick="switchProfileSubTab('sejarah')" id="subnav-sejarah" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-950 flex items-center gap-1.5 transition-all">
+                <i data-lucide="landmark" class="w-3.5 h-3.5 text-emerald-700"></i>
+                <span>2. Sejarah &amp; Linimasa</span>
+              </button>
+              <button onclick="switchProfileSubTab('logo-makna')" id="subnav-logo-makna" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-950 flex items-center gap-1.5 transition-all">
+                <i data-lucide="shield" class="w-3.5 h-3.5 text-amber-600"></i>
+                <span>3. Logo &amp; Maknanya</span>
+              </button>
+              <button onclick="switchProfileSubTab('tugas-wewenang')" id="subnav-tugas-wewenang" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-emerald-50 hover:text-emerald-950 flex items-center gap-1.5 transition-all">
+                <i data-lucide="scale" class="w-3.5 h-3.5 text-emerald-700"></i>
+                <span>4. Tugas &amp; Wewenang</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 1: VISI & MISI -->
+        <div id="subtab-panel-visi-misi" class="space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left: Text Settings -->
+            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <h4 class="font-heading font-bold text-sm text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+                <i data-lucide="edit-3" class="w-4 h-4 text-emerald-800"></i>
+                <span>Pengaturan Teks Visi &amp; Doktrin</span>
+              </h4>
+              <div class="space-y-3 text-xs">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Teks Visi Resmi Kejaksaan RI</label>
+                  <textarea id="cms-input-profil-visi-text" rows="4" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 leading-relaxed"></textarea>
+                  <button onclick="saveAdminProfileText('profil_visi_text', 'cms-input-profil-visi-text')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px] hover:bg-emerald-900">Simpan Teks Visi</button>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Motto Visi Layanan KERTAGOSA</label>
+                  <input type="text" id="cms-input-profil-visi-sub" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600">
+                  <button onclick="saveAdminProfileText('profil_visi_misi_sub', 'cms-input-profil-visi-sub')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px] hover:bg-emerald-900">Simpan Motto</button>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Doktrin Tri Krama: SATYA</label>
+                  <textarea id="cms-input-profil-doktrin-satya" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"></textarea>
+                  <button onclick="saveAdminProfileText('profil_doktrin_satya', 'cms-input-profil-doktrin-satya')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px] hover:bg-emerald-900">Simpan Satya</button>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Doktrin Tri Krama: ADHI</label>
+                  <textarea id="cms-input-profil-doktrin-adhi" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"></textarea>
+                  <button onclick="saveAdminProfileText('profil_doktrin_adhi', 'cms-input-profil-doktrin-adhi')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px] hover:bg-emerald-900">Simpan Adhi</button>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Doktrin Tri Krama: WICAKSANA</label>
+                  <textarea id="cms-input-profil-doktrin-wicaksana" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600"></textarea>
+                  <button onclick="saveAdminProfileText('profil_doktrin_wicaksana', 'cms-input-profil-doktrin-wicaksana')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px] hover:bg-emerald-900">Simpan Wicaksana</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Misi Items Table -->
+            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h4 class="font-heading font-bold text-sm text-slate-900 flex items-center gap-2">
+                    <i data-lucide="target" class="w-4 h-4 text-emerald-800"></i>
+                    <span>Daftar Misi Strategis</span>
+                  </h4>
+                  <p class="text-xs text-slate-500">Urutan tampil di halaman publik Visi dan Misi.</p>
+                </div>
+                <button onclick="openAdminProfileItemModal('VISI_MISI', 'MISI')" class="px-3.5 py-1.5 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5">
+                  <i data-lucide="plus" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span>+ Tambah Misi</span>
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                      <th class="py-2.5 px-3 w-12 text-center">No</th>
+                      <th class="py-2.5 px-3">Judul Misi</th>
+                      <th class="py-2.5 px-3">Deskripsi</th>
+                      <th class="py-2.5 px-3 w-24 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-body-admin-misi" class="divide-y divide-slate-100">
+                    <!-- Populated via admin.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 2: SEJARAH & LINIMASA -->
+        <div id="subtab-panel-sejarah" class="space-y-6 hidden">
+          <!-- Photos Uploader Card -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+            <h4 class="font-heading font-bold text-sm text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+              <i data-lucide="camera" class="w-4 h-4 text-emerald-800"></i>
+              <span>Foto Dokumentasi Sejarah (Upload / Ganti Gambar)</span>
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Foto 1 -->
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                <div>
+                  <div class="text-xs font-bold text-slate-800 mb-1">Foto 1: Balai Kerta Gosa Semarapura</div>
+                  <p class="text-[11px] text-slate-500 mb-3">Tampil pada Card Akar Historis Kerta Gosa.</p>
+                  <img id="admin-preview-sejarah-1" src="/static/images/hero-bg.jpg" class="w-full h-44 object-cover rounded-xl mb-3 border border-slate-200 shadow-sm">
+                </div>
+                <label class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs rounded-xl cursor-pointer text-center flex items-center justify-center gap-2 shadow">
+                  <i data-lucide="upload" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span>Pilih &amp; Upload Foto Kerta Gosa</span>
+                  <input type="file" accept="image/*" class="hidden" onchange="uploadAdminProfileImage('profil_sejarah_img_1', event, 'admin-preview-sejarah-1')">
+                </label>
+              </div>
+
+              <!-- Foto 2 -->
+              <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 flex flex-col justify-between">
+                <div>
+                  <div class="text-xs font-bold text-slate-800 mb-1">Foto 2: Kantor Kejari Klungkung</div>
+                  <p class="text-[11px] text-slate-500 mb-3">Tampil pada Card Dinamika Kelembagaan.</p>
+                  <img id="admin-preview-sejarah-2" src="/static/images/hero-bg.jpg" class="w-full h-44 object-cover rounded-xl mb-3 border border-slate-200 shadow-sm">
+                </div>
+                <label class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs rounded-xl cursor-pointer text-center flex items-center justify-center gap-2 shadow">
+                  <i data-lucide="upload" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span>Pilih &amp; Upload Foto Kantor Kejari</span>
+                  <input type="file" accept="image/*" class="hidden" onchange="uploadAdminProfileImage('profil_sejarah_img_2', event, 'admin-preview-sejarah-2')">
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Milestones Table & Narrative Texts -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Narrative Texts -->
+            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <h4 class="font-heading font-bold text-sm text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+                <i data-lucide="file-text" class="w-4 h-4 text-emerald-800"></i>
+                <span>Narasi Sejarah Tertulis</span>
+              </h4>
+              <div class="space-y-3 text-xs">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Sejarah Kerta Gosa (Paragraf 1)</label>
+                  <textarea id="cms-input-profil-sejarah-p1" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl leading-relaxed"></textarea>
+                  <button onclick="saveAdminProfileText('profil_sejarah_kerta_gosa_p1', 'cms-input-profil-sejarah-p1')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px]">Simpan Paragraf 1</button>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Sejarah Kerta Gosa (Paragraf 2)</label>
+                  <textarea id="cms-input-profil-sejarah-p2" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl leading-relaxed"></textarea>
+                  <button onclick="saveAdminProfileText('profil_sejarah_kerta_gosa_p2', 'cms-input-profil-sejarah-p2')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px]">Simpan Paragraf 2</button>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Kejaksaan Pasca Kemerdekaan</label>
+                  <textarea id="cms-input-profil-sejarah-modern" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl leading-relaxed"></textarea>
+                  <button onclick="saveAdminProfileText('profil_sejarah_modern_p1', 'cms-input-profil-sejarah-modern')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px]">Simpan Paragraf Modern</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Milestones Table -->
+            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h4 class="font-heading font-bold text-sm text-slate-900 flex items-center gap-2">
+                    <i data-lucide="git-commit" class="w-4 h-4 text-emerald-800"></i>
+                    <span>Linimasa Tonggak Sejarah</span>
+                  </h4>
+                  <p class="text-xs text-slate-500">Milestone sejarah yang tampil pada garis waktu.</p>
+                </div>
+                <button onclick="openAdminProfileItemModal('SEJARAH', 'TIMELINE')" class="px-3.5 py-1.5 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5">
+                  <i data-lucide="plus" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span>+ Tambah Tonggak</span>
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                      <th class="py-2.5 px-3 w-12 text-center">Urutan</th>
+                      <th class="py-2.5 px-3">Tahun / Periode</th>
+                      <th class="py-2.5 px-3">Judul &amp; Keterangan</th>
+                      <th class="py-2.5 px-3 w-24 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-body-admin-sejarah" class="divide-y divide-slate-100">
+                    <!-- Populated via admin.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 3: LOGO & MAKNANYA -->
+        <div id="subtab-panel-logo-makna" class="space-y-6 hidden">
+          <!-- Official Logo Master Card -->
+          <div class="bg-gradient-to-br from-emerald-950 via-[#0B3B24] to-emerald-900 text-white rounded-2xl p-6 shadow-md border border-amber-400/40">
+            <div class="flex flex-col sm:flex-row items-center gap-6">
+              <div class="w-32 h-32 p-2 bg-white/10 rounded-2xl border border-amber-400/40 shrink-0 flex items-center justify-center">
+                <img id="admin-preview-logo-makna" src="/static/images/logo-kejari.svg" class="w-full h-full object-contain site-logo-img">
+              </div>
+              <div class="space-y-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 uppercase tracking-wider">LOGO RESMI INSTANSI TERINTEGRASI</span>
+                <h4 class="font-heading font-black text-lg text-white">Upload &amp; Ganti Lambang Resmi Kejaksaan RI</h4>
+                <p class="text-xs text-emerald-100/80 leading-relaxed">
+                  Mengganti logo di sini akan secara otomatis menyelaraskan logo pada Header Nav, Halaman Profil Logo dan Maknanya, serta Footer portal secara menyeluruh.
+                </p>
+                <div class="pt-2">
+                  <label class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl cursor-pointer inline-flex items-center gap-2 shadow-lg transition-transform active:scale-95">
+                    <i data-lucide="upload" class="w-4 h-4"></i>
+                    <span>Pilih &amp; Upload Logo Resmi Baru (SVG / PNG)</span>
+                    <input type="file" accept="image/*" class="hidden" onchange="uploadAdminProfileImage('header_logo_url', event, 'admin-preview-logo-makna')">
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Narrative Texts -->
+            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <h4 class="font-heading font-bold text-sm text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+                <i data-lucide="palette" class="w-4 h-4 text-emerald-800"></i>
+                <span>Filosofi Lambang, Warna &amp; Nama</span>
+              </h4>
+              <div class="space-y-3 text-xs">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Deskripsi Lambang Satya Adhi Wicaksana</label>
+                  <textarea id="cms-input-profil-logo-desc" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl leading-relaxed"></textarea>
+                  <button onclick="saveAdminProfileText('profil_logo_satya_desc', 'cms-input-profil-logo-desc')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px]">Simpan Deskripsi Lambang</button>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Filosofi Palet Warna Resmi</label>
+                  <textarea id="cms-input-profil-logo-warna" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl leading-relaxed"></textarea>
+                  <button onclick="saveAdminProfileText('profil_logo_filosofi_warna', 'cms-input-profil-logo-warna')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px]">Simpan Filosofi Warna</button>
+                </div>
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Filosofi Nama KERTAGOSA</label>
+                  <textarea id="cms-input-profil-logo-kertagosa" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-xl leading-relaxed"></textarea>
+                  <button onclick="saveAdminProfileText('profil_logo_filosofi_kertagosa', 'cms-input-profil-logo-kertagosa')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px]">Simpan Filosofi KERTAGOSA</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Elements Table -->
+            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h4 class="font-heading font-bold text-sm text-slate-900 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-4 h-4 text-emerald-800"></i>
+                    <span>Elemen Makna Lambang (Anatomi Logo)</span>
+                  </h4>
+                  <p class="text-xs text-slate-500">Bintang, Pedang, Neraca, Padi &amp; Kapas, Perisai, Pita.</p>
+                </div>
+                <button onclick="openAdminProfileItemModal('LOGO_MAKNA', 'LOGO_ELEM')" class="px-3.5 py-1.5 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5">
+                  <i data-lucide="plus" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span>+ Tambah Elemen</span>
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                      <th class="py-2.5 px-3 w-12 text-center">Ikon</th>
+                      <th class="py-2.5 px-3">Nama Elemen Lambang</th>
+                      <th class="py-2.5 px-3">Makna Simbolik</th>
+                      <th class="py-2.5 px-3 w-24 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-body-admin-logo" class="divide-y divide-slate-100">
+                    <!-- Populated via admin.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-TAB 4: TUGAS & WEWENANG -->
+        <div id="subtab-panel-tugas-wewenang" class="space-y-6 hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left: Legal Basis -->
+            <div class="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <h4 class="font-heading font-bold text-sm text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+                <i data-lucide="scale" class="w-4 h-4 text-emerald-800"></i>
+                <span>Dasar Hukum Pokok</span>
+              </h4>
+              <div class="space-y-3 text-xs">
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1">Dasar UU RI No. 11 Tahun 2021</label>
+                  <textarea id="cms-input-profil-tugas-hukum" rows="6" class="w-full px-3 py-2 border border-slate-300 rounded-xl leading-relaxed"></textarea>
+                  <button onclick="saveAdminProfileText('profil_tugas_dasar_hukum', 'cms-input-profil-tugas-hukum')" class="mt-1.5 px-3 py-1 bg-emerald-800 text-white rounded-lg font-bold text-[11px]">Simpan Dasar Hukum</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Bidang Tasks Table -->
+            <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h4 class="font-heading font-bold text-sm text-slate-900 flex items-center gap-2">
+                    <i data-lucide="briefcase" class="w-4 h-4 text-emerald-800"></i>
+                    <span>Bidang Tugas &amp; Kewenangan Operasional</span>
+                  </h4>
+                  <p class="text-xs text-slate-500">Pidum/Pidsus, Datun, Intelijen, PB3R, Pembinaan.</p>
+                </div>
+                <button onclick="openAdminProfileItemModal('TUGAS_WEWENANG', 'TUGAS_BIDANG')" class="px-3.5 py-1.5 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5">
+                  <i data-lucide="plus" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span>+ Tambah Bidang</span>
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                      <th class="py-2.5 px-3 w-12 text-center">No</th>
+                      <th class="py-2.5 px-3">Nama Bidang &amp; Pasal</th>
+                      <th class="py-2.5 px-3">Rincian Tugas</th>
+                      <th class="py-2.5 px-3 w-24 text-right">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table-body-admin-tugas" class="divide-y divide-slate-100">
+                    <!-- Populated via admin.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- TAB: ANNOUNCEMENTS (Pengumuman Resmi) -->
+      <section id="tab-announcements" class="space-y-6 hidden">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 class="font-heading font-bold text-base text-slate-900">Daftar Pengumuman &amp; Maklumat Resmi</h3>
+              <p class="text-xs text-slate-500">Kelola lelang terbuka rampasan negara, operasional pelayanan PTSP, seleksi CASN, dan maklumat.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <a href="/informasi/pengumuman" target="_blank" class="px-3 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors">
+                <i data-lucide="external-link" class="w-4 h-4"></i> Lihat Halaman Publik
+              </a>
+              <button onclick="openAdminAnnouncementModal()" class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm transition-colors">
+                <i data-lucide="plus" class="w-4 h-4 text-amber-400"></i> Tambah Pengumuman Baru
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+                  <th class="py-3 px-3">Flyer / Foto</th>
+                  <th class="py-3 px-3">No. Pengumuman &amp; Judul</th>
+                  <th class="py-3 px-3">Kategori</th>
+                  <th class="py-3 px-3">Batas Waktu</th>
+                  <th class="py-3 px-3">Tautan Terkait</th>
+                  <th class="py-3 px-3 text-center">Urutan</th>
+                  <th class="py-3 px-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="admin-announcements-tbody" class="divide-y divide-slate-100">
+                <!-- Dynamically loaded rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+    </div>
+  </main>
+
+  <!-- MODALS FOR ADMIN CMS (NEWS CRUD, JAGADITA CRUD, STATUS UPDATE) -->
+
+  <!-- News Form Modal (Create / Edit) -->
+  <div id="modal-admin-news-form" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 id="news-form-title" class="font-heading font-bold text-sm text-slate-900">Tambah Artikel Berita Baru</h3>
+        <button onclick="closeModal('modal-admin-news-form')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="admin-news-form" onsubmit="handleSaveNews(event)" class="p-6 space-y-4 text-xs">
+        <input type="hidden" id="news-form-id">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Judul Artikel *</label>
+          <input type="text" id="news-form-title-input" required class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Kategori *</label>
+            <select id="news-form-category" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              <option value="Kegiatan Kejari">Kegiatan Kejari</option>
+              <option value="Tindak Pidana Umum">Tindak Pidana Umum</option>
+              <option value="Tindak Pidana Khusus">Tindak Pidana Khusus</option>
+              <option value="Intelijen & JMS">Intelijen &amp; JMS</option>
+              <option value="Perdata & Tata Usaha Negara">Perdata &amp; Tata Usaha Negara</option>
+              <option value="Pengumuman">Pengumuman</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Teks Badge Label</label>
+            <input type="text" id="news-form-badge" placeholder="Contoh: BERITA UTAMA" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Tata Letak (Layout)</label>
+            <select id="news-form-layout" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              <option value="FEATURED_MAIN">Berita Utama (Kartu Besar Kiri)</option>
+              <option value="FEATURED_SIDE">Side Card (Kartu Kanan Atas)</option>
+              <option value="COMPACT_BOTTOM">Compact Bottom (Baris Bawah)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Penulis</label>
+            <input type="text" id="news-form-author" value="Tim Publikasi Kejari" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Ringkasan Singkat (Excerpt) *</label>
+          <textarea id="news-form-excerpt" rows="2" required class="w-full px-3 py-2 border border-slate-300 rounded-lg"></textarea>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Kutipan Highlight (Quote Box)</label>
+          <input type="text" id="news-form-quote" placeholder="Kutipan pernyataan penting Kajari / Kasi..." class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Isi Berita Lengkap</label>
+          <textarea id="news-form-content" rows="4" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-sans"></textarea>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-admin-news-form')" class="px-4 py-2 text-slate-600 font-semibold hover:bg-slate-100 rounded-lg">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-[#0B3B24] text-white font-bold rounded-lg shadow">Simpan Artikel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Jagadita Form Modal (Create / Edit) -->
+  <div id="modal-admin-jagadita-form" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 id="jagadita-form-title" class="font-heading font-bold text-sm text-slate-900">Tambah Jadwal Sidang JAGADITA</h3>
+        <button onclick="closeModal('modal-admin-jagadita-form')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="admin-jagadita-form" onsubmit="handleSaveJagadita(event)" class="p-6 space-y-4 text-xs">
+        <input type="hidden" id="jagadita-form-id">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Jam Sidang *</label>
+            <input type="text" id="jagadita-form-time" required placeholder="09:30 WITA" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Ruang Sidang *</label>
+            <input type="text" id="jagadita-form-room" required placeholder="R. Sidang Cakra" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Nomor Perkara *</label>
+            <input type="text" id="jagadita-form-case" required placeholder="124/Pid.B/2026/PN Kp" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Jenis Perkara *</label>
+            <select id="jagadita-form-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              <option value="PIDUM">PIDUM (Pidana Umum)</option>
+              <option value="TIPIKOR">TIPIKOR (Tindak Pidana Korupsi)</option>
+              <option value="PIDSUS">PIDSUS (Pidana Khusus Lainnya)</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Nama Terdakwa *</label>
+          <input type="text" id="jagadita-form-defendant" required placeholder="Nama lengkap terdakwa" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Agenda Sidang *</label>
+          <input type="text" id="jagadita-form-agenda" required placeholder="Contoh: Pemeriksaan Saksi & Ahli" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Jaksa Penuntut Umum (JPU) *</label>
+            <input type="text" id="jagadita-form-prosecutor" required placeholder="Nama Jaksa, S.H." class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Status Sidang *</label>
+            <select id="jagadita-form-status" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold">
+              <option value="SEDANG BERLANGSUNG">SEDANG BERLANGSUNG</option>
+              <option value="TERJADWAL">TERJADWAL</option>
+              <option value="SELESAI">SELESAI</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-admin-jagadita-form')" class="px-4 py-2 text-slate-600 font-semibold hover:bg-slate-100 rounded-lg">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-[#0B3B24] text-white font-bold rounded-lg shadow">Simpan Jadwal</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Submission Status Modal -->
+  <div id="modal-submission-update" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-6 border border-slate-200">
+      <h3 class="font-heading font-bold text-sm text-slate-900 mb-3">Perbarui Status Tiket</h3>
+      <input type="hidden" id="submission-update-type">
+      <input type="hidden" id="submission-update-id">
+      <div class="space-y-3 text-xs mb-4">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Status Penanganan</label>
+          <select id="submission-update-status" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold">
+            <option value="TERKIRIM">TERKIRIM</option>
+            <option value="DIVERIFIKASI">DIVERIFIKASI</option>
+            <option value="DALAM_PROSES">DALAM_PROSES</option>
+            <option value="DIJADWALKAN">DIJADWALKAN</option>
+            <option value="SELESAI">SELESAI</option>
+            <option value="DITOLAK">DITOLAK</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Catatan Tindak Lanjut Petugas</label>
+          <textarea id="submission-update-notes" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></textarea>
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2">
+        <button type="button" onclick="closeModal('modal-submission-update')" class="px-3.5 py-1.5 text-slate-600 font-semibold hover:bg-slate-100 rounded-lg">Batal</button>
+        <button onclick="saveSubmissionStatus()" class="px-4 py-2 bg-[#0B3B24] text-white font-bold rounded-lg shadow">Simpan Status</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Organization Member Form Modal (Create / Edit) -->
+  <div id="modal-admin-org-member-form" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 id="org-member-form-title" class="font-heading font-bold text-sm text-slate-900">Tambah Data Pegawai Baru</h3>
+        <button onclick="closeModal('modal-admin-org-member-form')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="admin-org-member-form" onsubmit="handleSaveOrgMember(event)" class="p-6 space-y-4 text-xs">
+        <input type="hidden" id="org-member-form-id">
+
+        <!-- Foto Profil -->
+        <div class="flex items-center gap-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div class="w-16 h-16 rounded-xl bg-white border border-slate-300 p-1 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+            <img id="preview-org-member-photo" src="/static/images/avatar-officer-male.svg" alt="Preview Foto" class="w-full h-full object-cover rounded-lg">
+          </div>
+          <div class="flex-1 space-y-1.5">
+            <label class="block font-bold text-slate-800">Foto Profil Pegawai</label>
+            <input type="text" id="org-member-photo-url" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono" placeholder="/static/images/avatar-officer-male.svg">
+            <div class="flex items-center gap-2">
+              <label class="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg cursor-pointer font-semibold text-[11px] transition-colors">
+                <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-700"></i>
+                <span>Upload Foto</span>
+                <input type="file" accept="image/*" class="hidden" onchange="uploadMemberPhoto(event)">
+              </label>
+              <button type="button" onclick="setPresetPhoto('/static/images/avatar-officer-male.svg')" class="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-[10px] font-semibold">Avatar Pria</button>
+              <button type="button" onclick="setPresetPhoto('/static/images/avatar-officer-female.svg')" class="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-[10px] font-semibold">Avatar Wanita</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nama Lengkap &amp; Gelar *</label>
+          <input type="text" id="org-member-name" required placeholder="Contoh: R. Indra Senjaya, S.H., M.H." class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold text-slate-900">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Jabatan dalam Organisasi *</label>
+          <input type="text" id="org-member-position" required placeholder="Contoh: Kepala Seksi Tindak Pidana Umum" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Level Hierarki *</label>
+            <select id="org-member-level" required onchange="handleLevelChange(this.value)" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-semibold">
+              <option value="1">Level 1: Pimpinan (Kajari)</option>
+              <option value="2">Level 2: Kepala Seksi / Bagian</option>
+              <option value="3">Level 3: Sub-bagian / Urusan</option>
+              <option value="4">Level 4: Jabatan Fungsional</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Pilih Atasan Langsung</label>
+            <select id="org-member-parent" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+              <option value="">-- Tanpa Atasan (Level 1) --</option>
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Nomor Induk Pegawai (NIP)</label>
+            <input type="text" id="org-member-nip" placeholder="19750512 199903 1 002" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Pangkat / Golongan</label>
+            <input type="text" id="org-member-rank" placeholder="Jaksa Utama Pratama / IV-b" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+          </div>
+        </div>
+
+        <div class="w-1/2">
+          <label class="block font-semibold text-slate-700 mb-1">Nomor Urutan Tampilan</label>
+          <input type="number" id="org-member-order" min="1" value="1" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-admin-org-member-form')" class="px-4 py-2 text-slate-600 font-semibold hover:bg-slate-100 rounded-lg">Batal</button>
+          <button type="submit" id="btn-submit-org-member" class="px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-lg shadow transition-colors">
+            Simpan Data Pegawai
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin User Form Modal (Create / Edit) -->
+  <div id="modal-admin-user-form" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 id="admin-user-form-title" class="font-heading font-bold text-sm text-slate-900">Tambah Administrator Baru</h3>
+        <button onclick="closeModal('modal-admin-user-form')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="form-admin-user" onsubmit="handleSaveAdminUser(event)" class="p-6 space-y-4 text-xs">
+        <input type="hidden" id="admin-user-form-id">
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nama Lengkap &amp; Gelar *</label>
+          <input type="text" id="admin-user-fullname" required placeholder="Contoh: I Putu Gede, S.H." class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold text-slate-900">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Username *</label>
+            <input type="text" id="admin-user-username" required placeholder="putugede" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Peran / Hak Akses *</label>
+            <select id="admin-user-role" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-semibold">
+              <option value="ADMIN">ADMIN (Editor Penuh)</option>
+              <option value="SUPERADMIN">SUPERADMIN (Master Admin)</option>
+              <option value="EDITOR">EDITOR (Konten &amp; Berita)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Email Kedinasan *</label>
+          <input type="email" id="admin-user-email" required placeholder="nama@kejariklungkung.go.id" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-bold text-slate-700">Password Akun *</label>
+            <span id="admin-user-password-note" class="text-[10px] text-slate-400">Minimal 6 karakter</span>
+          </div>
+          <input type="password" id="admin-user-password" placeholder="Masukkan password akun" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono">
+        </div>
+
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <i data-lucide="shield-check" class="w-4 h-4 text-emerald-700"></i>
+              <div>
+                <span class="font-bold text-slate-800 block text-[11px]">Proteksi Multi-Factor Authentication (TOTP)</span>
+                <span class="text-slate-500 text-[10px]">Wajibkan 6-digit kode Google / Microsoft Authenticator</span>
+              </div>
+            </div>
+            <input type="checkbox" id="admin-user-mfa" checked class="w-4 h-4 accent-emerald-800 cursor-pointer">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1 text-[11px]">Aplikasi MFA (Khusus Google &amp; Microsoft Authenticator)</label>
+            <select id="admin-user-mfa-provider" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-semibold bg-white text-xs">
+              <option value="GOOGLE">Google Authenticator</option>
+              <option value="MICROSOFT">Microsoft Authenticator</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-admin-user-form')" class="px-4 py-2 text-slate-600 font-semibold hover:bg-slate-100 rounded-lg">Batal</button>
+          <button type="submit" id="btn-submit-admin-user" class="px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-lg shadow transition-colors">
+            Simpan Administrator
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin MFA Authenticator QR Code Setup & Provisioning Modal -->
+  <div id="modal-admin-mfa-qr" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-[#0B3B24] to-[#072A19] text-white">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
+            <i data-lucide="qr-code" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-extrabold text-sm text-white">Konfigurasi Google / Microsoft MFA</h3>
+            <p id="admin-mfa-qr-subtitle" class="text-[11px] text-amber-300 font-medium">Pindai QR Code pada Aplikasi Authenticator</p>
+          </div>
+        </div>
+        <button onclick="closeAdminMfaModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+
+      <div class="p-5 sm:p-6 space-y-4 text-xs">
+        <input type="hidden" id="admin-mfa-target-userid">
+
+        <!-- App Selector Pills -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-full bg-white border border-emerald-200 flex items-center justify-center font-black text-blue-600 text-xs shrink-0">G</span>
+            <div>
+              <div class="font-bold text-emerald-950 text-[11px]">Google Authenticator</div>
+              <div class="text-[9px] text-emerald-700">Android &amp; iOS</div>
+            </div>
+          </div>
+          <div class="p-2.5 rounded-xl bg-blue-50 border border-blue-200 flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0">M</span>
+            <div>
+              <div class="font-bold text-blue-950 text-[11px]">Microsoft Authenticator</div>
+              <div class="text-[9px] text-blue-700">Android &amp; iOS</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- QR Code Container -->
+        <div class="flex flex-col items-center justify-center p-4 bg-slate-50 border-2 border-emerald-800/20 rounded-2xl">
+          <div id="admin-mfa-qr-box" class="w-48 h-48 bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex items-center justify-center">
+            <!-- SVG QR Code injected here -->
+          </div>
+          <div id="admin-mfa-account-label" class="font-mono font-bold text-[11px] text-slate-700 mt-2">admin@kejariklungkung.go.id</div>
+          <div class="text-[10px] text-slate-400">Issuer: KERTAGOSA Kejari Klungkung (SHA1 • 6 Digit • 30s)</div>
+        </div>
+
+        <!-- Secret Key & Authenticator Info Box -->
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">Kunci Setup Manual Base32 (Google / Microsoft Auth):</span>
+            <code id="admin-mfa-secret-code" class="font-mono font-bold text-xs text-slate-900 my-1 select-all break-all block">---- ---- ---- ----</code>
+            <span id="admin-mfa-live-rem" class="text-[10px] font-semibold text-emerald-800 block">Hanya dapat diakses melalui Google Authenticator / Microsoft Authenticator</span>
+          </div>
+          <button type="button" onclick="copyAdminMfaSecret()" class="px-3 py-2 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-bold text-[11px] shrink-0 flex items-center justify-center gap-1 shadow-sm">
+            <i data-lucide="copy" class="w-3.5 h-3.5 text-emerald-700"></i>
+            <span>Salin Kunci</span>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="resetAdminMfaSecret()" class="px-3 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 font-bold text-[11px] flex items-center gap-1.5 transition-colors">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            <span>Reset / Buat Kunci Baru</span>
+          </button>
+          <button type="button" onclick="closeAdminMfaModal()" class="px-4 py-2 rounded-xl bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs shadow">
+            Selesai
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accountability Document Form Modal (Create / Edit) -->
+  <div id="modal-admin-accountability-form" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 id="accountability-form-title" class="font-heading font-bold text-sm text-slate-900">Tambah Dokumen SAKIP Baru</h3>
+        <button onclick="closeModal('modal-admin-accountability-form')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="form-admin-accountability" onsubmit="handleSaveAccountabilityDoc(event)" class="p-6 space-y-4 text-xs">
+        <input type="hidden" id="accountability-form-id">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Kategori Dokumen *</label>
+            <select id="accountability-form-category" required class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold text-slate-900">
+              <option value="RENSTRA">RENCANA STRATEGIS (RENSTRA)</option>
+              <option value="RENJA">RENCANA KERJA (RENJA)</option>
+              <option value="LKJ">LAPORAN KINERJA (LKj)</option>
+              <option value="TRIWULAN">LAPORAN KINERJA TRIWULAN</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Periode / Tahun *</label>
+            <input type="text" id="accountability-form-period" required placeholder="Contoh: 2024 atau 2020-2024" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-semibold">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nama / Judul Lengkap Dokumen *</label>
+          <input type="text" id="accountability-form-title-input" required placeholder="Contoh: Rencana Strategis (RENSTRA) Tahun 2020 - 2024" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold text-slate-900">
+        </div>
+
+        <!-- Google Drive Share Link with Helper Tooltip -->
+        <div class="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block font-bold text-emerald-950">Link Share Google Drive *</label>
+            <span class="text-[10px] text-emerald-800 font-bold bg-emerald-200/60 px-2 py-0.5 rounded">Tautan Publik</span>
+          </div>
+          <input 
+            type="url" 
+            id="accountability-form-url" 
+            required 
+            placeholder="https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing" 
+            class="w-full px-3 py-2 border border-emerald-300 rounded-lg font-mono text-xs bg-white text-slate-900"
+          >
+          <div class="flex items-start gap-1.5 text-[11px] text-emerald-900/90 leading-relaxed">
+            <i data-lucide="info" class="w-3.5 h-3.5 text-emerald-700 shrink-0 mt-0.5"></i>
+            <span>
+              <strong>Alur Kerja:</strong> Unggah file PDF ke Google Drive Anda &gt; Klik kanan "Bagikan" (Share) &gt; Pilih akses <em>"Siapa saja yang memiliki tautan"</em> (Anyone with the link) &gt; Salin tautan dan tempelkan di atas.
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Format &amp; Ukuran File</label>
+            <input type="text" id="accountability-form-filesize" placeholder="Contoh: PDF (3.8 MB)" value="PDF (3.2 MB)" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Nomor Urutan Tampilan</label>
+            <input type="number" id="accountability-form-order" min="1" value="1" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Ringkasan / Catatan Deskripsi Dokumen</label>
+          <textarea id="accountability-form-desc" rows="3" placeholder="Jelaskan ringkasan isi dokumen, tujuan perumusan, atau target capaian yang dimuat..." class="w-full px-3 py-2 border border-slate-300 rounded-lg"></textarea>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+          <div>
+            <span class="font-bold text-slate-800 block text-[11px]">Status Publikasi Dokumen</span>
+            <span class="text-slate-500 text-[10px]">Tampilkan dokumen ini di halaman publik Akuntabilitas Kinerja</span>
+          </div>
+          <input type="checkbox" id="accountability-form-active" checked class="w-4 h-4 accent-emerald-800 cursor-pointer">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-admin-accountability-form')" class="px-4 py-2 text-slate-600 font-semibold hover:bg-slate-100 rounded-lg">Batal</button>
+          <button type="submit" id="btn-submit-accountability" class="px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-lg shadow transition-colors">
+            Simpan Dokumen SAKIP
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Form: Profile Items (Create & Edit) -->
+  <div id="modal-admin-profile-item-form" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 id="admin-profile-item-modal-title" class="font-heading font-bold text-sm text-slate-900 flex items-center gap-2">
+          <i data-lucide="edit-3" class="w-4 h-4 text-emerald-800"></i>
+          <span>Kelola Item Profil Instansi</span>
+        </h3>
+        <button onclick="closeModal('modal-admin-profile-item-form')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form id="form-admin-profile-item" onsubmit="saveAdminProfileItem(event)" class="p-6 space-y-4 text-xs">
+        <input type="hidden" id="admin-profile-item-id">
+        <input type="hidden" id="admin-profile-item-page-type">
+        <input type="hidden" id="admin-profile-item-type">
+
+        <div>
+          <label id="admin-profile-item-lbl-title" class="block font-bold text-slate-700 mb-1">Judul / Nama Item *</label>
+          <input type="text" id="admin-profile-item-title" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label id="admin-profile-item-lbl-sub" class="block font-bold text-slate-700 mb-1">Subtitle / Keterangan Singkat</label>
+            <input type="text" id="admin-profile-item-sub" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Nomor Urut Tampil *</label>
+            <input type="number" id="admin-profile-item-order" min="1" value="1" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ikon / Simbol (Emoji atau Nama Icon)</label>
+          <input type="text" id="admin-profile-item-icon" placeholder="Contoh: ★, ⚔️, ⚖️, 🌾, 🛡️, 🎗️, dsb." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600">
+        </div>
+
+        <div>
+          <label id="admin-profile-item-lbl-desc" class="block font-bold text-slate-700 mb-1">Deskripsi / Penjelasan Lengkap *</label>
+          <textarea id="admin-profile-item-desc" rows="5" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 leading-relaxed"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-admin-profile-item-form')" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl shadow-md flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4 text-amber-400"></i>
+            <span>Simpan Item Profil</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL IMPORT EXCEL KOTAK MASUK (MASADU & SEMARA BAKTI) -->
+  <div id="modal-inbox-excel-import" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-[#0B3B24] to-[#072A19] text-white">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-extrabold text-sm text-white">Import Data Excel (.xlsx / .csv)</h3>
+            <p class="text-[11px] text-amber-300 font-medium">Kotak Masuk Aduan MASADU &amp; SEMARA BAKTI</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-inbox-excel-import')" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form onsubmit="handleInboxExcelImport(event)" class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">1. Pilih Layanan Tujuan Import *</label>
+          <select id="inbox-import-target" required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-900 bg-slate-50">
+            <option value="complaints">Aduan Publik Terenkripsi — MASADU</option>
+            <option value="deliveries">Pengantaran Barang Bukti — SEMARA BAKTI</option>
+          </select>
+        </div>
+
+        <div class="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-emerald-950 flex items-center gap-1.5">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>2. Unduh Template Resmi Excel (.xlsx)</span>
+            </span>
+            <span class="text-[10px] font-bold bg-emerald-200/70 text-emerald-900 px-2 py-0.5 rounded">Disarankan</span>
+          </div>
+          <p class="text-[11px] text-emerald-900/80 leading-relaxed">
+            Gunakan format kolom standar Kejari Klungkung. Jika kolom <strong>No. Tiket</strong> sudah ada di database, status &amp; catatan akan diperbarui otomatis; jika baru, tiket baru akan ditambahkan.
+          </p>
+          <div class="flex flex-wrap gap-2 pt-1">
+            <button type="button" onclick="exportInboxData('complaints', 'xlsx', true)" class="px-3 py-1.5 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg font-bold text-[11px] flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Template Excel MASADU (.xlsx)</span>
+            </button>
+            <button type="button" onclick="exportInboxData('deliveries', 'xlsx', true)" class="px-3 py-1.5 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg font-bold text-[11px] flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-amber-700"></i>
+              <span>Template Excel SEMARA BAKTI (.xlsx)</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1.5">3. Pilih File Excel (.xlsx) atau CSV (.csv) *</label>
+          <input type="file" id="inbox-excel-file-input" accept=".xlsx,.csv,.tsv" required class="w-full px-3 py-2.5 border-2 border-dashed border-slate-300 hover:border-emerald-700 rounded-xl bg-slate-50 text-xs font-semibold cursor-pointer">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-inbox-excel-import')" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50">Batal</button>
+          <button type="submit" id="btn-submit-inbox-import" class="px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl shadow-md flex items-center gap-1.5">
+            <i data-lucide="upload" class="w-4 h-4 text-amber-400"></i>
+            <span>Proses &amp; Import Excel</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL IMPORT EXCEL JADWAL SIDANG JAGADITA -->
+  <div id="modal-jagadita-excel-import" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-[#0B3B24] to-[#072A19] text-white">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-extrabold text-sm text-white">Import Excel Jadwal Sidang (JAGADITA)</h3>
+            <p class="text-[11px] text-amber-300 font-medium">Unggah File Microsoft Excel (.xlsx) atau CSV</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-jagadita-excel-import')" class="text-white/70 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form onsubmit="handleJagaditaExcelImport(event)" class="p-6 space-y-4 text-xs">
+        <div class="p-3.5 bg-emerald-50/80 border border-emerald-200 rounded-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-emerald-950">Format Kolom Excel JAGADITA</span>
+            <button type="button" onclick="exportJagaditaData('xlsx', true)" class="px-3 py-1 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-sm">
+              <i data-lucide="download" class="w-3 h-3 text-emerald-700"></i>
+              <span>Unduh Template (.xlsx)</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-emerald-900/80 leading-relaxed">
+            Kolom standar: <strong>Jam Sidang</strong>, <strong>Ruang Sidang</strong>, <strong>No. Perkara</strong>, <strong>Jenis Perkara</strong>, <strong>Nama Terdakwa</strong>, <strong>Agenda Sidang</strong>, <strong>Jaksa Penuntut Umum (JPU)</strong>, <strong>Status</strong>.
+          </p>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1.5">Pilih File Excel (.xlsx) atau CSV *</label>
+          <input type="file" id="jagadita-excel-file-input" accept=".xlsx,.csv,.tsv" required class="w-full px-3 py-2.5 border-2 border-dashed border-slate-300 hover:border-emerald-700 rounded-xl bg-slate-50 text-xs font-semibold cursor-pointer">
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+          <div>
+            <span class="font-bold text-slate-800 block text-[11px]">Ganti Semua Jadwal Sidang Sebelumnya?</span>
+            <span class="text-slate-500 text-[10px]">Aktifkan jika ingin mengganti daftar jadwal hari ini sepenuhnya</span>
+          </div>
+          <input type="checkbox" id="jagadita-import-replace-all" class="w-4 h-4 accent-emerald-800 cursor-pointer">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-jagadita-excel-import')" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50">Batal</button>
+          <button type="submit" id="btn-submit-jagadita-import" class="px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl shadow-md flex items-center gap-1.5">
+            <i data-lucide="upload" class="w-4 h-4 text-amber-400"></i>
+            <span>Import Jadwal Sidang</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/js/admin.js?v=3.0"></script>
+
+  <!-- MODAL ADMIN ANNOUNCEMENT FORM -->
+  <div id="modal-admin-announcement" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+        <h3 id="modal-admin-announcement-title" class="font-heading font-bold text-sm text-slate-900 flex items-center gap-2">
+          <i data-lucide="bell" class="w-4 h-4 text-emerald-800"></i>
+          <span>Kelola Pengumuman Resmi</span>
+        </h3>
+        <button onclick="closeModal('modal-admin-announcement')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <form onsubmit="saveAdminAnnouncement(event)" class="p-6 space-y-4 text-xs">
+        <input type="hidden" id="admin-ann-id">
+        
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Nomor Pengumuman / Surat *</label>
+            <input type="text" id="admin-ann-number" required placeholder="Contoh: PENG-04/KPKNL-KLK/X/2026" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Kategori Pengumuman *</label>
+            <select id="admin-ann-category" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs">
+              <option value="LELANG">LELANG (Rampasan Negara)</option>
+              <option value="LAYANAN">LAYANAN (Operasional PTSP)</option>
+              <option value="SELEKSI">SELEKSI (CASN / Rekrutmen)</option>
+              <option value="MAKLUMAT">MAKLUMAT (Pelayanan Publik)</option>
+              <option value="UMUM">UMUM (Pemberitahuan Publik)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Judul Lengkap Pengumuman *</label>
+          <input type="text" id="admin-ann-title" required placeholder="Judul pengumuman..." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs font-semibold">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Label Badge *</label>
+            <input type="text" id="admin-ann-badge" required placeholder="LELANG RAMPASAN NEGARA" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Batas Waktu / Tanggal</label>
+            <input type="text" id="admin-ann-deadline" placeholder="28 Oktober 2026" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Ringkasan / Excerpt Singkat *</label>
+          <textarea id="admin-ann-excerpt" rows="2" required placeholder="Ringkasan isi..." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs"></textarea>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Isi Rincian Pengumuman (Teks/HTML) *</label>
+          <textarea id="admin-ann-content" rows="4" required placeholder="Rincian lengkap pengumuman..." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs font-mono"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">URL Tautan Eksternal / Dokumen</label>
+            <input type="text" id="admin-ann-ext-url" placeholder="https://..." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Label Tombol Tautan</label>
+            <input type="text" id="admin-ann-ext-label" placeholder="Contoh: Portal Lelang.go.id" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">URL Flyer / Gambar</label>
+            <input type="text" id="admin-ann-image-url" placeholder="/static/images/news-bb.jpg" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Nomor Urut Tampil</label>
+            <input type="number" id="admin-ann-order" min="1" value="1" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeModal('modal-admin-announcement')" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl shadow-md flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4 text-amber-400"></i>
+            <span>Simpan Pengumuman</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>

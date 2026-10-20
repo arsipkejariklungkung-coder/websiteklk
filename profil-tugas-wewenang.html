@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tugas dan Wewenang - Kejaksaan Negeri Klungkung (KERTAGOSA)</title>
+  <meta name="description" content="Tugas dan wewenang resmi Kejaksaan Negeri Klungkung berdasarkan Undang-Undang No. 11 Tahun 2021 tentang Kejaksaan Republik Indonesia.">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: {
+              DEFAULT: '#0B3B24',
+              dark: '#072A19',
+              light: '#14532D',
+              deep: '#03190E'
+            },
+            gold: {
+              DEFAULT: '#EAB308',
+              dark: '#CA8A04',
+              amber: '#D97706',
+              light: '#FEF08A'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/css/styles.css?v=2.8">
+  <link rel="icon" type="image/svg+xml" href="/static/images/logo-kejari.svg">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-amber-400 selection:text-slate-900">
+
+  <!-- TOP UTILITY BAR & MAIN NAVBAR -->
+  <header class="w-full bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm transition-all">
+    <div class="border-b border-slate-100 bg-slate-50/70 text-xs">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <a href="/" class="w-9 h-9 flex-shrink-0">
+            <img id="header-logo" src="/static/images/logo-kejari.svg" alt="Logo Kejaksaan RI" class="w-full h-full object-contain site-logo-img">
+          </a>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5">
+            <a href="/" class="font-heading font-extrabold text-slate-900 tracking-tight text-xs sm:text-sm uppercase hover:text-emerald-900 transition-colors">
+              KEJAKSAAN REPUBLIK INDONESIA - KEJAKSAAN NEGERI KLUNGKUNG
+            </a>
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 shadow-sm w-fit">
+              ⭐ ZONA INTEGRITAS WBK / WBBM
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 ml-auto">
+          <div class="hidden md:flex items-center gap-1.5 text-slate-600 font-medium text-xs">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-800"></i>
+            <span>Senin - Jumat: 08.00 - 16.00 WITA</span>
+          </div>
+          <button onclick="openModal('modal-ticket-tracker')" class="px-3.5 py-1.5 rounded-lg bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-colors">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Lacak Tiket Layanan</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <!-- Mobile Menu Trigger (Left side of Navbar on < 1024px) -->
+      <button type="button" onclick="toggleMobileMenu()" class="lg:hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-800 border border-slate-200 font-heading font-bold text-xs transition-all active:scale-95">
+        <i data-lucide="menu" class="w-4 h-4 text-[#0B3B24]"></i>
+        <span>Menu Navigasi</span>
+      </button>
+
+      <div class="hidden lg:flex items-center gap-1 text-sm font-semibold text-slate-700">
+        <a href="/" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1.5">
+          <i data-lucide="home" class="w-4 h-4 text-emerald-800"></i>
+          Beranda
+        </a>
+
+        <!-- Profil Dropdown (ACTIVE ON THIS PAGE) -->
+        <div class="relative group">
+          <button class="px-4 py-2 rounded-full bg-[#0B3B24] text-white shadow-sm flex items-center gap-1.5 transition-colors">
+            Profil <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-amber-400 group-hover:rotate-180 transition-transform"></i>
+          </button>
+          <div class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
+            <a href="/profil/struktur-organisasi" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="network" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Struktur Organisasi</span>
+            </a>
+            <a href="/profil/visi-misi" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Visi dan Misi</span>
+            </a>
+            <a href="/profil/sejarah" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="landmark" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Sejarah</span>
+            </a>
+            <a href="/profil/logo-makna" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Logo dan Maknanya</span>
+            </a>
+            <a href="/profil/tugas-wewenang" class="block px-3 py-2 text-xs font-bold text-emerald-900 bg-emerald-50 rounded-lg flex items-center gap-2">
+              <i data-lucide="scale" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Tugas dan Wewenang</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Informasi Dropdown -->
+        <div class="relative group">
+          <button class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center gap-1 transition-colors">
+            Informasi <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
+          </button>
+          <div class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
+            <a href="/informasi/berita" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="newspaper" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Berita &amp; Publikasi Hukum</span>
+            </a>
+            <a href="/informasi/pengumuman" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Pengumuman Resmi</span>
+            </a>
+            <a href="/informasi/jadwal-sidang" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="gavel" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Jadwal Sidang JAGADITA</span>
+            </a>
+            <a href="/informasi/skm" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Indeks Kepuasan (SKM)</span>
+            </a>
+          </div>
+        </div>
+        <a href="/#pilar-layanan" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Pelayanan</a>
+        <a href="/akuntabilitas-kinerja" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Akuntabilitas Kinerja</a>
+        <a href="/#kantor-peta" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Kontak</a>
+      </div>
+
+      <a href="tel:081138004444" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 border border-amber-300 text-amber-950 flex items-center gap-2 shadow-sm hover:bg-amber-100 transition-colors">
+        <i data-lucide="phone-call" class="w-3.5 h-3.5 text-amber-700"></i>
+        <span>Hotline PTSP: 0811-3800-4444</span>
+      </a>
+    </nav>
+
+    <!-- Collapsible Categorized Mobile Navigation Drawer -->
+    <div id="mobile-nav-drawer" class="hidden lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-4 shadow-2xl">
+      <!-- Section 1: Navigasi Utama -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Navigasi Utama</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+          <a href="/" class="p-2.5 rounded-xl bg-[#0B3B24] text-white flex items-center gap-2 shadow-sm">
+            <i data-lucide="home" class="w-4 h-4 text-amber-400 shrink-0"></i>
+            <span class="truncate">Beranda</span>
+          </a>
+          <a href="/#layanan-digital" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-amber-50 text-amber-950 border border-amber-200 flex items-center gap-2">
+            <i data-lucide="globe" class="w-4 h-4 text-amber-700 shrink-0"></i>
+            <span class="truncate">Layanan Digital</span>
+          </a>
+          <a href="/akuntabilitas-kinerja" class="p-2.5 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-200 flex items-center gap-2">
+            <i data-lucide="file-check" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Akuntabilitas (SAKIP)</span>
+          </a>
+          <a href="/#kantor-peta" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Kontak &amp; Lokasi</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 2: Profil Instansi (5 Halaman) -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Profil Instansi</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+          <a href="/profil/struktur-organisasi" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="network" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Struktur Organisasi</span>
+          </a>
+          <a href="/profil/visi-misi" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Visi &amp; Misi</span>
+          </a>
+          <a href="/profil/sejarah" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="landmark" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Sejarah</span>
+          </a>
+          <a href="/profil/logo-makna" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Logo &amp; Makna</span>
+          </a>
+          <a href="/profil/tugas-wewenang" class="col-span-2 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="scale" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Tugas Pokok &amp; Wewenang Kejaksaan</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 3: Informasi Publik (4 Halaman) -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Informasi Publik</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+          <a href="/informasi/berita" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="newspaper" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Pusat Berita</span>
+          </a>
+          <a href="/informasi/pengumuman" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+            <span class="truncate">Pengumuman</span>
+          </a>
+          <a href="/informasi/jadwal-sidang" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="gavel" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Jadwal Sidang</span>
+          </a>
+          <a href="/informasi/skm" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Skor IKM / SKM</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 4: Portal Layanan Digital Eksternal -->
+      <div class="pt-2 border-t border-slate-100">
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 mb-2 px-1">Akses Cepat Layanan Digital</div>
+        <div class="grid grid-cols-4 gap-1.5 text-[10px] font-bold text-center">
+          <a href="https://halojpn.kejaksaan.go.id/" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-200 flex flex-col items-center gap-1">
+            <i data-lucide="message-square-heart" class="w-4 h-4 text-emerald-700"></i>
+            <span>HaloJPN</span>
+          </a>
+          <a href="https://tilang.kejaksaan.go.id/home" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-blue-50 text-blue-950 border border-blue-200 flex flex-col items-center gap-1">
+            <i data-lucide="car" class="w-4 h-4 text-blue-700"></i>
+            <span>E-Tilang</span>
+          </a>
+          <a href="https://ppid.kejaksaan.go.id/satker/kn-klungkung" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-amber-50 text-amber-950 border border-amber-200 flex flex-col items-center gap-1">
+            <i data-lucide="folder-search" class="w-4 h-4 text-amber-700"></i>
+            <span>E-PPID</span>
+          </a>
+          <a href="https://www.lapor.go.id/" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-rose-50 text-rose-950 border border-rose-200 flex flex-col items-center gap-1">
+            <i data-lucide="megaphone" class="w-4 h-4 text-rose-700"></i>
+            <span>LAPOR!</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE HERO BANNER -->
+  <section class="hero-forest-bg hero-mesh-pattern text-white py-12 lg:py-16 relative border-b border-emerald-950">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <!-- Breadcrumbs -->
+      <nav class="flex items-center gap-2 text-xs text-emerald-200/80 mb-4 font-medium">
+        <a href="/" class="hover:text-white transition-colors">Beranda</a>
+        <span>/</span>
+        <span class="text-emerald-300">Profil</span>
+        <span>/</span>
+        <span class="text-amber-300 font-bold">Tugas dan Wewenang</span>
+      </nav>
+
+      <div class="max-w-3xl">
+        <span class="inline-block px-3 py-1 rounded-full text-xs font-extrabold tracking-wider border border-amber-400/50 bg-amber-950/50 text-amber-300 mb-3">
+          LANDASAN YURIDIS RESMI
+        </span>
+        <h1 data-cms-key="profil_tugas_hero_title" data-cms-label="Judul Hero Tugas dan Wewenang" class="font-serif font-black text-3xl sm:text-5xl text-white tracking-wide mb-4 hero-title-shimmer">
+          Tugas dan Wewenang Kejaksaan Negeri Klungkung
+        </h1>
+        <p data-cms-key="profil_tugas_hero_subtitle" data-cms-label="Subjudul Hero Tugas dan Wewenang" class="text-emerald-100/90 text-sm sm:text-base leading-relaxed font-light">
+          Berdasarkan Undang-Undang Republik Indonesia Nomor 11 Tahun 2021 tentang Perubahan atas Undang-Undang Nomor 16 Tahun 2004 tentang Kejaksaan Republik Indonesia, Kejaksaan adalah badan yang melaksanakan kekuasaan negara di bidang penuntutan serta kewenangan lain berdasarkan undang-undang.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+      
+      <!-- Left Content (8 cols) -->
+      <div class="lg:col-span-8 space-y-10">
+
+        <!-- Admin Quick Action Toolbar -->
+        <div id="profile-admin-toolbar" class="hidden"></div>
+        
+        <!-- Basis Hukum Card -->
+        <div class="bg-gradient-to-r from-emerald-50 to-amber-50/50 rounded-2xl p-6 border border-emerald-200 shadow-sm flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-emerald-800 text-white flex items-center justify-center shrink-0 shadow">
+            <i data-lucide="scale" class="w-6 h-6 text-amber-300"></i>
+          </div>
+          <div>
+            <h2 class="font-heading font-black text-base text-slate-900 mb-1">
+              Dasar Hukum Utama: UU RI No. 11 Tahun 2021
+            </h2>
+            <p data-cms-key="profil_tugas_dasar_hukum" data-cms-label="Dasar Hukum UU Kejaksaan RI" class="text-xs text-slate-600 leading-relaxed">
+              Pasal 30, 30A, 30B, dan 30C UU Kejaksaan menegaskan peran Kejaksaan sebagai pengendali perkara (*Dominus Litis*), satu-satunya instansi penuntut umum yang sah di Indonesia, serta lembaga penegak hukum yang berorientasi pada pemulihan keadilan dan penyelamatan aset negara.
+            </p>
+          </div>
+        </div>
+
+        <!-- 5 Bidang Tugas & Wewenang -->
+        <div class="space-y-6">
+          <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
+            <h2 class="font-heading font-extrabold text-xl text-slate-900 flex items-center gap-2">
+              <i data-lucide="briefcase" class="w-5 h-5 text-emerald-800"></i>
+              Bidang Kewenangan Operasional
+            </h2>
+            <div id="tugas-admin-add-btn-slot"></div>
+          </div>
+
+          <div id="container-tugas-bidang" class="space-y-6">
+            <!-- Populated dynamically via app.js / profile_items with admin CRUD buttons -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Sidebar: Quick Navigation (4 cols) -->
+      <aside class="lg:col-span-4 space-y-6">
+        <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+          <h3 class="font-heading font-bold text-sm text-slate-900 mb-4 pb-3 border-b border-slate-100 uppercase tracking-wider text-emerald-800">
+            Menu Profil Instansi
+          </h3>
+          <ul class="space-y-1.5 text-xs font-semibold">
+            <li>
+              <a href="/profil/struktur-organisasi" class="flex items-center justify-between p-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors">
+                <span class="flex items-center gap-2"><i data-lucide="network" class="w-4 h-4 text-emerald-700"></i> Struktur Organisasi</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+              </a>
+            </li>
+            <li>
+              <a href="/profil/visi-misi" class="flex items-center justify-between p-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors">
+                <span class="flex items-center gap-2"><i data-lucide="compass" class="w-4 h-4 text-emerald-700"></i> Visi dan Misi</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+              </a>
+            </li>
+            <li>
+              <a href="/profil/sejarah" class="flex items-center justify-between p-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors">
+                <span class="flex items-center gap-2"><i data-lucide="landmark" class="w-4 h-4 text-emerald-700"></i> Sejarah</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+              </a>
+            </li>
+            <li>
+              <a href="/profil/logo-makna" class="flex items-center justify-between p-2.5 rounded-xl text-slate-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors">
+                <span class="flex items-center gap-2"><i data-lucide="shield" class="w-4 h-4 text-emerald-700"></i> Logo dan Maknanya</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+              </a>
+            </li>
+            <li>
+              <a href="/profil/tugas-wewenang" class="flex items-center justify-between p-2.5 rounded-xl bg-[#0B3B24] text-white">
+                <span class="flex items-center gap-2"><i data-lucide="scale" class="w-4 h-4 text-amber-400"></i> Tugas dan Wewenang</span>
+                <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- OFFICIAL FOOTER -->
+  <footer class="bg-[#072A19] text-white border-t border-emerald-950 pt-12 pb-8 text-xs mt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-8 border-b border-emerald-900/60">
+        <div class="flex items-center gap-3">
+          <img id="footer-logo" src="/static/images/logo-kejari.svg" alt="Logo Kejaksaan RI" class="w-10 h-10 object-contain site-logo-img">
+          <div>
+            <div class="font-heading font-black text-sm uppercase text-white tracking-wide">KEJAKSAAN NEGERI KLUNGKUNG</div>
+            <div class="text-[11px] text-amber-300 font-semibold">SATYA ADHI WICAKSANA</div>
+          </div>
+        </div>
+        <div class="text-emerald-200/70 text-xs text-center sm:text-right">
+          Jl. Gajah Mada No. 32, Semarapura, Kab. Klungkung, Bali 80711
+        </div>
+      </div>
+      <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-emerald-200/60 text-[11px]">
+        <div>© 2026 Kejaksaan Negeri Klungkung - Hak Cipta Dilindungi Undang-Undang. Portal KERTAGOSA v2.4</div>
+        <a href="/" class="text-amber-300 hover:underline">Kembali ke Beranda Utama ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js?v=2.8"></script>
+
+  <!-- =========================================================================
+       MOBILE STICKY BOTTOM NAVIGATION DOCK (APP-LIKE UX ON SMARTPHONES)
+       ========================================================================= -->
+  <nav id="mobile-bottom-dock" class="lg:hidden fixed bottom-0 inset-x-0 z-40 px-2 pt-1.5 no-print" aria-label="Navigasi Bawah Mobile">
+    <div class="grid grid-cols-5 items-center max-w-md mx-auto">
+      <a href="/" data-dock-path="/" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="home" class="w-4 h-4"></i></div>
+        <span>Beranda</span>
+      </a>
+      <a href="/informasi/jadwal-sidang" data-dock-path="/informasi/jadwal-sidang" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="gavel" class="w-4 h-4"></i></div>
+        <span>Sidang</span>
+      </a>
+      <div class="flex flex-col items-center justify-center">
+        <a href="/#layanan-digital" class="mobile-dock-center-btn" title="Layanan Digital Terpadu">
+          <i data-lucide="layout-grid" class="w-5 h-5"></i>
+        </a>
+        <span class="text-[10px] font-extrabold text-[#0B3B24] mt-0.5">Layanan</span>
+      </div>
+      <a href="/akuntabilitas-kinerja" data-dock-path="/akuntabilitas-kinerja" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="file-check" class="w-4 h-4"></i></div>
+        <span>SAKIP</span>
+      </a>
+      <button type="button" onclick="toggleMobileMenu(true)" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="menu" class="w-4 h-4"></i></div>
+        <span>Menu</span>
+      </button>
+    </div>
+  </nav>
+</body>
+</html>

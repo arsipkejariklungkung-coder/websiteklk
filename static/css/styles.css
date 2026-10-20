@@ -1,0 +1,886 @@
+/* ==========================================================================
+   KERTAGOSA - Master Design Tokens & Comprehensive Styling System
+   Portal Web & Layanan Terpadu Kejaksaan Negeri Klungkung
+   ========================================================================== */
+
+/* 1. Google Fonts Typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&display=swap');
+
+/* 2. Color Tokens & CSS Variables */
+:root {
+  /* Kejaksaan Forest Green Palette */
+  --color-forest-950: #03190E;
+  --color-forest-900: #072A19;
+  --color-forest-800: #0B3B24;
+  --color-forest-700: #14532D;
+  --color-forest-600: #166534;
+  --color-forest-500: #15803D;
+
+  /* Official Gold / Amber Accent Palette */
+  --color-gold-50:  #FEFCE8;
+  --color-gold-100: #FEF9C3;
+  --color-gold-200: #FEF08A;
+  --color-gold-300: #FDE047;
+  --color-gold-400: #FACC15;
+  --color-gold-500: #EAB308;
+  --color-gold-600: #CA8A04;
+  --color-gold-700: #A16207;
+  --color-amber-600: #D97706;
+
+  /* Alert & MASADU Red */
+  --color-masadu-900: #7F1D1D;
+  --color-masadu-800: #991B1B;
+  --color-masadu-700: #B91C1C;
+  --color-masadu-600: #DC2626;
+
+  /* Neutrals & Surfaces */
+  --color-slate-50:  #F8FAFC;
+  --color-slate-100: #F1F5F9;
+  --color-slate-200: #E2E8F0;
+  --color-slate-300: #CBD5E1;
+  --color-slate-400: #94A3B8;
+  --color-slate-500: #64748B;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1E293B;
+  --color-slate-900: #0F172A;
+
+  /* Shadows & Glows */
+  --shadow-gold-glow: 0 0 25px rgba(234, 179, 8, 0.35);
+  --shadow-forest-deep: 0 20px 40px -15px rgba(7, 42, 25, 0.7);
+  --shadow-card-elevated: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+}
+
+/* 3. Base & Reset Enhancements */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: var(--color-slate-800);
+  background-color: var(--color-slate-50);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--color-gold-400);
+  color: var(--color-forest-950);
+}
+
+/* 4. Typography Classes */
+.font-serif-title, .font-serif {
+  font-family: 'Playfair Display', Georgia, Cambria, serif;
+}
+
+.font-heading {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Global Subtle Ambient Dot Pattern on Body */
+body {
+  background-color: #F8FAFC;
+  background-image: radial-gradient(rgba(11, 59, 36, 0.035) 1.2px, transparent 1.2px);
+  background-size: 24px 24px;
+}
+
+/* Global Reading Scroll Progress Bar */
+#scroll-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3.5px;
+  background: linear-gradient(90deg, #10B981 0%, #F59E0B 50%, #EAB308 100%);
+  width: 0%;
+  z-index: 100000;
+  transition: width 0.08s ease-out;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
+  pointer-events: none;
+}
+
+/* 5. Hero Section Visual Effects with Authentic Building Backdrop */
+.hero-forest-bg {
+  position: relative;
+  background-color: #041E11;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Layer 1: High-Resolution Aerial Photo of Gedung Kejaksaan Negeri Klungkung + Directional Overlay */
+.hero-forest-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(180deg, rgba(3, 22, 12, 0.72) 0%, rgba(5, 32, 18, 0.35) 45%, rgba(3, 22, 12, 0.88) 100%),
+    linear-gradient(90deg, rgba(3, 24, 14, 0.92) 0%, rgba(6, 38, 22, 0.80) 42%, rgba(8, 48, 28, 0.50) 72%, rgba(4, 26, 15, 0.75) 100%),
+    url('/static/images/gedung-kejari-klungkung.jpg');
+  background-position: center 36%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  z-index: -2;
+  transform: scale(1.02);
+  animation: heroSlowZoom 24s ease-in-out infinite alternate;
+}
+
+/* Specifically tuned for Landing Page Hero (#beranda) so the red Balinese roof & building facade shine clearly */
+#beranda.hero-forest-bg::before {
+  background-image: 
+    linear-gradient(180deg, rgba(3, 20, 11, 0.65) 0%, rgba(5, 32, 18, 0.20) 45%, rgba(3, 22, 12, 0.90) 100%),
+    linear-gradient(95deg, rgba(3, 24, 14, 0.92) 0%, rgba(6, 38, 22, 0.82) 38%, rgba(9, 52, 30, 0.38) 66%, rgba(4, 26, 15, 0.68) 100%),
+    url('/static/images/gedung-kejari-klungkung.jpg');
+  background-position: center 38%;
+}
+
+@keyframes heroSlowZoom {
+  0% { transform: scale(1.0); }
+  100% { transform: scale(1.06); }
+}
+
+/* Layer 2: Subtle Golden Architectural Mesh & Top Ambient Light Beam (Does NOT overwrite ::before photo!) */
+.hero-forest-bg::after,
+.hero-mesh-pattern::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(90deg, transparent 8%, rgba(254, 240, 138, 0.65) 50%, transparent 92%),
+    radial-gradient(rgba(234, 179, 8, 0.14) 1.25px, transparent 1.25px),
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 100% 2px, 28px 28px, 112px 112px, 112px 112px;
+  background-position: top center, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat, repeat, repeat, repeat;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.hero-mesh-pattern {
+  position: relative;
+}
+
+/* Interactive Card & Button Polish */
+.card-interactive {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -15px rgba(11, 59, 36, 0.16), 0 0 15px rgba(234, 179, 8, 0.15);
+  border-color: rgba(234, 179, 8, 0.6);
+}
+
+button:active, .btn-action:active {
+  transform: scale(0.97);
+}
+
+/* Building Watermark Utility for Cards & Modals */
+.bg-building-watermark {
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-building-watermark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/static/images/gedung-kejari-klungkung.jpg') center/cover no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+  filter: saturate(0.2);
+}
+
+/* Hero Shimmer Light Sweep on Title */
+.hero-title-shimmer {
+  background: linear-gradient(120deg, #FFFFFF 0%, #FFFFFF 38%, #FEF08A 55%, #FDE047 65%, #FFFFFF 100%);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shineSweep 8s ease-in-out infinite;
+  filter: drop-shadow(0 4px 20px rgba(0, 0, 0, 0.55));
+}
+
+@keyframes shineSweep {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* 6. Glassmorphism Stat Cards (Deep Contrast over Aerial Building Photo) */
+.glass-stat-card {
+  background: linear-gradient(145deg, rgba(5, 34, 19, 0.80) 0%, rgba(3, 22, 12, 0.88) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(254, 240, 138, 0.28);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(254, 240, 138, 0.12), transparent);
+  transition: left 0.6s ease;
+}
+
+.glass-stat-card:hover {
+  background: linear-gradient(145deg, rgba(8, 48, 28, 0.88) 0%, rgba(5, 32, 18, 0.94) 100%);
+  border-color: rgba(250, 204, 21, 0.75);
+  transform: translateY(-5px);
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.5), 0 0 24px rgba(234, 179, 8, 0.3);
+}
+
+.glass-stat-card:hover::before {
+  left: 100%;
+}
+
+/* 7. Gold Frame for Kajari Portrait (Executive Studio Portrait Frame) */
+.kajari-portrait-frame {
+  position: relative;
+  background: linear-gradient(145deg, #FEF08A 0%, #F59E0B 32%, #B45309 68%, #FDE047 100%);
+  padding: 4px;
+  border-radius: 24px;
+  box-shadow: 0 28px 60px -12px rgba(0, 0, 0, 0.78), 0 0 40px rgba(234, 179, 8, 0.32);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease;
+}
+
+.kajari-portrait-frame:hover {
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 34px 70px -15px rgba(0, 0, 0, 0.85), 0 0 50px rgba(234, 179, 8, 0.48);
+}
+
+.kajari-portrait-inner {
+  border-radius: 20px;
+  overflow: hidden;
+  background: 
+    radial-gradient(circle at 50% 34%, rgba(234, 179, 8, 0.28) 0%, rgba(16, 83, 45, 0.78) 48%, rgba(4, 24, 14, 0.98) 100%);
+  box-shadow: inset 0 0 0 1px rgba(254, 240, 138, 0.22);
+  position: relative;
+}
+
+/* 8. Running Text Ticker Infinite Scroll */
+.ticker-container {
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+}
+
+.ticker-content {
+  display: inline-block;
+  white-space: nowrap;
+  animation: tickerSlide 38s linear infinite;
+  will-change: transform;
+}
+
+.ticker-container:hover .ticker-content {
+  animation-play-state: paused;
+}
+
+@keyframes tickerSlide {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* 9. Interactive 4 Pillars Service Cards */
+.pillar-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  border: 1px solid var(--color-slate-200);
+}
+
+.pillar-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-color: rgba(20, 83, 45, 0.4);
+}
+
+.pillar-card.card-masadu:hover {
+  border-color: rgba(220, 38, 38, 0.4);
+  box-shadow: 0 20px 35px -10px rgba(220, 38, 38, 0.15);
+}
+
+.pillar-card.card-semara:hover {
+  border-color: rgba(217, 119, 6, 0.4);
+  box-shadow: 0 20px 35px -10px rgba(217, 119, 6, 0.15);
+}
+
+/* 10. Bento Grid News Polish */
+.bento-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.12);
+}
+
+/* 11. SKM Card Score Banner */
+.skm-hero-box {
+  background: radial-gradient(circle at 10% 20%, #16532D 0%, #0B3B24 50%, #051F12 100%);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3), 0 8px 24px -6px rgba(7, 42, 25, 0.4);
+  position: relative;
+}
+
+.skm-hero-box::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  bottom: -50%;
+  left: -50%;
+  background: radial-gradient(circle, rgba(234, 179, 8, 0.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* 12. Golden Shimmer & Button Micro-Interactions */
+.btn-gold-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #FDE047 0%, #EAB308 50%, #CA8A04 100%);
+  color: #0F172A;
+  font-weight: 800;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-gold-shimmer::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transform: rotate(25deg);
+  transition: left 0.75s ease;
+}
+
+.btn-gold-shimmer:hover::after {
+  left: 140%;
+}
+
+.btn-gold-shimmer:hover {
+  box-shadow: 0 10px 25px -5px rgba(234, 179, 8, 0.5), 0 0 15px rgba(234, 179, 8, 0.3);
+  transform: translateY(-2px);
+}
+
+/* 13. Map Visual Overlay & Pin Pulse Animation */
+.map-pin-pulse {
+  animation: radarPing 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes radarPing {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.8;
+  }
+  75%, 100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   14. LIVE INLINE CMS EDITING SYSTEM (Admin Mode)
+   ========================================================================== */
+
+/* When Admin Live Edit Mode is ACTIVE */
+body.live-edit-active [data-cms-key] {
+  position: relative;
+  outline: 2px dashed rgba(234, 179, 8, 0.85);
+  outline-offset: 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.live-edit-active [data-cms-key]:hover {
+  outline: 2.5px solid #EAB308;
+  background-color: rgba(234, 179, 8, 0.15) !important;
+  box-shadow: 0 0 15px rgba(234, 179, 8, 0.35);
+}
+
+body.live-edit-active [data-cms-key]::after {
+  content: '✎ ' attr(data-cms-label);
+  position: absolute;
+  top: -26px;
+  left: 0;
+  background: var(--color-forest-900);
+  color: var(--color-gold-200);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--color-gold-500);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.2s ease;
+  z-index: 99999;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.35);
+}
+
+body.live-edit-active [data-cms-key]:hover::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Image Editable Overlay */
+body.live-edit-active .cms-image-wrapper {
+  position: relative;
+}
+
+body.live-edit-active .cms-image-overlay {
+  display: flex !important;
+}
+
+.cms-image-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 42, 25, 0.82);
+  backdrop-filter: blur(5px);
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.cms-image-wrapper:hover .cms-image-overlay {
+  opacity: 1;
+}
+
+/* Floating Admin Toolbar at bottom */
+.admin-floating-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(11, 59, 36, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid var(--color-gold-500);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6), 0 0 25px rgba(234, 179, 8, 0.35);
+  border-radius: 9999px;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 100000;
+  animation: slideUpFloat 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpFloat {
+  from {
+    transform: translate(-50%, 70px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* 15. Modals & Dialog Polish */
+.modal-backdrop {
+  background: rgba(3, 25, 14, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-backdrop > div {
+  animation: modalScaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleIn {
+  from {
+    transform: scale(0.94) translateY(12px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 16. Form Controls & Input Styling */
+input[type="text"],
+input[type="password"],
+input[type="date"],
+input[type="number"],
+input[type="email"],
+select,
+textarea {
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-forest-700);
+  box-shadow: 0 0 0 3px rgba(20, 83, 45, 0.15);
+  outline: none;
+}
+
+/* 17. Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-slate-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-slate-300);
+  border-radius: 9999px;
+  border: 2px solid var(--color-slate-100);
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-forest-700);
+}
+
+/* 18. Toast Notifications */
+#toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 120000;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-forest-800);
+  color: #FFFFFF;
+  border-left: 5px solid var(--color-gold-500);
+  padding: 14px 22px;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.4), 0 0 15px rgba(234, 179, 8, 0.2);
+  font-size: 13.5px;
+  font-weight: 500;
+  animation: toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 380px;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* 19. Court Schedule Table Row Status & Badges */
+.badge-status-sedang {
+  background-color: #FEF3C7;
+  color: #78350F;
+  border: 1px solid #FCD34D;
+  animation: pulseGold 2s infinite;
+}
+
+@keyframes pulseGold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+  50% { box-shadow: 0 0 0 4px rgba(234, 179, 8, 0); }
+}
+
+.badge-status-terjadwal {
+  background-color: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+.badge-status-selesai {
+  background-color: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+/* 21. Interactive Homepage Enhancements & Micro-Animations */
+.ticker-paused {
+  animation-play-state: paused !important;
+}
+
+.hero-glow-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: floatOrb 10s ease-in-out infinite alternate;
+}
+
+@keyframes floatOrb {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(-25px, 20px) scale(1.12);
+  }
+}
+
+.sakip-home-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sakip-home-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 35px -12px rgba(11, 59, 36, 0.18);
+  border-color: rgba(234, 179, 8, 0.65);
+}
+
+.quick-assist-fab {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.quick-assist-fab:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 15px 30px -5px rgba(11, 59, 36, 0.45), 0 0 20px rgba(234, 179, 8, 0.35);
+}
+
+.jagadita-row-interactive {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.jagadita-row-interactive:hover {
+  background-color: #F0FDF4 !important;
+}
+
+/* =========================================================================
+   22. MOBILE-FIRST RESPONSIVE UI & UX ENHANCEMENTS (ALL PAGES)
+   ========================================================================= */
+
+/* Hide scrollbars on horizontal pill carousels while keeping touch scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* App-Like Sticky Mobile Bottom Navigation Dock (< 1024px) */
+#mobile-bottom-dock {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1px solid rgba(203, 213, 225, 0.85);
+  box-shadow: 0 -8px 30px rgba(3, 25, 14, 0.12);
+  padding-bottom: env(safe-area-inset-bottom, 6px);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-dock-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 12px;
+  color: #64748B;
+  font-size: 10px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.mobile-dock-item.active {
+  color: #0B3B24;
+  font-weight: 800;
+}
+
+.mobile-dock-item.active .dock-icon-wrap {
+  background-color: #ECFDF5;
+  color: #0B3B24;
+  border: 1px solid #A7F3D0;
+  padding: 3px 12px;
+  border-radius: 9999px;
+}
+
+.mobile-dock-center-btn {
+  margin-top: -18px;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0B3B24 0%, #072A19 100%);
+  border: 2.5px solid #FACC15;
+  color: #FACC15;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 22px -4px rgba(11, 59, 36, 0.55), 0 0 12px rgba(250, 204, 21, 0.35);
+  transition: transform 0.2s ease;
+}
+
+.mobile-dock-center-btn:active {
+  transform: scale(0.92);
+}
+
+/* Mobile Slide-Down Navigation Drawer Animation */
+#mobile-nav-drawer {
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  animation: mobileDrawerSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mobileDrawerSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Organizational Chart Zoom Modes for Mobile Screens */
+.org-tree-zoom-fit {
+  zoom: 0.42;
+}
+@media (min-width: 480px) {
+  .org-tree-zoom-fit {
+    zoom: 0.55;
+  }
+}
+@media (min-width: 768px) {
+  .org-tree-zoom-fit {
+    zoom: 0.78;
+  }
+}
+.org-tree-zoom-75 {
+  zoom: 0.72;
+}
+
+/* Mobile Responsive Adjustments (< 1024px) */
+@media (max-width: 1023px) {
+  body:not(.admin-body) {
+    padding-bottom: 74px !important;
+  }
+
+  #btn-back-to-top {
+    bottom: 84px !important;
+    right: 16px !important;
+  }
+
+  #admin-floating-bar {
+    bottom: 80px !important;
+    width: calc(100% - 20px) !important;
+    padding: 8px 12px !important;
+    border-radius: 16px !important;
+  }
+}
+
+/* Small Screen / Smartphone Polish (< 640px) */
+@media (max-width: 639px) {
+  /* Hero Background on Mobile: show building clearly in upper-center */
+  #beranda.hero-forest-bg::before,
+  .hero-forest-bg::before {
+    background-image: 
+      linear-gradient(180deg, rgba(3, 22, 12, 0.86) 0%, rgba(6, 38, 22, 0.55) 45%, rgba(3, 22, 12, 0.94) 100%),
+      url('/static/images/gedung-kejari-klungkung.jpg') !important;
+    background-position: center 22% !important;
+  }
+
+  /* Bottom-Sheet Style Modals on Mobile */
+  .modal-backdrop {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .modal-backdrop > div {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 24px !important;
+    border-top-right-radius: 24px !important;
+    margin: 0 !important;
+    max-height: 90vh !important;
+    width: 100% !important;
+    animation: mobileSheetUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  @keyframes mobileSheetUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  /* Toast notifications fit mobile width */
+  #toast-container {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+  }
+  .toast {
+    max-width: 100%;
+    font-size: 12.5px;
+    padding: 12px 16px;
+  }
+}
+
+/* 20. Print Stylesheet */
+@media print {
+  header, footer, .admin-floating-bar, #admin-floating-bar, #mobile-bottom-dock, #btn-back-to-top, button, .no-print {
+    display: none !important;
+  }
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    font-size: 12pt;
+  }
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  th, td {
+    border: 1px solid #CCCCCC !important;
+    padding: 6px 10px !important;
+  }
+}

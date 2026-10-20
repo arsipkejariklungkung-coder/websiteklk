@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akuntabilitas Kinerja (SAKIP) - Kejaksaan Negeri Klungkung (KERTAGOSA)</title>
+  <meta name="description" content="Publikasi Dokumen Akuntabilitas Kinerja Instansi Pemerintah (SAKIP) Kejaksaan Negeri Klungkung: RENSTRA, RENJA, Laporan Kinerja (LKj), dan Laporan Triwulan.">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: {
+              DEFAULT: '#0B3B24',
+              dark: '#072A19',
+              light: '#14532D',
+              deep: '#03190E'
+            },
+            gold: {
+              DEFAULT: '#EAB308',
+              dark: '#CA8A04',
+              amber: '#D97706',
+              light: '#FEF08A'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/css/styles.css?v=2.8">
+  <link rel="icon" type="image/svg+xml" href="/static/images/logo-kejari.svg">
+  <style>
+    .doc-card-hover {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .doc-card-hover:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -10px rgba(11, 59, 36, 0.15);
+    }
+    .modal-backdrop {
+      background-color: rgba(3, 25, 14, 0.75);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-amber-400 selection:text-slate-900 min-h-screen flex flex-col justify-between">
+
+  <!-- TOP UTILITY BAR & MAIN NAVBAR -->
+  <header class="w-full bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm transition-all">
+    <div class="border-b border-slate-100 bg-slate-50/70 text-xs">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <a href="/" class="w-9 h-9 flex-shrink-0">
+            <img id="header-logo" src="/static/images/logo-kejari.svg" alt="Logo Kejaksaan RI" class="w-full h-full object-contain">
+          </a>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5">
+            <a href="/" class="font-heading font-extrabold text-slate-900 tracking-tight text-xs sm:text-sm uppercase hover:text-emerald-900 transition-colors">
+              KEJAKSAAN REPUBLIK INDONESIA - KEJAKSAAN NEGERI KLUNGKUNG
+            </a>
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 shadow-sm w-fit">
+              ⭐ ZONA INTEGRITAS WBK / WBBM
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 ml-auto">
+          <div class="hidden md:flex items-center gap-1.5 text-slate-600 font-medium text-xs">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-800"></i>
+            <span>Senin - Jumat: 08.00 - 16.00 WITA</span>
+          </div>
+          <button onclick="openModal('modal-ticket-tracker')" class="px-3.5 py-1.5 rounded-lg bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-colors">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Lacak Tiket Layanan</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <!-- Mobile Menu Trigger (Left side of Navbar on < 1024px) -->
+      <button type="button" onclick="toggleMobileMenu()" class="lg:hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-800 border border-slate-200 font-heading font-bold text-xs transition-all active:scale-95">
+        <i data-lucide="menu" class="w-4 h-4 text-[#0B3B24]"></i>
+        <span>Menu Navigasi</span>
+      </button>
+
+      <div class="hidden lg:flex items-center gap-1 text-sm font-semibold text-slate-700">
+        <a href="/" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1.5">
+          <i data-lucide="home" class="w-4 h-4 text-emerald-800"></i>
+          Beranda
+        </a>
+
+        <!-- Profil Dropdown -->
+        <div class="relative group">
+          <button class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center gap-1 transition-colors">
+            Profil <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
+          </button>
+          <div class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
+            <a href="/profil/struktur-organisasi" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="network" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Struktur Organisasi</span>
+            </a>
+            <a href="/profil/visi-misi" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Visi dan Misi</span>
+            </a>
+            <a href="/profil/sejarah" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="landmark" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Sejarah</span>
+            </a>
+            <a href="/profil/logo-makna" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Logo dan Maknanya</span>
+            </a>
+            <a href="/profil/tugas-wewenang" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="scale" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Tugas dan Wewenang</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Informasi Dropdown -->
+        <div class="relative group">
+          <button class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center gap-1 transition-colors">
+            Informasi <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
+          </button>
+          <div class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
+            <a href="/informasi/berita" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="newspaper" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Berita &amp; Publikasi Hukum</span>
+            </a>
+            <a href="/informasi/pengumuman" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Pengumuman Resmi</span>
+            </a>
+            <a href="/informasi/jadwal-sidang" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="gavel" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Jadwal Sidang JAGADITA</span>
+            </a>
+            <a href="/informasi/skm" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Indeks Kepuasan (SKM)</span>
+            </a>
+          </div>
+        </div>
+
+        <a href="/#pilar-layanan" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Pelayanan</a>
+        
+        <!-- Akuntabilitas Kinerja (ACTIVE) -->
+        <a href="/akuntabilitas-kinerja" class="px-4 py-2 rounded-full bg-[#0B3B24] text-white shadow-sm flex items-center gap-1.5 font-bold transition-colors">
+          <i data-lucide="file-check" class="w-4 h-4 text-amber-400"></i>
+          <span>Akuntabilitas Kinerja</span>
+        </a>
+
+        <a href="/#kantor-peta" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Kontak</a>
+      </div>
+
+      <a href="tel:081138004444" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 border border-amber-300 text-amber-950 flex items-center gap-2 shadow-sm hover:bg-amber-100 transition-colors">
+        <i data-lucide="phone-call" class="w-3.5 h-3.5 text-amber-700"></i>
+        <span>Hotline PTSP: 0811-3800-4444</span>
+      </a>
+    </nav>
+
+    <!-- Collapsible Categorized Mobile Navigation Drawer -->
+    <div id="mobile-nav-drawer" class="hidden lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-4 shadow-2xl">
+      <!-- Section 1: Navigasi Utama -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Navigasi Utama</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+          <a href="/" class="p-2.5 rounded-xl bg-[#0B3B24] text-white flex items-center gap-2 shadow-sm">
+            <i data-lucide="home" class="w-4 h-4 text-amber-400 shrink-0"></i>
+            <span class="truncate">Beranda</span>
+          </a>
+          <a href="/#layanan-digital" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-amber-50 text-amber-950 border border-amber-200 flex items-center gap-2">
+            <i data-lucide="globe" class="w-4 h-4 text-amber-700 shrink-0"></i>
+            <span class="truncate">Layanan Digital</span>
+          </a>
+          <a href="/akuntabilitas-kinerja" class="p-2.5 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-200 flex items-center gap-2">
+            <i data-lucide="file-check" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Akuntabilitas (SAKIP)</span>
+          </a>
+          <a href="/#kantor-peta" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Kontak &amp; Lokasi</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 2: Profil Instansi (5 Halaman) -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Profil Instansi</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+          <a href="/profil/struktur-organisasi" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="network" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Struktur Organisasi</span>
+          </a>
+          <a href="/profil/visi-misi" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Visi &amp; Misi</span>
+          </a>
+          <a href="/profil/sejarah" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="landmark" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Sejarah</span>
+          </a>
+          <a href="/profil/logo-makna" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Logo &amp; Makna</span>
+          </a>
+          <a href="/profil/tugas-wewenang" class="col-span-2 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="scale" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Tugas Pokok &amp; Wewenang Kejaksaan</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 3: Informasi Publik (4 Halaman) -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Informasi Publik</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+          <a href="/informasi/berita" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="newspaper" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Pusat Berita</span>
+          </a>
+          <a href="/informasi/pengumuman" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+            <span class="truncate">Pengumuman</span>
+          </a>
+          <a href="/informasi/jadwal-sidang" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="gavel" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Jadwal Sidang</span>
+          </a>
+          <a href="/informasi/skm" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Skor IKM / SKM</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 4: Portal Layanan Digital Eksternal -->
+      <div class="pt-2 border-t border-slate-100">
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 mb-2 px-1">Akses Cepat Layanan Digital</div>
+        <div class="grid grid-cols-4 gap-1.5 text-[10px] font-bold text-center">
+          <a href="https://halojpn.kejaksaan.go.id/" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-200 flex flex-col items-center gap-1">
+            <i data-lucide="message-square-heart" class="w-4 h-4 text-emerald-700"></i>
+            <span>HaloJPN</span>
+          </a>
+          <a href="https://tilang.kejaksaan.go.id/home" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-blue-50 text-blue-950 border border-blue-200 flex flex-col items-center gap-1">
+            <i data-lucide="car" class="w-4 h-4 text-blue-700"></i>
+            <span>E-Tilang</span>
+          </a>
+          <a href="https://ppid.kejaksaan.go.id/satker/kn-klungkung" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-amber-50 text-amber-950 border border-amber-200 flex flex-col items-center gap-1">
+            <i data-lucide="folder-search" class="w-4 h-4 text-amber-700"></i>
+            <span>E-PPID</span>
+          </a>
+          <a href="https://www.lapor.go.id/" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-rose-50 text-rose-950 border border-rose-200 flex flex-col items-center gap-1">
+            <i data-lucide="megaphone" class="w-4 h-4 text-rose-700"></i>
+            <span>LAPOR!</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE HERO BANNER -->
+  <section class="hero-forest-bg hero-mesh-pattern text-white py-10 lg:py-16 relative border-b border-emerald-950 overflow-hidden">
+    <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <!-- Breadcrumbs -->
+      <nav class="flex items-center gap-2 text-xs text-emerald-200/80 mb-4 font-medium">
+        <a href="/" class="hover:text-white transition-colors">Beranda</a>
+        <span>/</span>
+        <span class="text-emerald-300">Akuntabilitas Kinerja</span>
+        <span>/</span>
+        <span class="text-amber-300 font-bold">SAKIP</span>
+      </nav>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <!-- Hero Text (7 cols) -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold tracking-wider border border-amber-400/50 bg-amber-950/50 text-amber-300 shadow-sm">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-amber-400"></i>
+              SAKIP KEJAKSAAN NEGERI KLUNGKUNG
+            </span>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-900/60 border border-emerald-700/60 text-emerald-200">
+              Dokumen Terbuka Publik
+            </span>
+          </div>
+
+          <h1 class="font-heading font-black text-2xl sm:text-4xl lg:text-5xl tracking-tight text-white leading-tight">
+            Akuntabilitas Kinerja <br class="hidden sm:inline">
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">
+              Instansi Pemerintah
+            </span>
+          </h1>
+
+          <p class="text-emerald-100/90 text-sm sm:text-base leading-relaxed max-w-2xl font-light">
+            Transparansi dan pertanggungjawaban menyeluruh atas perumusan rencana strategis, rencana operasional tahunan, alokasi kinerja anggaran, dan pencapaian target penegakan hukum Kejaksaan Negeri Klungkung.
+          </p>
+
+          <div class="pt-2 flex flex-wrap items-center gap-3 text-xs">
+            <div class="flex items-center gap-1.5 text-amber-300 font-bold bg-amber-950/40 border border-amber-500/30 px-3 py-1.5 rounded-lg">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+              <span>Terintegrasi Google Drive Resmi</span>
+            </div>
+            <div class="flex items-center gap-1.5 text-emerald-200 bg-emerald-900/40 border border-emerald-700/40 px-3 py-1.5 rounded-lg">
+              <i data-lucide="eye" class="w-4 h-4"></i>
+              <span>Dapat Ditinjau Langsung (Preview)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Stats Cards (5 cols) -->
+        <div class="lg:col-span-5 grid grid-cols-2 gap-3">
+          <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 flex flex-col justify-between hover:bg-white/15 transition-all">
+            <div class="flex items-center justify-between text-amber-300 mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-200">Total SAKIP</span>
+              <i data-lucide="folder-check" class="w-5 h-5"></i>
+            </div>
+            <div class="font-heading font-black text-3xl text-white" id="stat-total-docs">15</div>
+            <div class="text-[11px] text-emerald-200/80 mt-1 font-medium">Dokumen Terverifikasi</div>
+          </div>
+
+          <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 flex flex-col justify-between hover:bg-white/15 transition-all">
+            <div class="flex items-center justify-between text-emerald-300 mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-200">RENSTRA</span>
+              <i data-lucide="target" class="w-5 h-5"></i>
+            </div>
+            <div class="font-heading font-black text-3xl text-white" id="stat-renstra-docs">3</div>
+            <div class="text-[11px] text-emerald-200/80 mt-1 font-medium">Rencana Strategis</div>
+          </div>
+
+          <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 flex flex-col justify-between hover:bg-white/15 transition-all">
+            <div class="flex items-center justify-between text-yellow-300 mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-200">RENJA</span>
+              <i data-lucide="calendar-check" class="w-5 h-5"></i>
+            </div>
+            <div class="font-heading font-black text-3xl text-white" id="stat-renja-docs">4</div>
+            <div class="text-[11px] text-emerald-200/80 mt-1 font-medium">Rencana Kerja</div>
+          </div>
+
+          <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-2xl p-4 flex flex-col justify-between hover:bg-white/15 transition-all">
+            <div class="flex items-center justify-between text-blue-300 mb-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-200">LKj &amp; Triwulan</span>
+              <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+            </div>
+            <div class="font-heading font-black text-3xl text-white" id="stat-lkj-docs">8</div>
+            <div class="text-[11px] text-emerald-200/80 mt-1 font-medium">Laporan Kinerja</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN INTERACTIVE CONTENT AREA -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full flex-1">
+
+    <!-- SEARCH & CATEGORY FILTER CONTROL PANEL -->
+    <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mb-10 -mt-8 relative z-20 space-y-4">
+      <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+        
+        <!-- Search Input -->
+        <div class="relative w-full md:w-96">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input 
+            type="text" 
+            id="search-input" 
+            oninput="handleSearchInput(this.value)" 
+            placeholder="Cari nama dokumen SAKIP, tahun, atau kata kunci..." 
+            class="w-full pl-10 pr-10 py-2.5 text-xs font-medium border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:border-emerald-700 bg-slate-50 transition-all"
+          >
+          <button 
+            id="btn-clear-search" 
+            onclick="clearSearch()" 
+            class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          >
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Year / Period Dropdown Filter -->
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <label for="filter-year" class="text-xs font-bold text-slate-600 whitespace-nowrap flex items-center gap-1.5">
+            <i data-lucide="filter" class="w-3.5 h-3.5 text-emerald-800"></i>
+            Periode:
+          </label>
+          <select 
+            id="filter-year" 
+            onchange="handleYearFilter(this.value)" 
+            class="w-full md:w-48 px-3 py-2 text-xs font-semibold border border-slate-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700"
+          >
+            <option value="ALL">Semua Periode / Tahun</option>
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-2 border-t border-slate-100 no-scrollbar" id="category-pills-bar">
+        <button 
+          onclick="selectCategoryFilter('ALL')" 
+          id="cat-pill-ALL" 
+          class="cat-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 bg-[#0B3B24] text-white shadow-sm"
+        >
+          Semua Dokumen (<span id="pill-count-ALL">0</span>)
+        </button>
+        <button 
+          onclick="selectCategoryFilter('RENSTRA')" 
+          id="cat-pill-RENSTRA" 
+          class="cat-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 transition-all shrink-0"
+        >
+          RENCANA STRATEGIS (RENSTRA) (<span id="pill-count-RENSTRA">0</span>)
+        </button>
+        <button 
+          onclick="selectCategoryFilter('RENJA')" 
+          id="cat-pill-RENJA" 
+          class="cat-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 transition-all shrink-0"
+        >
+          RENCANA KERJA (RENJA) (<span id="pill-count-RENJA">0</span>)
+        </button>
+        <button 
+          onclick="selectCategoryFilter('LKJ')" 
+          id="cat-pill-LKJ" 
+          class="cat-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 transition-all shrink-0"
+        >
+          LAPORAN KINERJA (LKj) (<span id="pill-count-LKJ">0</span>)
+        </button>
+        <button 
+          onclick="selectCategoryFilter('TRIWULAN')" 
+          id="cat-pill-TRIWULAN" 
+          class="cat-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 transition-all shrink-0"
+        >
+          LAPORAN KINERJA TRIWULAN (<span id="pill-count-TRIWULAN">0</span>)
+        </button>
+      </div>
+    </div>
+
+    <!-- ACTIVE FILTER NOTICE (Dynamic) -->
+    <div id="filter-status-banner" class="hidden mb-6 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0"></i>
+        <span>Menampilkan hasil penyaringan untuk: <strong id="filter-status-text"></strong></span>
+      </div>
+      <button onclick="resetAllFilters()" class="text-xs font-bold text-emerald-800 hover:underline flex items-center gap-1">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+        Reset Filter
+      </button>
+    </div>
+
+    <!-- DOCUMENT SECTIONS CONTAINER -->
+    <div id="document-sections-container" class="space-y-12">
+      <!-- Dynamically generated sections for RENSTRA, RENJA, LKJ, and TRIWULAN -->
+      <div class="text-center py-16 text-slate-400">
+        <div class="inline-block animate-spin mb-3">
+          <i data-lucide="loader-2" class="w-8 h-8 text-emerald-800"></i>
+        </div>
+        <div class="text-sm font-medium">Memuat publikasi dokumen SAKIP...</div>
+      </div>
+    </div>
+
+    <!-- EMPTY STATE -->
+    <div id="empty-state-notice" class="hidden text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300 p-8">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+        <i data-lucide="file-question" class="w-8 h-8"></i>
+      </div>
+      <h3 class="font-heading font-bold text-base text-slate-800 mb-1">Dokumen Tidak Ditemukan</h3>
+      <p class="text-xs text-slate-500 max-w-md mx-auto mb-5">
+        Tidak ditemukan dokumen SAKIP yang cocok dengan kriteria pencarian atau penyaringan yang Anda pilih.
+      </p>
+      <button onclick="resetAllFilters()" class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white text-xs font-bold rounded-xl shadow transition-colors inline-flex items-center gap-2">
+        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+        Tampilkan Semua Dokumen
+      </button>
+    </div>
+
+    <!-- SAKIP INFORMATION BOX -->
+    <div class="mt-16 bg-gradient-to-r from-emerald-950 via-[#0B3B24] to-[#072A19] rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-lg border border-emerald-900">
+      <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-amber-400/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="relative z-10 max-w-3xl space-y-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/20 border border-amber-400/40 rounded-full text-[11px] font-bold text-amber-300">
+          <i data-lucide="info" class="w-3.5 h-3.5"></i>
+          PANDUAN AKSES DOKUMEN PUBLIK
+        </div>
+        <h3 class="font-heading font-black text-xl sm:text-2xl text-white">
+          Keterbukaan Informasi &amp; Akuntabilitas Publik
+        </h3>
+        <p class="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-light">
+          Seluruh dokumen akuntabilitas kinerja yang dipublikasikan di halaman ini merupakan salinan sah (official copy) dokumen perencanaan dan pelaporan kinerja Kejaksaan Negeri Klungkung. Dokumen tersimpan dalam format PDF di Google Drive Resmi dan dapat diunduh secara gratis oleh publik sesuai ketentuan Undang-Undang Nomor 14 Tahun 2008 tentang Keterbukaan Informasi Publik.
+        </p>
+        <div class="pt-2 flex flex-wrap gap-4 text-xs">
+          <div class="flex items-center gap-2 text-amber-300 font-semibold">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            Tautan Asli &amp; Terverifikasi
+          </div>
+          <div class="flex items-center gap-2 text-emerald-200 font-semibold">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            Dapat Diunduh Langsung (PDF)
+          </div>
+          <div class="flex items-center gap-2 text-emerald-200 font-semibold">
+            <i data-lucide="clock" class="w-4 h-4"></i>
+            Pembaruan Berkala Tiap Triwulan
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- =========================================================================
+       MODAL 1: INTERACTIVE DOCUMENT VIEWER (GOOGLE DRIVE EMBED / PREVIEW)
+       ========================================================================= -->
+  <div id="modal-doc-viewer" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-2 sm:p-4 md:p-6">
+    <div class="bg-white rounded-2xl w-full max-w-5xl h-[92vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+      
+      <!-- Modal Header -->
+      <div class="p-4 bg-gradient-to-r from-[#072A19] to-[#0B3B24] text-white flex items-center justify-between border-b border-emerald-950 shrink-0">
+        <div class="flex items-center gap-3 overflow-hidden pr-4">
+          <div class="w-9 h-9 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 font-bold shadow">
+            <i data-lucide="file-text" class="w-5 h-5 text-[#072A19]"></i>
+          </div>
+          <div class="overflow-hidden">
+            <div class="flex items-center gap-2">
+              <span id="viewer-doc-category" class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-emerald-800 text-emerald-200">SAKIP</span>
+              <span id="viewer-doc-period" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-950/60 text-amber-300 border border-amber-400/40">2024</span>
+            </div>
+            <h3 id="viewer-doc-title" class="font-heading font-extrabold text-sm sm:text-base text-white truncate max-w-lg sm:max-w-xl">
+              Nama Dokumen
+            </h3>
+          </div>
+        </div>
+
+        <!-- Controls: Open in Google Drive, Copy Link, Close -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button 
+            id="viewer-btn-copy" 
+            onclick="copyCurrentViewerLink()" 
+            title="Salin Tautan Google Drive" 
+            class="px-2.5 py-1.5 rounded-lg bg-emerald-900/80 hover:bg-emerald-800 text-emerald-200 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+          >
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Salin Link</span>
+          </button>
+          
+          <a 
+            id="viewer-btn-external" 
+            href="#" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            title="Buka Dokumen di Tab Baru" 
+            class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-extrabold flex items-center gap-1.5 shadow transition-colors"
+          >
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Buka di Tab Baru</span>
+          </a>
+
+          <button 
+            onclick="closeModal('modal-doc-viewer')" 
+            title="Tutup Pratinjau" 
+            class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors ml-1"
+          >
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Iframe) -->
+      <div class="flex-1 bg-slate-900 relative overflow-hidden flex flex-col">
+        <!-- Loading Spinner -->
+        <div id="viewer-loading" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 text-white z-10 transition-opacity">
+          <i data-lucide="loader-2" class="w-10 h-10 text-amber-400 animate-spin mb-3"></i>
+          <p class="text-xs font-medium text-slate-300">Menghubungkan ke Google Drive Dokumen...</p>
+          <p class="text-[11px] text-slate-500 mt-1">Mohon tunggu beberapa saat</p>
+        </div>
+
+        <!-- Embedded Google Drive Preview Iframe -->
+        <iframe 
+          id="viewer-iframe" 
+          src="" 
+          class="w-full h-full border-0 bg-white" 
+          onload="handleIframeLoaded()"
+          allow="autoplay"
+        ></iframe>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-4 py-2.5 bg-slate-100 border-t border-slate-200 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center gap-2 text-[11px] text-slate-500">
+          <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700"></i>
+          <span>Sumber Resmi: Google Drive Kejaksaan Negeri Klungkung</span>
+          <span class="text-slate-300">•</span>
+          <span id="viewer-file-size">PDF</span>
+        </div>
+        <div class="text-[11px] text-slate-500">
+          Jika pratinjau tidak muncul di peramban Anda, silakan gunakan tombol <strong>"Buka di Tab Baru"</strong>.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: TICKET TRACKER (Standard Across Portal)
+       ========================================================================= -->
+  <div id="modal-ticket-tracker" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 border border-slate-200 relative">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+            <i data-lucide="search" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-bold text-sm text-slate-900">Lacak Status Layanan</h3>
+            <p class="text-[10px] text-slate-500">Cek progres penanganan tiket MASADU atau SEMARA BAKTI</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-ticket-tracker')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Nomor Kode Tiket *</label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="input-ticket-code" 
+              placeholder="Contoh: TKT-MSD-12345 atau TKT-SMB-67890" 
+              class="w-full px-3 py-2.5 text-xs font-mono font-bold border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-700 focus:outline-none uppercase"
+            >
+          </div>
+          <p class="text-[10px] text-slate-400 mt-1">Kode tiket didapatkan saat Anda berhasil mengirim pengaduan atau permohonan.</p>
+        </div>
+
+        <button 
+          onclick="searchTicketStatus()" 
+          class="w-full py-2.5 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-2"
+        >
+          <i data-lucide="search" class="w-4 h-4 text-amber-400"></i>
+          <span>Cek Progres Sekarang</span>
+        </button>
+
+        <div id="ticket-result-container" class="hidden pt-3 border-t border-slate-100 space-y-3">
+          <!-- Dynamic ticket result -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- OFFICIAL FOOTER -->
+  <footer class="bg-[#072A19] text-white border-t border-emerald-950 pt-12 pb-8 text-xs mt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-8 border-b border-emerald-900/60">
+        <div class="flex items-center gap-3">
+          <img id="footer-logo" src="/static/images/logo-kejari.svg" alt="Logo Kejaksaan RI" class="w-10 h-10 object-contain">
+          <div>
+            <div class="font-heading font-black text-sm uppercase text-white tracking-wide">KEJAKSAAN NEGERI KLUNGKUNG</div>
+            <div class="text-[11px] text-amber-300 font-semibold">SATYA ADHI WICAKSANA</div>
+          </div>
+        </div>
+        <div class="text-emerald-200/70 text-xs text-center sm:text-right">
+          Jl. Gajah Mada No. 32, Semarapura, Kab. Klungkung, Bali 80711
+        </div>
+      </div>
+
+      <!-- Footer Quick Links -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 py-8 border-b border-emerald-900/60 text-xs">
+        <div>
+          <div class="font-bold text-amber-300 mb-2.5 uppercase tracking-wider text-[11px]">Akuntabilitas (SAKIP)</div>
+          <ul class="space-y-1.5 text-emerald-200/80">
+            <li><a href="#section-RENSTRA" class="hover:text-white transition-colors">Rencana Strategis (RENSTRA)</a></li>
+            <li><a href="#section-RENJA" class="hover:text-white transition-colors">Rencana Kerja (RENJA)</a></li>
+            <li><a href="#section-LKJ" class="hover:text-white transition-colors">Laporan Kinerja (LKj)</a></li>
+            <li><a href="#section-TRIWULAN" class="hover:text-white transition-colors">Laporan Triwulan</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="font-bold text-amber-300 mb-2.5 uppercase tracking-wider text-[11px]">Profil Instansi</div>
+          <ul class="space-y-1.5 text-emerald-200/80">
+            <li><a href="/profil/struktur-organisasi" class="hover:text-white transition-colors">Struktur Organisasi</a></li>
+            <li><a href="/profil/visi-misi" class="hover:text-white transition-colors">Visi dan Misi</a></li>
+            <li><a href="/profil/sejarah" class="hover:text-white transition-colors">Sejarah Singkat</a></li>
+            <li><a href="/profil/logo-makna" class="hover:text-white transition-colors">Logo dan Maknanya</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="font-bold text-amber-300 mb-2.5 uppercase tracking-wider text-[11px]">Informasi Publik</div>
+          <ul class="space-y-1.5 text-emerald-200/80">
+            <li><a href="/informasi/berita" class="hover:text-white transition-colors">Pusat Berita</a></li>
+            <li><a href="/informasi/pengumuman" class="hover:text-white transition-colors">Pengumuman Resmi</a></li>
+            <li><a href="/informasi/jadwal-sidang" class="hover:text-white transition-colors">Jadwal Sidang JAGADITA</a></li>
+            <li><a href="/informasi/skm" class="hover:text-white transition-colors">Indeks Kepuasan (SKM)</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="font-bold text-amber-300 mb-2.5 uppercase tracking-wider text-[11px]">Kontak &amp; Bantuan</div>
+          <ul class="space-y-1.5 text-emerald-200/80">
+            <li>Telepon: (0366) 21124</li>
+            <li>Hotline PTSP: 0811-3800-4444</li>
+            <li>Email: kejari.klungkung@kejaksaan.go.id</li>
+            <li>Jam Pelayanan: 08.00 - 16.00 WITA</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-emerald-200/60 text-[11px]">
+        <div>© 2026 Kejaksaan Negeri Klungkung - Hak Cipta Dilindungi Undang-Undang. Portal KERTAGOSA v2.4</div>
+        <a href="/" class="text-amber-300 hover:underline">Kembali ke Beranda Utama ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       PAGE JAVASCRIPT LOGIC
+       ========================================================================= -->
+  <script>
+    // State
+    let sakipData = {
+      categories: [],
+      documents: [],
+      years: [],
+      stats: {}
+    };
+
+    let activeCategory = 'ALL';
+    let activeYear = 'ALL';
+    let searchQuery = '';
+    let currentViewerDoc = null;
+
+    // Load initial data
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Sync dynamic site logo
+      fetch('/api/public/homepage-data').then(r => r.json()).then(d => {
+        if (d.success && d.contents && d.contents.header_logo_url && d.contents.header_logo_url.value) {
+          const lUrl = d.contents.header_logo_url.value;
+          const h = document.getElementById('header-logo');
+          const f = document.getElementById('footer-logo');
+          if (h) h.src = lUrl;
+          if (f) f.src = lUrl;
+        }
+      }).catch(() => {});
+
+      await loadAccountabilityData();
+      lucide.createIcons();
+    });
+
+    async function loadAccountabilityData() {
+      try {
+        let url = `/api/public/accountability?`;
+        if (activeCategory && activeCategory !== 'ALL') {
+          url += `category=${encodeURIComponent(activeCategory)}&`;
+        }
+        if (activeYear && activeYear !== 'ALL') {
+          url += `year=${encodeURIComponent(activeYear)}&`;
+        }
+        if (searchQuery) {
+          url += `search=${encodeURIComponent(searchQuery)}&`;
+        }
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.success) {
+          sakipData = data;
+          updateStatsUI();
+          populateYearDropdown();
+          renderCategoryPills();
+          renderDocumentSections();
+        }
+      } catch (err) {
+        console.error('Gagal memuat dokumen SAKIP:', err);
+        showToast('Gagal memuat data dokumen SAKIP dari server', 'error');
+      }
+    }
+
+    function updateStatsUI() {
+      const stats = sakipData.stats || {};
+      const elTotal = document.getElementById('stat-total-docs');
+      const elRenstra = document.getElementById('stat-renstra-docs');
+      const elRenja = document.getElementById('stat-renja-docs');
+      const elLkj = document.getElementById('stat-lkj-docs');
+
+      if (elTotal) elTotal.textContent = stats.total_docs || '0';
+      if (elRenstra) elRenstra.textContent = stats.renstra_count || '0';
+      if (elRenja) elRenja.textContent = stats.renja_count || '0';
+      if (elLkj) elLkj.textContent = ((stats.lkj_count || 0) + (stats.triwulan_count || 0)) || '0';
+
+      // Update pill counts
+      const pAll = document.getElementById('pill-count-ALL');
+      const pRenstra = document.getElementById('pill-count-RENSTRA');
+      const pRenja = document.getElementById('pill-count-RENJA');
+      const pLkj = document.getElementById('pill-count-LKJ');
+      const pTriwulan = document.getElementById('pill-count-TRIWULAN');
+
+      if (pAll) pAll.textContent = stats.total_docs || '0';
+      if (pRenstra) pRenstra.textContent = stats.renstra_count || '0';
+      if (pRenja) pRenja.textContent = stats.renja_count || '0';
+      if (pLkj) pLkj.textContent = stats.lkj_count || '0';
+      if (pTriwulan) pTriwulan.textContent = stats.triwulan_count || '0';
+    }
+
+    function populateYearDropdown() {
+      const select = document.getElementById('filter-year');
+      if (!select) return;
+
+      const currentVal = select.value;
+      const years = sakipData.years || [];
+
+      let html = '<option value="ALL">Semua Periode / Tahun</option>';
+      years.forEach(y => {
+        html += `<option value="${escapeHtml(y)}" ${currentVal === y ? 'selected' : ''}>Tahun / Periode ${escapeHtml(y)}</option>`;
+      });
+      select.innerHTML = html;
+    }
+
+    function renderCategoryPills() {
+      const pills = ['ALL', 'RENSTRA', 'RENJA', 'LKJ', 'TRIWULAN'];
+      pills.forEach(cat => {
+        const btn = document.getElementById(`cat-pill-${cat}`);
+        if (!btn) return;
+
+        if (cat === activeCategory) {
+          btn.className = 'cat-filter-btn px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 bg-[#0B3B24] text-white shadow-sm';
+        } else {
+          btn.className = 'cat-filter-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 transition-all shrink-0';
+        }
+      });
+    }
+
+    function renderDocumentSections() {
+      const container = document.getElementById('document-sections-container');
+      const emptyNotice = document.getElementById('empty-state-notice');
+      const filterBanner = document.getElementById('filter-status-banner');
+      const filterText = document.getElementById('filter-status-text');
+
+      // Update Filter Status Banner
+      const hasFilter = (activeCategory !== 'ALL') || (activeYear !== 'ALL') || (searchQuery.trim().length > 0);
+      if (hasFilter) {
+        filterBanner.classList.remove('hidden');
+        const parts = [];
+        if (activeCategory !== 'ALL') parts.push(`Kategori "${activeCategory}"`);
+        if (activeYear !== 'ALL') parts.push(`Periode "${activeYear}"`);
+        if (searchQuery.trim()) parts.push(`Pencarian "${searchQuery.trim()}"`);
+        filterText.textContent = parts.join(' • ');
+      } else {
+        filterBanner.classList.add('hidden');
+      }
+
+      const docs = sakipData.documents || [];
+
+      if (docs.length === 0) {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+        emptyNotice.classList.remove('hidden');
+        lucide.createIcons();
+        return;
+      }
+
+      container.classList.remove('hidden');
+      emptyNotice.classList.add('hidden');
+
+      // Group documents by category
+      const categoriesOrder = [
+        {
+          key: 'RENSTRA',
+          title: 'RENCANA STRATEGIS (RENSTRA)',
+          subtitle: 'Dokumen Perencanaan Jangka Menengah 5 Tahunan Kejaksaan Negeri Klungkung',
+          icon: 'target',
+          color: 'emerald',
+          badgeBg: 'bg-emerald-100 text-emerald-900 border-emerald-300'
+        },
+        {
+          key: 'RENJA',
+          title: 'RENCANA KERJA (RENJA)',
+          subtitle: 'Rencana Operasional Tahunan, Program Prioritas & Pagu Alokasi Anggaran',
+          icon: 'calendar-check',
+          color: 'amber',
+          badgeBg: 'bg-amber-100 text-amber-950 border-amber-300'
+        },
+        {
+          key: 'LKJ',
+          title: 'LAPORAN KINERJA (LKj)',
+          subtitle: 'Pertanggungjawaban Realisasi Capaian Target Kinerja Tahunan (LKjIP)',
+          icon: 'file-check',
+          color: 'blue',
+          badgeBg: 'bg-blue-100 text-blue-900 border-blue-300'
+        },
+        {
+          key: 'TRIWULAN',
+          title: 'LAPORAN KINERJA TRIWULAN',
+          subtitle: 'Pemantauan & Evaluasi Berkala Capaian Realisasi Indikator Kinerja Per Triwulan',
+          icon: 'bar-chart-3',
+          color: 'purple',
+          badgeBg: 'bg-purple-100 text-purple-900 border-purple-300'
+        }
+      ];
+
+      let html = '';
+
+      categoriesOrder.forEach(catDef => {
+        // If a specific category is filtered, only show that category
+        if (activeCategory !== 'ALL' && activeCategory !== catDef.key) {
+          return;
+        }
+
+        const catDocs = docs.filter(d => (d.category || '').toUpperCase() === catDef.key);
+        if (catDocs.length === 0) {
+          // If searching or filtering and no docs in this category, skip
+          return;
+        }
+
+        html += `
+          <section id="section-${catDef.key}" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
+            
+            <!-- Category Section Header -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 mb-6">
+              <div class="flex items-start sm:items-center gap-3.5">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#0B3B24] to-[#072A19] text-amber-400 flex items-center justify-center shrink-0 shadow-md">
+                  <i data-lucide="${catDef.icon}" class="w-6 h-6"></i>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h2 class="font-heading font-black text-lg sm:text-xl text-slate-900 tracking-tight">
+                      ${catDef.title}
+                    </h2>
+                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${catDef.badgeBg}">
+                      ${catDocs.length} Dokumen
+                    </span>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-1 font-medium max-w-2xl">
+                    ${catDef.subtitle}
+                  </p>
+                </div>
+              </div>
+
+              <div class="text-xs text-slate-400 flex items-center gap-1.5 self-end sm:self-center font-medium">
+                <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+                <span>Tersedia Unduhan Resmi</span>
+              </div>
+            </div>
+
+            <!-- Documents List (Cards & Direct Action Buttons) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              ${catDocs.map(doc => renderDocumentCard(doc)).join('')}
+            </div>
+
+          </section>
+        `;
+      });
+
+      container.innerHTML = html;
+      lucide.createIcons();
+    }
+
+    function renderDocumentCard(doc) {
+      const gdriveLink = doc.doc_url || '#';
+      const safeTitle = escapeAttr(doc.title);
+      const safeDesc = escapeHtml(doc.description || '');
+      const safeYear = escapeHtml(doc.period_year || '-');
+      const safeSize = escapeHtml(doc.file_size || 'PDF');
+      const docId = doc.id;
+
+      return `
+        <div class="doc-card-hover bg-slate-50 hover:bg-white rounded-2xl p-5 border border-slate-200/90 flex flex-col justify-between transition-all group">
+          
+          <!-- Top Border Accent (Gold) -->
+          <div class="w-12 h-1 rounded-full bg-amber-400 mb-3 group-hover:w-20 transition-all"></div>
+
+          <div>
+            <!-- Badge Metadata Row -->
+            <div class="flex flex-wrap items-center gap-2 mb-2.5">
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-extrabold bg-[#0B3B24] text-white">
+                <i data-lucide="calendar" class="w-3 h-3 text-amber-400"></i>
+                Periode ${safeYear}
+              </span>
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                <i data-lucide="file" class="w-3 h-3 text-amber-600"></i>
+                ${safeSize}
+              </span>
+              ${doc.views_count ? `
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-slate-500 bg-slate-200/60 ml-auto">
+                  <i data-lucide="eye" class="w-3 h-3 text-slate-400"></i>
+                  ${doc.views_count}x dilihat
+                </span>
+              ` : ''}
+            </div>
+
+            <!-- Document Title (Interactive Link) -->
+            <h3 class="font-heading font-extrabold text-sm sm:text-base text-slate-900 group-hover:text-emerald-900 transition-colors leading-snug mb-2">
+              <button 
+                onclick="openDocViewer(${docId})" 
+                class="text-left hover:underline focus:outline-none"
+              >
+                ${escapeHtml(doc.title)}
+              </button>
+            </h3>
+
+            <!-- Description -->
+            <p class="text-xs text-slate-600 leading-relaxed mb-4 line-clamp-2">
+              ${safeDesc || 'Dokumen akuntabilitas kinerja resmi Kejaksaan Negeri Klungkung.'}
+            </p>
+          </div>
+
+          <!-- Action Buttons Bar -->
+          <div class="pt-3 border-t border-slate-200/70 flex items-center justify-between gap-2">
+            
+            <!-- Primary Action: Preview Document Modal -->
+            <button 
+              onclick="openDocViewer(${docId})" 
+              class="flex-1 py-2 px-3 rounded-xl bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-colors group-hover:shadow"
+            >
+              <i data-lucide="eye" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Pratinjau Dokumen</span>
+            </button>
+
+            <!-- Secondary Action: Open in New Tab (Direct Google Drive) -->
+            <a 
+              href="${escapeAttr(gdriveLink)}" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              onclick="recordDocView(${docId})"
+              title="Buka langsung di Google Drive (Tab Baru)" 
+              class="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs flex items-center justify-center transition-colors"
+            >
+              <i data-lucide="external-link" class="w-4 h-4 text-emerald-800"></i>
+            </a>
+
+            <!-- Tertiary Action: Copy Share Link -->
+            <button 
+              onclick="copyDocLink('${escapeAttr(gdriveLink)}', '${safeTitle}')" 
+              title="Salin Tautan Google Drive" 
+              class="p-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs flex items-center justify-center transition-colors"
+            >
+              <i data-lucide="copy" class="w-4 h-4 text-slate-600"></i>
+            </button>
+
+          </div>
+
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // MODAL & PREVIEW VIEWER LOGIC
+    // =========================================================================
+
+    function openDocViewer(docId) {
+      const doc = (sakipData.documents || []).find(d => d.id === docId);
+      if (!doc) return;
+
+      currentViewerDoc = doc;
+
+      // Update Header Text & Badges
+      document.getElementById('viewer-doc-title').textContent = doc.title;
+      document.getElementById('viewer-doc-category').textContent = doc.category;
+      document.getElementById('viewer-doc-period').textContent = 'Periode ' + (doc.period_year || '-');
+      document.getElementById('viewer-file-size').textContent = doc.file_size || 'PDF';
+
+      const extBtn = document.getElementById('viewer-btn-external');
+      if (extBtn) {
+        extBtn.href = doc.doc_url;
+      }
+
+      // Convert Google Drive share link into embedded preview URL
+      const previewUrl = transformToGoogleDrivePreviewUrl(doc.doc_url);
+
+      // Setup Iframe & Loading Indicator
+      const iframe = document.getElementById('viewer-iframe');
+      const loader = document.getElementById('viewer-loading');
+
+      loader.classList.remove('opacity-0', 'pointer-events-none');
+      loader.classList.add('opacity-100');
+      iframe.src = previewUrl;
+
+      // Increment view count
+      recordDocView(docId);
+
+      openModal('modal-doc-viewer');
+      lucide.createIcons();
+    }
+
+    function transformToGoogleDrivePreviewUrl(url) {
+      if (!url) return '';
+      // If it's a standard Google Drive file URL:
+      // https://drive.google.com/file/d/<FILE_ID>/view... -> https://drive.google.com/file/d/<FILE_ID>/preview
+      if (url.includes('drive.google.com/file/d/')) {
+        const fileIdMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (fileIdMatch && fileIdMatch[1]) {
+          return `https://drive.google.com/file/d/${fileIdMatch[1]}/preview`;
+        }
+      }
+      return url;
+    }
+
+    function handleIframeLoaded() {
+      const loader = document.getElementById('viewer-loading');
+      if (loader) {
+        loader.classList.add('opacity-0', 'pointer-events-none');
+      }
+    }
+
+    async function recordDocView(docId) {
+      try {
+        await fetch(`/api/public/accountability/${docId}/view`, { method: 'POST' });
+      } catch (e) {
+        // silent fail
+      }
+    }
+
+    function copyCurrentViewerLink() {
+      if (currentViewerDoc && currentViewerDoc.doc_url) {
+        copyDocLink(currentViewerDoc.doc_url, currentViewerDoc.title);
+      }
+    }
+
+    function copyDocLink(url, title) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast(`Tautan dokumen "${title}" berhasil disalin ke clipboard!`, 'success');
+        }).catch(() => {
+          fallbackCopyText(url, title);
+        });
+      } else {
+        fallbackCopyText(url, title);
+      }
+    }
+
+    function fallbackCopyText(text, title) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast(`Tautan dokumen berhasil disalin ke clipboard!`, 'success');
+      } catch (err) {
+        prompt('Salin tautan dokumen berikut:', text);
+      }
+      document.body.removeChild(ta);
+    }
+
+    // =========================================================================
+    // FILTERS & SEARCH CONTROLLERS
+    // =========================================================================
+
+    function selectCategoryFilter(categoryKey) {
+      activeCategory = categoryKey;
+      renderCategoryPills();
+      loadAccountabilityData();
+    }
+
+    function handleYearFilter(yearVal) {
+      activeYear = yearVal;
+      loadAccountabilityData();
+    }
+
+    let searchTimer = null;
+    function handleSearchInput(val) {
+      searchQuery = val;
+      const clearBtn = document.getElementById('btn-clear-search');
+      if (val.trim().length > 0) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        loadAccountabilityData();
+      }, 250);
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('search-input');
+      if (input) input.value = '';
+      searchQuery = '';
+      document.getElementById('btn-clear-search').classList.add('hidden');
+      loadAccountabilityData();
+    }
+
+    function resetAllFilters() {
+      activeCategory = 'ALL';
+      activeYear = 'ALL';
+      searchQuery = '';
+      const input = document.getElementById('search-input');
+      if (input) input.value = '';
+      const select = document.getElementById('filter-year');
+      if (select) select.value = 'ALL';
+      document.getElementById('btn-clear-search').classList.add('hidden');
+      renderCategoryPills();
+      loadAccountabilityData();
+    }
+
+    // =========================================================================
+    // TICKET TRACKER & GENERIC UTILS
+    // =========================================================================
+
+    async function searchTicketStatus() {
+      const codeInput = document.getElementById('input-ticket-code');
+      const code = codeInput.value.trim().toUpperCase();
+      const resContainer = document.getElementById('ticket-result-container');
+
+      if (!code) {
+        alert('Silakan masukkan nomor kode tiket layanan Anda.');
+        return;
+      }
+
+      resContainer.innerHTML = `
+        <div class="text-center py-4 text-slate-400">
+          <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto mb-2 text-emerald-700"></i>
+          <span class="text-xs">Mencari status tiket...</span>
+        </div>
+      `;
+      resContainer.classList.remove('hidden');
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`/api/public/ticket/${encodeURIComponent(code)}`);
+        const data = await res.json();
+
+        if (data.success && data.ticket) {
+          const t = data.ticket;
+          resContainer.innerHTML = `
+            <div class="bg-emerald-50 rounded-xl p-3 border border-emerald-200 text-xs space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-mono font-bold text-emerald-950">${escapeHtml(t.ticket_code)}</span>
+                <span class="px-2 py-0.5 rounded font-extrabold text-[10px] bg-emerald-800 text-white">${escapeHtml(t.status)}</span>
+              </div>
+              <div class="text-slate-700"><strong>Jenis Layanan:</strong> ${escapeHtml(t.type || 'Layanan PTSP')}</div>
+              <div class="text-slate-700"><strong>Nama Pemohon:</strong> ${escapeHtml(t.full_name || t.owner_name || '-')}</div>
+              ${t.admin_notes ? `
+                <div class="p-2 bg-white rounded border border-emerald-200 text-slate-800">
+                  <strong>Catatan Petugas:</strong> ${escapeHtml(t.admin_notes)}
+                </div>
+              ` : ''}
+              <div class="text-[10px] text-slate-400">Diperbarui: ${escapeHtml(t.created_at || 'Baru Saja')}</div>
+            </div>
+          `;
+        } else {
+          resContainer.innerHTML = `
+            <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 text-center">
+              Kode tiket <strong>"${escapeHtml(code)}"</strong> tidak ditemukan dalam sistem. Pastikan kode yang dimasukkan sudah sesuai.
+            </div>
+          `;
+        }
+      } catch (err) {
+        resContainer.innerHTML = `
+          <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 text-center">
+            Gagal menghubungkan ke server untuk melacak tiket.
+          </div>
+        `;
+      }
+      lucide.createIcons();
+    }
+
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.classList.add('overflow-hidden');
+      }
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.classList.remove('overflow-hidden');
+
+        // If viewer modal is closed, clear iframe src to stop video/pdf resources
+        if (modalId === 'modal-doc-viewer') {
+          const iframe = document.getElementById('viewer-iframe');
+          if (iframe) iframe.src = '';
+        }
+      }
+    }
+
+    // Close on Escape Key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeModal('modal-doc-viewer');
+        closeModal('modal-ticket-tracker');
+      }
+    });
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      let bg = 'bg-slate-900 text-white';
+      let icon = 'info';
+      if (type === 'success') {
+        bg = 'bg-[#0B3B24] text-white border border-amber-400';
+        icon = 'check-circle-2';
+      } else if (type === 'error') {
+        bg = 'bg-red-900 text-white border border-red-400';
+        icon = 'alert-triangle';
+      }
+
+      toast.className = `p-3 rounded-xl shadow-2xl flex items-center gap-2.5 text-xs font-semibold ${bg} pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0`;
+      toast.innerHTML = `
+        <i data-lucide="${icon}" class="w-4 h-4 text-amber-400 shrink-0"></i>
+        <span>${escapeHtml(message)}</span>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons({ root: toast });
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function toggleMobileMenu() {
+      const drawer = document.getElementById('mobile-nav-drawer');
+      if (!drawer) return;
+      const isNowOpen = drawer.classList.toggle('hidden') === false;
+      if (isNowOpen && window.lucide) lucide.createIcons();
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str);
+    }
+  </script>
+
+  <!-- =========================================================================
+       MOBILE STICKY BOTTOM NAVIGATION DOCK (APP-LIKE UX ON SMARTPHONES)
+       ========================================================================= -->
+  <nav id="mobile-bottom-dock" class="lg:hidden fixed bottom-0 inset-x-0 z-40 px-2 pt-1.5 no-print" aria-label="Navigasi Bawah Mobile">
+    <div class="grid grid-cols-5 items-center max-w-md mx-auto">
+      <a href="/" data-dock-path="/" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="home" class="w-4 h-4"></i></div>
+        <span>Beranda</span>
+      </a>
+      <a href="/informasi/jadwal-sidang" data-dock-path="/informasi/jadwal-sidang" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="gavel" class="w-4 h-4"></i></div>
+        <span>Sidang</span>
+      </a>
+      <div class="flex flex-col items-center justify-center">
+        <a href="/#layanan-digital" class="mobile-dock-center-btn" title="Layanan Digital Terpadu">
+          <i data-lucide="layout-grid" class="w-5 h-5"></i>
+        </a>
+        <span class="text-[10px] font-extrabold text-[#0B3B24] mt-0.5">Layanan</span>
+      </div>
+      <a href="/akuntabilitas-kinerja" data-dock-path="/akuntabilitas-kinerja" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="file-check" class="w-4 h-4"></i></div>
+        <span>SAKIP</span>
+      </a>
+      <button type="button" onclick="toggleMobileMenu(true)" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="menu" class="w-4 h-4"></i></div>
+        <span>Menu</span>
+      </button>
+    </div>
+  </nav>
+</body>
+</html>

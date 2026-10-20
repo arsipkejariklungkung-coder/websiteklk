@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1B4D33"/>
+      <stop offset="40%" stop-color="#0E3821"/>
+      <stop offset="100%" stop-color="#082314"/>
+    </linearGradient>
+    <linearGradient id="goldFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FDE047"/>
+      <stop offset="50%" stop-color="#EAB308"/>
+      <stop offset="100%" stop-color="#A16207"/>
+    </linearGradient>
+    <linearGradient id="suitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#164E31"/>
+      <stop offset="60%" stop-color="#0E3821"/>
+      <stop offset="100%" stop-color="#072213"/>
+    </linearGradient>
+    <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FCD3B0"/>
+      <stop offset="100%" stop-color="#E7A87A"/>
+    </linearGradient>
+    <linearGradient id="flagRed" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#DC2626"/>
+      <stop offset="100%" stop-color="#991B1B"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- Background Office / Ceremonial Wall -->
+  <rect x="0" y="0" width="400" height="520" fill="url(#bgGrad)"/>
+  
+  <!-- Subtle Indonesian Flag on Left Wall -->
+  <g opacity="0.35" transform="translate(20, 40)">
+    <rect x="0" y="0" width="50" height="90" fill="url(#flagRed)"/>
+    <rect x="0" y="90" width="50" height="90" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Kejaksaan Gold Crest Emboss on Right Wall -->
+  <g opacity="0.25" transform="translate(320, 100) scale(0.35)">
+    <circle cx="0" cy="0" r="90" fill="none" stroke="#FDE047" stroke-width="4"/>
+    <polygon points="0,-30 8,-8 30,0 8,8 0,30 -8,8 -30,0 -8,-8" fill="#FDE047"/>
+  </g>
+
+  <!-- Official Kajari Silhouette & Detailed Attire -->
+  <!-- Shoulders & Torso (PDU Green Uniform) -->
+  <path d="M 50,520 L 70,360 L 120,310 L 150,300 L 200,315 L 250,300 L 280,310 L 330,360 L 350,520 Z" fill="url(#suitGrad)" filter="url(#softShadow)"/>
+
+  <!-- Epaulets (Tanda Pangkat Bahu Emas Kejaksaan) -->
+  <!-- Left Epaulet -->
+  <g transform="translate(95, 312) rotate(-15)">
+    <rect x="-10" y="-30" width="20" height="42" rx="3" fill="#D97706" stroke="#FEF08A" stroke-width="1.5"/>
+    <polygon points="0,-20 3,-14 9,-14 4,-10 6,-4 0,-7 -6,-4 -4,-10 -9,-14 -3,-14" fill="#FEF08A"/>
+    <polygon points="0,-3 3,3 9,3 4,7 6,13 0,10 -6,13 -4,7 -9,3 -3,3" fill="#FEF08A"/>
+  </g>
+  <!-- Right Epaulet -->
+  <g transform="translate(305, 312) rotate(15)">
+    <rect x="-10" y="-30" width="20" height="42" rx="3" fill="#D97706" stroke="#FEF08A" stroke-width="1.5"/>
+    <polygon points="0,-20 3,-14 9,-14 4,-10 6,-4 0,-7 -6,-4 -4,-10 -9,-14 -3,-14" fill="#FEF08A"/>
+    <polygon points="0,-3 3,3 9,3 4,7 6,13 0,10 -6,13 -4,7 -9,3 -3,3" fill="#FEF08A"/>
+  </g>
+
+  <!-- White Collar & Green Tie -->
+  <polygon points="175,300 200,345 160,300" fill="#FFFFFF"/>
+  <polygon points="225,300 200,345 240,300" fill="#FFFFFF"/>
+  <polygon points="194,330 206,330 210,430 200,445 190,430" fill="#0A331E"/>
+
+  <!-- Service Ribbons & Medals on Left Chest -->
+  <g transform="translate(130, 360)">
+    <!-- Row 1 -->
+    <rect x="0" y="0" width="16" height="7" rx="1" fill="#DC2626"/>
+    <rect x="18" y="0" width="16" height="7" rx="1" fill="#2563EB"/>
+    <rect x="36" y="0" width="16" height="7" rx="1" fill="#D97706"/>
+    <!-- Row 2 -->
+    <rect x="0" y="9" width="16" height="7" rx="1" fill="#059669"/>
+    <rect x="18" y="9" width="16" height="7" rx="1" fill="#EAB308"/>
+    <rect x="36" y="9" width="16" height="7" rx="1" fill="#7C3AED"/>
+  </g>
+
+  <!-- Kejaksaan Metal Badge on Right Chest -->
+  <g transform="translate(230, 365)">
+    <circle cx="15" cy="8" r="10" fill="url(#goldFrame)"/>
+    <circle cx="15" cy="8" r="7" fill="#0B3B24"/>
+    <polygon points="15,4 16,7 19,7 17,9 18,12 15,10 12,12 13,9 11,7 14,7" fill="#FEF08A"/>
+  </g>
+
+  <!-- Golden Buttons along Center Placket -->
+  <circle cx="200" cy="385" r="5" fill="url(#goldFrame)"/>
+  <circle cx="200" cy="430" r="5" fill="url(#goldFrame)"/>
+  <circle cx="200" cy="475" r="5" fill="url(#goldFrame)"/>
+
+  <!-- Neck -->
+  <path d="M 180,240 L 180,310 L 220,310 L 220,240 Z" fill="url(#skinGrad)"/>
+  <path d="M 180,290 Q 200,305 220,290 Z" fill="#D1875A" opacity="0.6"/>
+
+  <!-- Head & Facial Features -->
+  <!-- Ears -->
+  <ellipse cx="146" cy="188" rx="8" ry="16" fill="url(#skinGrad)"/>
+  <ellipse cx="254" cy="188" rx="8" ry="16" fill="url(#skinGrad)"/>
+
+  <!-- Face Contour -->
+  <path d="M 152,145 Q 150,210 170,242 Q 200,265 230,242 Q 250,210 248,145 Z" fill="url(#skinGrad)" filter="url(#softShadow)"/>
+
+  <!-- Hair (Neat Short Side-Part Official Cut) -->
+  <path d="M 148,145 Q 148,100 200,98 Q 252,100 252,145 Q 242,128 200,126 Q 158,128 148,145 Z" fill="#1C1917"/>
+  <path d="M 148,145 L 152,180 L 158,160 Q 156,135 170,128 Z" fill="#1C1917"/>
+  <path d="M 252,145 L 248,180 L 242,160 Q 244,135 230,128 Z" fill="#1C1917"/>
+
+  <!-- Eyes & Eyebrows -->
+  <path d="M 166,160 Q 178,155 188,160" stroke="#1C1917" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M 212,160 Q 222,155 234,160" stroke="#1C1917" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <ellipse cx="178" cy="172" rx="6" ry="4" fill="#FFFFFF"/>
+  <circle cx="178" cy="172" r="3" fill="#292524"/>
+  <circle cx="177" cy="171" r="1" fill="#FFFFFF"/>
+  <path d="M 170,170 Q 178,166 186,170" stroke="#44403C" stroke-width="1.2" fill="none"/>
+
+  <ellipse cx="222" cy="172" rx="6" ry="4" fill="#FFFFFF"/>
+  <circle cx="222" cy="172" r="3" fill="#292524"/>
+  <circle cx="221" cy="171" r="1" fill="#FFFFFF"/>
+  <path d="M 214,170 Q 222,166 230,170" stroke="#44403C" stroke-width="1.2" fill="none"/>
+
+  <!-- Nose -->
+  <path d="M 200,168 L 198,198 L 206,198" stroke="#B8734A" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+
+  <!-- Smile / Confident Expression -->
+  <path d="M 184,216 Q 200,228 216,216" stroke="#9A3412" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M 188,217 Q 200,223 212,217" fill="#FFFFFF"/>
+
+  <!-- Subtle Vignette Frame Edge -->
+  <rect x="0" y="0" width="400" height="520" fill="none" stroke="#CA8A04" stroke-width="2" opacity="0.6"/>
+</svg>

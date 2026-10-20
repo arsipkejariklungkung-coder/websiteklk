@@ -1,0 +1,1583 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Struktur Organisasi - Kejaksaan Negeri Klungkung (KERTAGOSA)</title>
+  <meta name="description" content="Bagan Struktur Organisasi dan Pimpinan Satuan Kerja Kejaksaan Negeri Klungkung berdasarkan Peraturan Kejaksaan RI.">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: {
+              DEFAULT: '#0B3B24',
+              dark: '#072A19',
+              light: '#14532D',
+              deep: '#03190E'
+            },
+            gold: {
+              DEFAULT: '#EAB308',
+              dark: '#CA8A04',
+              amber: '#D97706',
+              light: '#FEF08A'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/css/styles.css?v=2.8">
+  <link rel="icon" type="image/svg+xml" href="/static/images/logo-kejari.svg">
+  <style>
+    /* Print Optimization */
+    @media print {
+      header, footer, .no-print {
+        display: none !important;
+      }
+      body {
+        background: white !important;
+      }
+      .org-canvas-container {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+      }
+    }
+
+    /* Node Card Hover and Animation */
+    .org-node-card {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .org-node-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px -6px rgba(11, 59, 36, 0.15), 0 4px 8px -4px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Tree Connector Lines */
+    .tree-line-gold {
+      background-color: #EAB308;
+    }
+    .tree-line-slate {
+      background-color: #CBD5E1;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-amber-400 selection:text-slate-900">
+
+  <!-- TOP UTILITY BAR & MAIN NAVBAR -->
+  <header class="w-full bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm transition-all no-print">
+    <div class="border-b border-slate-100 bg-slate-50/70 text-xs">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <a href="/" class="w-9 h-9 flex-shrink-0">
+            <img id="header-logo" src="/static/images/logo-kejari.svg" alt="Logo Kejaksaan RI" class="w-full h-full object-contain">
+          </a>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5">
+            <a href="/" class="font-heading font-extrabold text-slate-900 tracking-tight text-xs sm:text-sm uppercase hover:text-emerald-900 transition-colors">
+              KEJAKSAAN REPUBLIK INDONESIA - KEJAKSAAN NEGERI KLUNGKUNG
+            </a>
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 shadow-sm w-fit">
+              ⭐ ZONA INTEGRITAS WBK / WBBM
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 ml-auto">
+          <div class="hidden md:flex items-center gap-1.5 text-slate-600 font-medium text-xs">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-800"></i>
+            <span>Senin - Jumat: 08.00 - 16.00 WITA</span>
+          </div>
+          <button onclick="openModal('modal-ticket-tracker')" class="px-3.5 py-1.5 rounded-lg bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-colors">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Lacak Tiket Layanan</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <!-- Mobile Menu Trigger (Left side of Navbar on < 1024px) -->
+      <button type="button" onclick="toggleMobileMenu()" class="lg:hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-800 border border-slate-200 font-heading font-bold text-xs transition-all active:scale-95">
+        <i data-lucide="menu" class="w-4 h-4 text-[#0B3B24]"></i>
+        <span>Menu Navigasi</span>
+      </button>
+
+      <div class="hidden lg:flex items-center gap-1 text-sm font-semibold text-slate-700">
+        <a href="/" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1.5">
+          <i data-lucide="home" class="w-4 h-4 text-emerald-800"></i>
+          Beranda
+        </a>
+
+        <!-- Profil Dropdown (ACTIVE ON THIS PAGE) -->
+        <div class="relative group">
+          <button class="px-4 py-2 rounded-full bg-[#0B3B24] text-white shadow-sm flex items-center gap-1.5 transition-colors">
+            Profil <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-amber-400 group-hover:rotate-180 transition-transform"></i>
+          </button>
+          <div class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
+            <a href="/profil/struktur-organisasi" class="block px-3 py-2 text-xs font-bold text-emerald-900 bg-emerald-50 rounded-lg flex items-center gap-2">
+              <i data-lucide="network" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Struktur Organisasi</span>
+            </a>
+            <a href="/profil/visi-misi" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Visi dan Misi</span>
+            </a>
+            <a href="/profil/sejarah" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="landmark" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Sejarah</span>
+            </a>
+            <a href="/profil/logo-makna" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Logo dan Maknanya</span>
+            </a>
+            <a href="/profil/tugas-wewenang" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="scale" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Tugas dan Wewenang</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Informasi Dropdown -->
+        <div class="relative group">
+          <button class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center gap-1 transition-colors">
+            Informasi <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
+          </button>
+          <div class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
+            <a href="/informasi/berita" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="newspaper" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Berita &amp; Publikasi Hukum</span>
+            </a>
+            <a href="/informasi/pengumuman" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Pengumuman Resmi</span>
+            </a>
+            <a href="/informasi/jadwal-sidang" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="gavel" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Jadwal Sidang JAGADITA</span>
+            </a>
+            <a href="/informasi/skm" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Indeks Kepuasan (SKM)</span>
+            </a>
+          </div>
+        </div>
+
+        <a href="/#pilar-layanan" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Pelayanan</a>
+        <a href="/akuntabilitas-kinerja" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Akuntabilitas Kinerja</a>
+        <a href="/#kantor-peta" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Kontak</a>
+      </div>
+
+      <a href="tel:081138004444" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 border border-amber-300 text-amber-950 flex items-center gap-2 shadow-sm hover:bg-amber-100 transition-colors">
+        <i data-lucide="phone-call" class="w-3.5 h-3.5 text-amber-700"></i>
+        <span>Hotline PTSP: 0811-3800-4444</span>
+      </a>
+    </nav>
+
+    <!-- Collapsible Categorized Mobile Navigation Drawer -->
+    <div id="mobile-nav-drawer" class="hidden lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-4 shadow-2xl">
+      <!-- Section 1: Navigasi Utama -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Navigasi Utama</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+          <a href="/" class="p-2.5 rounded-xl bg-[#0B3B24] text-white flex items-center gap-2 shadow-sm">
+            <i data-lucide="home" class="w-4 h-4 text-amber-400 shrink-0"></i>
+            <span class="truncate">Beranda</span>
+          </a>
+          <a href="/#layanan-digital" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-amber-50 text-amber-950 border border-amber-200 flex items-center gap-2">
+            <i data-lucide="globe" class="w-4 h-4 text-amber-700 shrink-0"></i>
+            <span class="truncate">Layanan Digital</span>
+          </a>
+          <a href="/akuntabilitas-kinerja" class="p-2.5 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-200 flex items-center gap-2">
+            <i data-lucide="file-check" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Akuntabilitas (SAKIP)</span>
+          </a>
+          <a href="/#kantor-peta" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Kontak &amp; Lokasi</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 2: Profil Instansi (5 Halaman) -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Profil Instansi</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+          <a href="/profil/struktur-organisasi" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="network" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Struktur Organisasi</span>
+          </a>
+          <a href="/profil/visi-misi" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Visi &amp; Misi</span>
+          </a>
+          <a href="/profil/sejarah" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="landmark" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Sejarah</span>
+          </a>
+          <a href="/profil/logo-makna" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Logo &amp; Makna</span>
+          </a>
+          <a href="/profil/tugas-wewenang" class="col-span-2 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="scale" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Tugas Pokok &amp; Wewenang Kejaksaan</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 3: Informasi Publik (4 Halaman) -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Informasi Publik</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+          <a href="/informasi/berita" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="newspaper" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Pusat Berita</span>
+          </a>
+          <a href="/informasi/pengumuman" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+            <span class="truncate">Pengumuman</span>
+          </a>
+          <a href="/informasi/jadwal-sidang" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="gavel" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Jadwal Sidang</span>
+          </a>
+          <a href="/informasi/skm" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Skor IKM / SKM</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 4: Portal Layanan Digital Eksternal -->
+      <div class="pt-2 border-t border-slate-100">
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 mb-2 px-1">Akses Cepat Layanan Digital</div>
+        <div class="grid grid-cols-4 gap-1.5 text-[10px] font-bold text-center">
+          <a href="https://halojpn.kejaksaan.go.id/" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-200 flex flex-col items-center gap-1">
+            <i data-lucide="message-square-heart" class="w-4 h-4 text-emerald-700"></i>
+            <span>HaloJPN</span>
+          </a>
+          <a href="https://tilang.kejaksaan.go.id/home" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-blue-50 text-blue-950 border border-blue-200 flex flex-col items-center gap-1">
+            <i data-lucide="car" class="w-4 h-4 text-blue-700"></i>
+            <span>E-Tilang</span>
+          </a>
+          <a href="https://ppid.kejaksaan.go.id/satker/kn-klungkung" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-amber-50 text-amber-950 border border-amber-200 flex flex-col items-center gap-1">
+            <i data-lucide="folder-search" class="w-4 h-4 text-amber-700"></i>
+            <span>E-PPID</span>
+          </a>
+          <a href="https://www.lapor.go.id/" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-rose-50 text-rose-950 border border-rose-200 flex flex-col items-center gap-1">
+            <i data-lucide="megaphone" class="w-4 h-4 text-rose-700"></i>
+            <span>LAPOR!</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE HERO BANNER -->
+  <section class="hero-forest-bg hero-mesh-pattern text-white py-10 lg:py-14 relative border-b border-emerald-950 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <!-- Breadcrumbs -->
+      <nav class="flex items-center gap-2 text-xs text-emerald-200/80 mb-3 font-medium">
+        <a href="/" class="hover:text-white transition-colors">Beranda</a>
+        <span>/</span>
+        <span class="text-emerald-300">Profil</span>
+        <span>/</span>
+        <span class="text-amber-300 font-bold">Struktur Organisasi</span>
+      </nav>
+
+      <div class="max-w-3xl">
+        <span class="inline-block px-3 py-0.5 rounded-full text-[11px] font-extrabold tracking-wider border border-amber-400/50 bg-amber-950/50 text-amber-300 mb-2">
+          BAGAN HIERARKI KEPEMIMPINAN YUSTISIAL
+        </span>
+        <h1 class="font-serif font-black text-2xl sm:text-4xl text-white tracking-wide mb-2 hero-title-shimmer">
+          Bagan Struktur Organisasi Resmi
+        </h1>
+        <p class="text-emerald-100/90 text-xs sm:text-sm leading-relaxed font-light">
+          Tata hubungan hierarkis dan penugasan pejabat struktural Kejaksaan Negeri Klungkung guna menjamin kepastian penegakan hukum yang berkeadilan, humanis, dan akuntabel.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN ORGANIZATIONAL CHART CANVAS -->
+  <main class="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 py-8 lg:py-12">
+    
+    <!-- Outer Card Container -->
+    <div class="org-canvas-container relative bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/90 shadow-xl p-4 sm:p-8 lg:p-12 overflow-hidden">
+      
+      <!-- 2. WATERMARK BACKGROUND (TRANSPARAN DI TENGAH HALAMAN) -->
+      <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-0 overflow-hidden">
+        <img id="org-watermark-img" src="/static/images/logo-kejari.svg" alt="Watermark Kejaksaan" class="w-[500px] h-[500px] lg:w-[750px] lg:h-[750px] object-contain select-none grayscale-[20%] transition-opacity duration-500" style="opacity: 0.12;">
+      </div>
+
+      <!-- Content Wrapper on top of Watermark -->
+      <div class="relative z-10 space-y-8">
+
+        <!-- Admin Mode Banner (Only displayed if current session is authenticated as Admin) -->
+        <div id="org-admin-indicator" class="hidden mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-300 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs no-print">
+          <div class="flex items-center gap-2.5 text-amber-950 font-bold">
+            <div class="w-8 h-8 rounded-lg bg-amber-200 text-amber-900 flex items-center justify-center shrink-0">
+              <i data-lucide="shield-check" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <span class="block text-slate-900 font-extrabold text-xs">Sesi Login Administrator Aktif</span>
+              <span class="text-amber-800 text-[11px] font-medium">Keterangan NIP dan Pangkat/Golongan hanya ditampilkan secara khusus untuk sesi login Anda, dan disembunyikan 100% dari pengunjung publik.</span>
+            </div>
+          </div>
+          <a href="/admin" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold flex items-center gap-1.5 shrink-0 transition-colors shadow-sm">
+            <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+            <span>Kelola di CMS Admin</span>
+          </a>
+        </div>
+
+        <!-- 1. HEADER HALAMAN: LOGO KIRI, JUDUL TEBAL DI TENGAH, LOGO KANAN -->
+        <div class="border-b-2 border-slate-200/80 pb-6">
+          <div class="flex items-center justify-between gap-4">
+            
+            <!-- Logo Sudut Kiri -->
+            <div class="w-16 h-16 sm:w-24 sm:h-24 shrink-0 flex items-center justify-center p-1 bg-white/60 rounded-2xl border border-slate-100 shadow-sm">
+              <img id="org-logo-left-img" src="/static/images/logo-kejari.svg" alt="Logo Kiri Kejaksaan RI" class="max-h-full max-w-full object-contain filter drop-shadow-sm">
+            </div>
+
+            <!-- Teks Judul Utama Besar dan Tebal di Tengah -->
+            <div class="text-center flex-1 px-2 sm:px-6">
+              <span class="inline-block px-3 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold uppercase tracking-widest bg-amber-100 text-amber-950 border border-amber-300 mb-1.5 shadow-sm">
+                BAGAN STRUKTURAL RESMI KEJAKSAAN RI
+              </span>
+              <h1 id="org-main-title" class="font-serif font-black text-2xl sm:text-4xl lg:text-5xl text-slate-900 tracking-tight uppercase leading-tight">
+                STRUKTUR ORGANISASI
+              </h1>
+              <p id="org-sub-title" class="font-heading font-extrabold text-xs sm:text-base text-emerald-900 uppercase tracking-wider mt-1">
+                KEJAKSAAN NEGERI KLUNGKUNG
+              </p>
+              <p id="org-legal-text" class="text-[11px] sm:text-xs text-slate-500 max-w-3xl mx-auto mt-1.5 hidden sm:block leading-relaxed">
+                Berdasarkan Peraturan Kejaksaan RI Nomor PER-006/A/JA/07/2017 tentang Organisasi dan Tata Kerja Kejaksaan Republik Indonesia
+              </p>
+            </div>
+
+            <!-- Logo Sudut Kanan -->
+            <div class="w-16 h-16 sm:w-24 sm:h-24 shrink-0 flex items-center justify-center p-1 bg-white/60 rounded-2xl border border-slate-100 shadow-sm">
+              <img id="org-logo-right-img" src="/static/images/logo-wbk.svg" alt="Logo Kanan WBK/WBBM" class="max-h-full max-w-full object-contain filter drop-shadow-sm">
+            </div>
+
+          </div>
+
+          <!-- Quick Action Bar (Search & Print) -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-5 mt-4 border-t border-slate-100 text-xs no-print">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-900 rounded-full font-bold border border-emerald-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                <span>Total 24 Pejabat &amp; Pegawai Terdaftar</span>
+              </span>
+              <span class="text-slate-400 hidden sm:inline">&bull;</span>
+              <span class="text-slate-500 hidden sm:inline">Klik kartu mana saja untuk melihat profil detail</span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+              <!-- Mobile/Tablet Zoom Switcher -->
+              <div class="inline-flex items-center rounded-lg bg-slate-100 p-0.5 border border-slate-200 text-[11px] font-bold">
+                <button type="button" id="btn-org-zoom-fit" onclick="setOrgTreeZoom('fit')" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-colors">
+                  Fit Layar HP
+                </button>
+                <button type="button" id="btn-org-zoom-100" onclick="setOrgTreeZoom('100')" class="px-2.5 py-1 rounded-md bg-[#0B3B24] text-white shadow-sm transition-colors">
+                  100% (Geser ↔)
+                </button>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <div class="relative">
+                  <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2"></i>
+                  <input type="text" id="org-search-input" oninput="filterChartLive(this.value)" placeholder="Cari nama / jabatan..." class="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-emerald-700 w-36 sm:w-52">
+                </div>
+                <button id="btn-download-org-jpg" onclick="downloadOrgChartJpg()" class="px-3.5 py-1.5 rounded-lg bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold flex items-center gap-1.5 shadow-sm transition-colors" title="Unduh Bagan Struktur Organisasi dalam format gambar JPG resolusi tinggi">
+                  <i data-lucide="image-down" class="w-3.5 h-3.5 text-amber-400"></i>
+                  <span>Unduh Bagan (JPG)</span>
+                </button>
+                <button onclick="window.print()" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold flex items-center gap-1.5 transition-colors">
+                  <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                  <span class="hidden sm:inline">Cetak Bagan</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Swipe Helper Hint (< 1024px) -->
+        <div class="lg:hidden flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-950 font-semibold no-print">
+          <div class="flex items-center gap-2">
+            <i data-lucide="move-horizontal" class="w-4 h-4 text-amber-700 shrink-0"></i>
+            <span>Geser bagan ke kiri/kanan atau ketuk <strong>"Fit Layar HP"</strong> untuk melihat bagan utuh.</span>
+          </div>
+        </div>
+
+        <!-- 3. HIERARCHICAL TREE CANVAS (HORIZONTAL SCROLL ON MOBILE IF NEEDED) -->
+        <div class="overflow-x-auto pb-6 no-scrollbar">
+          <div id="org-tree-canvas-inner" class="min-w-[1080px] space-y-6 pt-2 transition-all duration-300">
+
+            <!-- ==============================================================
+                 LEVEL 1: PIMPINAN (1 Kartu di paling atas tengah)
+                 ============================================================== -->
+            <div class="flex flex-col items-center">
+              <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-900 bg-amber-100 px-3 py-0.5 rounded-full border border-amber-300 mb-2 shadow-sm">
+                LEVEL 1: PIMPINAN TERTINGGI
+              </span>
+
+              <!-- Pimpinan Card Container -->
+              <div id="container-level-1" class="flex justify-center">
+                <!-- Dynamically populated or rendered fallback -->
+                <div onclick="openMemberDetail(1)" class="org-node-card cursor-pointer w-96 bg-white rounded-2xl shadow-lg border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-600 p-4 flex items-center gap-4 relative group">
+                  <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 border-amber-400 shrink-0 shadow-md bg-slate-100">
+                    <img id="kajari-avatar-img" src="/static/images/kajari-portrait.jpg" alt="Kajari Klungkung" class="w-full h-full object-cover">
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <span class="inline-block px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-100 text-amber-900 border border-amber-300">
+                      KEPALA KEJAKSAAN NEGERI
+                    </span>
+                    <h2 class="font-heading font-black text-sm sm:text-base text-slate-900 leading-snug mt-1 group-hover:text-emerald-900 transition-colors">
+                      R. Indra Senjaya, S.H., M.H.
+                    </h2>
+                    <p class="text-xs text-slate-600 font-medium">Kepala Kejaksaan Negeri Klungkung</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Connector Line Down from Level 1 to Horizontal Bus -->
+              <div class="w-0.5 h-8 tree-line-gold"></div>
+            </div>
+
+            <!-- ==============================================================
+                 HORIZONTAL BUS CONNECTOR (Connecting Level 1 to all 6 Level 2)
+                 ============================================================== -->
+            <div class="relative w-full h-6">
+              <!-- Horizontal Bus Line connecting col 1 to col 6 -->
+              <div class="absolute top-0 left-[8.33%] right-[8.33%] h-0.5 tree-line-gold"></div>
+              
+              <!-- 6 Vertical Drop Stems -->
+              <div class="grid grid-cols-6 h-full">
+                <div class="flex justify-center"><div class="w-0.5 h-full tree-line-gold"></div></div>
+                <div class="flex justify-center"><div class="w-0.5 h-full tree-line-gold"></div></div>
+                <div class="flex justify-center"><div class="w-0.5 h-full tree-line-gold"></div></div>
+                <div class="flex justify-center"><div class="w-0.5 h-full tree-line-gold"></div></div>
+                <div class="flex justify-center"><div class="w-0.5 h-full tree-line-gold"></div></div>
+                <div class="flex justify-center"><div class="w-0.5 h-full tree-line-gold"></div></div>
+              </div>
+            </div>
+
+            <!-- ==============================================================
+                 LEVEL 2 & LEVEL 3: 6 KEPALA SEKSI / BAGIAN + 2 SUB-BAGIAN DI BAWAHNYA
+                 ============================================================== -->
+            <div id="container-level-2-and-3" class="grid grid-cols-6 gap-3 lg:gap-4 items-start">
+              
+              <!-- Column 1: Subbagian Pembinaan -->
+              <div class="flex flex-col items-center space-y-2">
+                <!-- Level 2 Card -->
+                <div onclick="openMemberDetail(2)" class="org-node-card cursor-pointer w-full bg-white rounded-xl shadow-md border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-700 p-2.5 flex items-center gap-2.5 relative group">
+                  <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-emerald-50 text-emerald-900 border border-emerald-200">ESELON IV</span>
+                    <div class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Kasubbag Pembinaan</div>
+                    <div class="font-heading font-extrabold text-xs text-slate-900 leading-snug truncate group-hover:text-emerald-900">I Nyoman Triantara, S.H.</div>
+                  </div>
+                </div>
+
+                <!-- Connector Line Down to Sub-bagian -->
+                <div class="w-0.5 h-4 tree-line-slate"></div>
+
+                <!-- Level 3: 2 Sub-cards -->
+                <div class="w-full space-y-2">
+                  <div onclick="openMemberDetail(8)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kaur Kepegawaian &amp; Keuangan</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">Ni Ketut Sukasih, S.E.</div>
+                    </div>
+                  </div>
+                  <div onclick="openMemberDetail(9)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kaur Perlengkapan &amp; TU</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">I Made Sujana, S.Kom.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 2: Seksi Intelijen -->
+              <div class="flex flex-col items-center space-y-2">
+                <!-- Level 2 Card -->
+                <div onclick="openMemberDetail(3)" class="org-node-card cursor-pointer w-full bg-white rounded-xl shadow-md border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-700 p-2.5 flex items-center gap-2.5 relative group">
+                  <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-purple-50 text-purple-900 border border-purple-200">ESELON IV</span>
+                    <div class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Kasi Intelijen</div>
+                    <div class="font-heading font-extrabold text-xs text-slate-900 leading-snug truncate group-hover:text-emerald-900">I Putu Deny Krisna, S.H.</div>
+                  </div>
+                </div>
+
+                <div class="w-0.5 h-4 tree-line-slate"></div>
+
+                <!-- Level 3: 2 Sub-cards -->
+                <div class="w-full space-y-2">
+                  <div onclick="openMemberDetail(10)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kasubsi Penyelidikan &amp; Pengamanan</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">I Wayan Widnyana, S.H.</div>
+                    </div>
+                  </div>
+                  <div onclick="openMemberDetail(11)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kasubsi Penerangan Hukum &amp; JMS</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">Ni Putu Suryani, S.H.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 3: Seksi Tindak Pidana Umum (PIDUM) -->
+              <div class="flex flex-col items-center space-y-2">
+                <!-- Level 2 Card -->
+                <div onclick="openMemberDetail(4)" class="org-node-card cursor-pointer w-full bg-white rounded-xl shadow-md border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-700 p-2.5 flex items-center gap-2.5 relative group">
+                  <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-blue-50 text-blue-900 border border-blue-200">ESELON IV</span>
+                    <div class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Kasi Tindak Pidana Umum</div>
+                    <div class="font-heading font-extrabold text-xs text-slate-900 leading-snug truncate group-hover:text-emerald-900">I Kadek Wahyudi, S.H.</div>
+                  </div>
+                </div>
+
+                <div class="w-0.5 h-4 tree-line-slate"></div>
+
+                <!-- Level 3: 2 Sub-cards -->
+                <div class="w-full space-y-2">
+                  <div onclick="openMemberDetail(12)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kasubsi Prapenuntutan Pidum</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">Ida Bagus Made Yoga, S.H.</div>
+                    </div>
+                  </div>
+                  <div onclick="openMemberDetail(13)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kasubsi Penuntutan &amp; Eksekusi</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">I Gede Arya Putra, S.H.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 4: Seksi Tindak Pidana Khusus (PIDSUS) -->
+              <div class="flex flex-col items-center space-y-2">
+                <!-- Level 2 Card -->
+                <div onclick="openMemberDetail(5)" class="org-node-card cursor-pointer w-full bg-white rounded-xl shadow-md border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-700 p-2.5 flex items-center gap-2.5 relative group">
+                  <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-red-50 text-red-900 border border-red-200">ESELON IV</span>
+                    <div class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Kasi Tindak Pidana Khusus</div>
+                    <div class="font-heading font-extrabold text-xs text-slate-900 leading-snug truncate group-hover:text-emerald-900">Putu Gede Darmawan, S.H.</div>
+                  </div>
+                </div>
+
+                <div class="w-0.5 h-4 tree-line-slate"></div>
+
+                <!-- Level 3: 2 Sub-cards -->
+                <div class="w-full space-y-2">
+                  <div onclick="openMemberDetail(14)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kasubsi Penyidikan Tipikor</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">Kadek Agus Wirawan, S.H.</div>
+                    </div>
+                  </div>
+                  <div onclick="openMemberDetail(15)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kasubsi Penuntutan &amp; Upaya Hukum</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">Ni Luh Komang Santi, S.H.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 5: Seksi Datun (Perdata & TUN) -->
+              <div class="flex flex-col items-center space-y-2">
+                <!-- Level 2 Card -->
+                <div onclick="openMemberDetail(6)" class="org-node-card cursor-pointer w-full bg-white rounded-xl shadow-md border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-700 p-2.5 flex items-center gap-2.5 relative group">
+                  <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-emerald-50 text-emerald-900 border border-emerald-200">ESELON IV</span>
+                    <div class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Kasi Datun (JPN)</div>
+                    <div class="font-heading font-extrabold text-xs text-slate-900 leading-snug truncate group-hover:text-emerald-900">Ni Made Lestari, S.H.</div>
+                  </div>
+                </div>
+
+                <div class="w-0.5 h-4 tree-line-slate"></div>
+
+                <!-- Level 3: 2 Sub-cards -->
+                <div class="w-full space-y-2">
+                  <div onclick="openMemberDetail(16)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kasubsi Perdata (Bantuan Hukum)</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">Anak Agung Gede Rai, S.H.</div>
+                    </div>
+                  </div>
+                  <div onclick="openMemberDetail(17)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kasubsi TUN &amp; Pos Yanhal</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">Ni Kadek Dwi Anggraini, S.H.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Column 6: Seksi PB3R (Barang Bukti & Rampasan) -->
+              <div class="flex flex-col items-center space-y-2">
+                <!-- Level 2 Card -->
+                <div onclick="openMemberDetail(7)" class="org-node-card cursor-pointer w-full bg-white rounded-xl shadow-md border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-700 p-2.5 flex items-center gap-2.5 relative group">
+                  <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-amber-50 text-amber-900 border border-amber-200">ESELON IV</span>
+                    <div class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 truncate">Kasi PB3R</div>
+                    <div class="font-heading font-extrabold text-xs text-slate-900 leading-snug truncate group-hover:text-emerald-900">I Dewa Gede Raka, S.H.</div>
+                  </div>
+                </div>
+
+                <div class="w-0.5 h-4 tree-line-slate"></div>
+
+                <!-- Level 3: 2 Sub-cards -->
+                <div class="w-full space-y-2">
+                  <div onclick="openMemberDetail(18)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kasubsi Inventarisasi &amp; Gudang BB</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">I Wayan Gede Sunarta, A.Md.</div>
+                    </div>
+                  </div>
+                  <div onclick="openMemberDetail(19)" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                    <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                    <div class="flex-1 min-w-0">
+                      <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">Kasubsi Antar BB &amp; Lelang Rampasan</div>
+                      <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">I Komang Arimbawa, S.H.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- ==============================================================
+                 LEVEL 4: KELOMPOK JABATAN FUNGSIONAL (Berjejer Rapi di Baris Paling Bawah)
+                 ============================================================== -->
+            <div class="pt-8 mt-6 border-t border-slate-200/80">
+              <div class="flex items-center justify-center mb-6">
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold shadow-sm">
+                  <i data-lucide="award" class="w-4 h-4 text-emerald-800"></i>
+                  <span>LEVEL 4: KELOMPOK JABATAN FUNGSIONAL &amp; AHLI YUSTISIAL</span>
+                </span>
+              </div>
+
+              <!-- 5 Columns Grid for Level 4 Cards -->
+              <div id="container-level-4" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+                
+                <div onclick="openMemberDetail(20)" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
+                  <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="text-[8.5px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">AHLI MADYA</span>
+                    <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">Dr. I Gst Ayu Ratih, S.H.</div>
+                    <div class="text-[9.5px] text-slate-500 truncate">Jaksa Penuntut Umum</div>
+                  </div>
+                </div>
+
+                <div onclick="openMemberDetail(21)" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
+                  <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="text-[8.5px] font-bold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">AHLI MUDA</span>
+                    <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">I Ketut Budiarta, S.H.</div>
+                    <div class="text-[9.5px] text-slate-500 truncate">Jaksa Fungsional</div>
+                  </div>
+                </div>
+
+                <div onclick="openMemberDetail(22)" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
+                  <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="text-[8.5px] font-bold text-purple-900 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">FORENSIK</span>
+                    <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">Ni Nyoman Dewi, S.E.</div>
+                    <div class="text-[9.5px] text-slate-500 truncate">Auditor Keuangan Negara</div>
+                  </div>
+                </div>
+
+                <div onclick="openMemberDetail(23)" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
+                  <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="text-[8.5px] font-bold text-emerald-900 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">TI / IT</span>
+                    <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">I Dewa Putu Alit, S.Kom.</div>
+                    <div class="text-[9.5px] text-slate-500 truncate">Pranata Komputer Yustisial</div>
+                  </div>
+                </div>
+
+                <div onclick="openMemberDetail(24)" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
+                  <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="text-[8.5px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">ANALIS</span>
+                    <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">Ni Made Sri Wahyuni, S.H.</div>
+                    <div class="text-[9.5px] text-slate-500 truncate">Analis Penuntutan Perkara</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- MEMBER DETAIL POPUP MODAL -->
+  <div id="modal-member-detail" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in duration-200">
+      
+      <!-- Modal Header with Forest Green Banner -->
+      <div class="p-6 bg-gradient-to-r from-emerald-950 via-[#0B3B24] to-[#072A19] text-white relative">
+        <button onclick="closeModal('modal-member-detail')" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center absolute top-4 right-4">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+        
+        <div class="flex items-center gap-4">
+          <div class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-amber-400 shadow-md bg-white shrink-0">
+            <img id="detail-photo" src="/static/images/avatar-officer-male.svg" alt="Foto Detail" class="w-full h-full object-cover">
+          </div>
+          <div>
+            <span id="detail-level-badge" class="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-400 text-slate-950">
+              LEVEL 1: PIMPINAN
+            </span>
+            <h3 id="detail-name" class="font-heading font-black text-base text-white mt-1">
+              R. Indra Senjaya, S.H., M.H.
+            </h3>
+            <p id="detail-position" class="text-xs text-amber-300 font-medium">
+              Kepala Kejaksaan Negeri Klungkung
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-4 text-xs">
+        
+        <!-- Info Hubungan Kerja & Status (Terbuka untuk Publik) -->
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 text-[10px] font-bold uppercase tracking-wider">Hubungan Satuan Kerja</span>
+            <span class="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+              <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i> Aktif Bertugas
+            </span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[10px] font-semibold">Atasan Langsung:</span>
+            <span id="detail-parent" class="font-heading font-bold text-slate-800 text-xs">-</span>
+          </div>
+        </div>
+
+        <!-- Bagian Khusus Admin: NIP & Pangkat/Golongan (Hanya Terlihat Oleh Admin yang Terotentikasi) -->
+        <div id="admin-credentials-section" class="hidden p-3.5 rounded-xl bg-amber-50/80 border border-amber-300 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-amber-950 uppercase tracking-wider">
+              <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-amber-600"></i>
+              Akses Khusus Admin (Data Kepegawaian)
+            </span>
+            <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-200 text-amber-900 border border-amber-300">ADMIN ONLY</span>
+          </div>
+          <div class="grid grid-cols-2 gap-3 pt-2 border-t border-amber-200">
+            <div>
+              <span class="text-amber-900/80 block text-[10px] font-bold">Nomor Induk Pegawai:</span>
+              <span id="detail-nip" class="font-mono font-extrabold text-slate-900 text-xs">-</span>
+            </div>
+            <div>
+              <span class="text-amber-900/80 block text-[10px] font-bold">Pangkat / Golongan:</span>
+              <span id="detail-rank" class="font-extrabold text-slate-900 text-xs">-</span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-slate-400 block text-[10px] font-semibold uppercase tracking-wider mb-1">Tugas Pokok &amp; Fungsi Satuan Kerja</span>
+          <p id="detail-desc" class="text-slate-600 leading-relaxed text-[11px] bg-slate-50 p-3 rounded-xl border border-slate-100">
+            Melaksanakan tugas penegakan hukum, pelayanan hukum masyarakat, ketertiban peradilan, serta pemulihan aset negara secara transparan berpredikat WBK / WBBM.
+          </p>
+        </div>
+
+        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-[11px] flex items-center justify-between">
+          <span>Layanan Informasi &amp; PTSP Kejaksaan:</span>
+          <a href="tel:081138004444" class="font-bold underline text-emerald-950 hover:text-emerald-700">0811-3800-4444</a>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <button onclick="closeModal('modal-member-detail')" class="px-5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition-colors">
+          Tutup
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TICKET TRACKER MODAL -->
+  <div id="modal-ticket-tracker" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <i data-lucide="ticket" class="w-5 h-5 text-emerald-800"></i>
+          <h3 class="font-heading font-bold text-base text-slate-900">Lacak Tiket Layanan</h3>
+        </div>
+        <button onclick="closeModal('modal-ticket-tracker')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="py-4 space-y-3">
+        <p class="text-xs text-slate-500">Masukkan kode tiket laporan pengaduan (MASADU) atau pengantaran barang bukti (SEMARA BAKTI) Anda:</p>
+        <div class="flex gap-2">
+          <input type="text" id="ticket-search-input" placeholder="Contoh: TKT-20261019-XXXX" class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs uppercase font-mono focus:ring-2 focus:ring-emerald-700 outline-none">
+          <button onclick="trackTicket()" class="px-4 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs transition-colors">
+            Cek
+          </button>
+        </div>
+        <div id="ticket-result-box" class="hidden p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2 mt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OFFICIAL FOOTER -->
+  <footer class="bg-[#03190E] text-white border-t border-emerald-950 pt-16 pb-8 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-emerald-900/60">
+        
+        <!-- Col 1: Instansi -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <img id="footer-logo" src="/static/images/logo-kejari.svg" alt="Logo Kejaksaan RI" class="w-10 h-10 object-contain">
+            <div>
+              <span class="block font-heading font-extrabold text-sm uppercase tracking-tight text-white">KEJAKSAAN NEGERI KLUNGKUNG</span>
+              <span class="block text-[10px] text-amber-400 font-bold">PORTAL RESMI PELAYANAN TERPADU KERTAGOSA</span>
+            </div>
+          </div>
+          <p class="text-xs text-emerald-200/70 leading-relaxed">
+            Mewujudkan penegakan hukum yang berkeadilan, humanis, transparan, serta mengedepankan integritas berpredikat WBK / WBBM.
+          </p>
+        </div>
+
+        <!-- Col 2: Navigasi Cepat -->
+        <div>
+          <h4 class="font-heading font-bold text-xs uppercase tracking-wider text-amber-400 mb-4">Navigasi Profil</h4>
+          <ul class="space-y-2 text-xs text-emerald-100/80">
+            <li><a href="/profil/struktur-organisasi" class="text-amber-400 font-bold">Struktur Organisasi</a></li>
+            <li><a href="/profil/visi-misi" class="hover:text-amber-300 transition-colors">Visi &amp; Misi</a></li>
+            <li><a href="/profil/sejarah" class="hover:text-amber-300 transition-colors">Sejarah Balai Kerta Gosa</a></li>
+            <li><a href="/profil/logo-makna" class="hover:text-amber-300 transition-colors">Logo dan Maknanya</a></li>
+            <li><a href="/profil/tugas-wewenang" class="hover:text-amber-300 transition-colors">Tugas &amp; Wewenang</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Layanan Unggulan -->
+        <div>
+          <h4 class="font-heading font-bold text-xs uppercase tracking-wider text-amber-400 mb-4">4 Pilar Layanan Unggulan</h4>
+          <ul class="space-y-2 text-xs text-emerald-100/80">
+            <li><a href="/informasi/jadwal-sidang" class="hover:text-amber-300 transition-colors">JAGADITA — Jadwal Sidang Digital</a></li>
+            <li><a href="/#pilar-layanan" class="hover:text-amber-300 transition-colors">MASADU — Aduan Publik Terenkripsi</a></li>
+            <li><a href="/#pilar-layanan" class="hover:text-amber-300 transition-colors">SEMARA BAKTI — Pengantaran Barang Bukti</a></li>
+            <li><a href="/#pilar-layanan" class="hover:text-amber-300 transition-colors">YANHAL — Pos Pelayanan Hukum Gratis</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Jam Kerja & Kontak -->
+        <div class="space-y-3">
+          <h4 class="font-heading font-bold text-xs uppercase tracking-wider text-amber-400 mb-4">Kontak &amp; Alamat</h4>
+          <div class="text-xs text-emerald-100/80 space-y-1.5">
+            <p class="font-medium text-white">Kantor Kejaksaan Negeri Klungkung</p>
+            <p>Jl. Ramai No. 1, Semarapura, Klungkung, Bali 80711</p>
+            <p class="pt-1">Telp: (0366) 21105 / 21544</p>
+            <p>WhatsApp PTSP: 0811-3800-4444</p>
+            <p>Email: kejari.klungkung@kejaksaan.go.id</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-emerald-200/60 gap-4">
+        <p>&copy; 2026 Kejaksaan Negeri Klungkung. Hak Cipta Dilindungi Undang-Undang.</p>
+        <div class="flex items-center gap-4">
+          <a href="/admin" class="hover:text-amber-400 transition-colors text-[11px]">Portal Admin</a>
+          <span>&bull;</span>
+          <a href="/" class="hover:text-amber-400 transition-colors text-[11px]">Kebijakan Privasi</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT FOR DYNAMIC DATA SYNC & INTERACTIVITY -->
+  <script>
+    let publicOrgData = {
+      settings: {},
+      members: [],
+      hierarchy: {}
+    };
+
+    async function loadPublicOrgData() {
+      try {
+        const res = await fetch('/api/public/organization');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            publicOrgData = data;
+
+            // Toggle Admin Notice Indicator
+            const adminIndicator = document.getElementById('org-admin-indicator');
+            if (adminIndicator) {
+              if (data.is_admin) {
+                adminIndicator.classList.remove('hidden');
+              } else {
+                adminIndicator.classList.add('hidden');
+              }
+            }
+
+            applySettings(data.settings);
+            renderDynamicChart(data.hierarchy);
+
+            // Sync Header & Footer Logo
+            fetch('/api/public/homepage-data').then(r => r.json()).then(hd => {
+              if (hd.success && hd.contents && hd.contents.header_logo_url && hd.contents.header_logo_url.value) {
+                const lUrl = hd.contents.header_logo_url.value;
+                const h = document.getElementById('header-logo');
+                const f = document.getElementById('footer-logo');
+                if (h) h.src = lUrl;
+                if (f) f.src = lUrl;
+              }
+            }).catch(() => {});
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load dynamic organization data:', err);
+      }
+    }
+
+    function applySettings(settings) {
+      if (!settings) return;
+      
+      // Left Logo
+      if (settings.logo_left) {
+        const elLeft = document.getElementById('org-logo-left-img');
+        if (elLeft) elLeft.src = settings.logo_left;
+      }
+
+      // Right Logo
+      if (settings.logo_right) {
+        const elRight = document.getElementById('org-logo-right-img');
+        if (elRight) elRight.src = settings.logo_right;
+      }
+
+      // Watermark Image & Opacity
+      if (settings.watermark_bg) {
+        const elWatermark = document.getElementById('org-watermark-img');
+        if (elWatermark) {
+          elWatermark.src = settings.watermark_bg;
+          const op = (settings.watermark_opacity || 12) / 100.0;
+          elWatermark.style.opacity = op;
+        }
+      }
+
+      // Titles
+      if (settings.title) {
+        const elTitle = document.getElementById('org-main-title');
+        if (elTitle) elTitle.textContent = settings.title;
+      }
+      if (settings.subtitle) {
+        const elSubtitle = document.getElementById('org-sub-title');
+        if (elSubtitle) elSubtitle.textContent = settings.subtitle;
+      }
+      if (settings.legal_basis) {
+        const elLegal = document.getElementById('org-legal-text');
+        if (elLegal) elLegal.textContent = settings.legal_basis;
+      }
+    }
+
+    function renderDynamicChart(hierarchy) {
+      if (!hierarchy) return;
+
+      // 1. Render Level 1 (Pimpinan)
+      if (hierarchy.level_1 && hierarchy.level_1.length > 0) {
+        const l1 = hierarchy.level_1[0];
+        const containerL1 = document.getElementById('container-level-1');
+        if (containerL1) {
+          const nipHtml = (publicOrgData.is_admin && l1.nip) ? `
+            <div class="text-[10px] text-amber-900 font-mono font-bold mt-1.5 inline-flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-300">
+              <i data-lucide="shield" class="w-3 h-3 text-amber-700"></i> NIP. ${escapeHtml(l1.nip)}
+            </div>
+          ` : '';
+
+          containerL1.innerHTML = `
+            <div onclick="openMemberDetail(${l1.id})" class="org-node-card cursor-pointer w-96 bg-white rounded-2xl shadow-lg border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-600 p-4 flex items-center gap-4 relative group">
+              <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 border-amber-400 shrink-0 shadow-md bg-slate-100">
+                <img src="${escapeAttr(l1.photo_url || '/static/images/kajari-portrait.jpg')}" alt="${escapeAttr(l1.name)}" class="w-full h-full object-cover">
+              </div>
+              <div class="flex-1 min-w-0">
+                <span class="inline-block px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-100 text-amber-900 border border-amber-300">
+                  KEPALA KEJAKSAAN NEGERI
+                </span>
+                <h2 class="font-heading font-black text-sm sm:text-base text-slate-900 leading-snug mt-1 group-hover:text-emerald-900 transition-colors">
+                  ${escapeHtml(l1.name)}
+                </h2>
+                <p class="text-xs text-slate-600 font-medium">${escapeHtml(l1.position)}</p>
+                ${nipHtml}
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      // 2. Render Level 2 & Level 3
+      if (hierarchy.level_2 && hierarchy.level_2.length > 0) {
+        const containerL2 = document.getElementById('container-level-2-and-3');
+        if (containerL2) {
+          containerL2.innerHTML = hierarchy.level_2.map(kasi => {
+            const childrenHtml = (kasi.children || []).map(sub => `
+              <div onclick="openMemberDetail(${sub.id})" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
+                <img src="${escapeAttr(sub.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(sub.name)}" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                <div class="flex-1 min-w-0">
+                  <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">${escapeHtml(sub.position)}</div>
+                  <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">${escapeHtml(sub.name)}</div>
+                </div>
+              </div>
+            `).join('');
+
+            const nipLevel2Html = (publicOrgData.is_admin && kasi.nip) ? `
+              <div class="text-[9px] text-amber-900 font-mono font-bold truncate bg-amber-50 px-1.5 py-0.5 rounded border border-amber-300 mt-0.5">NIP. ${escapeHtml(kasi.nip)}</div>
+            ` : '';
+
+            return `
+              <div class="flex flex-col items-center space-y-2">
+                <!-- Level 2 Card with thick gold top border -->
+                <div onclick="openMemberDetail(${kasi.id})" class="org-node-card cursor-pointer w-full bg-white rounded-xl shadow-md border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-700 p-2.5 flex items-center gap-2.5 relative group">
+                  <img src="${escapeAttr(kasi.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(kasi.name)}" class="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-emerald-50 text-emerald-900 border border-emerald-200">ESELON IV</span>
+                    <div class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5 truncate">${escapeHtml(kasi.position)}</div>
+                    <div class="font-heading font-extrabold text-xs text-slate-900 leading-snug truncate group-hover:text-emerald-900">${escapeHtml(kasi.name)}</div>
+                    ${nipLevel2Html}
+                  </div>
+                </div>
+
+                <!-- Connector Line Down to Sub-bagian -->
+                <div class="w-0.5 h-4 tree-line-slate"></div>
+
+                <!-- Level 3: 2 Sub-cards -->
+                <div class="w-full space-y-2">
+                  ${childrenHtml}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // 3. Render Level 4 (Jabatan Fungsional)
+      if (hierarchy.level_4 && hierarchy.level_4.length > 0) {
+        const containerL4 = document.getElementById('container-level-4');
+        if (containerL4) {
+          containerL4.innerHTML = hierarchy.level_4.map(f => {
+            const nipLevel4Html = (publicOrgData.is_admin && f.nip) ? `
+              <div class="text-[8.5px] text-amber-900 font-mono font-bold truncate mt-0.5">NIP. ${escapeHtml(f.nip)}</div>
+            ` : '';
+
+            return `
+              <div onclick="openMemberDetail(${f.id})" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
+                <img src="${escapeAttr(f.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(f.name)}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
+                <div class="flex-1 min-w-0">
+                  <span class="text-[8.5px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">FUNGSIONAL</span>
+                  <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">${escapeHtml(f.name)}</div>
+                  <div class="text-[9.5px] text-slate-500 truncate">${escapeHtml(f.position)}</div>
+                  ${nipLevel4Html}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      lucide.createIcons();
+    }
+
+    function openMemberDetail(id) {
+      const member = (publicOrgData.members || []).find(m => m.id === id);
+      if (!member) return;
+
+      document.getElementById('detail-photo').src = member.photo_url || '/static/images/avatar-officer-male.svg';
+      document.getElementById('detail-name').textContent = member.name;
+      document.getElementById('detail-position').textContent = member.position;
+      document.getElementById('detail-parent').textContent = member.parent_name ? member.parent_name : 'Kepala Kejaksaan Negeri Klungkung';
+
+      // NIP & Pangkat/Golongan: Only accessible for logged-in Admin
+      const adminCredsSection = document.getElementById('admin-credentials-section');
+      if (publicOrgData.is_admin && (member.nip || member.rank)) {
+        adminCredsSection.classList.remove('hidden');
+        document.getElementById('detail-nip').textContent = member.nip || 'Belum diisi';
+        document.getElementById('detail-rank').textContent = member.rank || 'Pegawai Negeri Sipil Kejaksaan RI';
+      } else {
+        adminCredsSection.classList.add('hidden');
+      }
+
+      let lvlBadge = 'LEVEL 1: PIMPINAN';
+      if (member.level === 2) lvlBadge = 'LEVEL 2: KEPALA SEKSI / BAGIAN';
+      else if (member.level === 3) lvlBadge = 'LEVEL 3: SUB-BAGIAN / URUSAN';
+      else if (member.level === 4) lvlBadge = 'LEVEL 4: JABATAN FUNGSIONAL';
+      document.getElementById('detail-level-badge').textContent = lvlBadge;
+
+      openModal('modal-member-detail');
+      lucide.createIcons();
+    }
+
+    function loadOrgCanvasImage(src) {
+      return new Promise(resolve => {
+        if (!src) return resolve(null);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    function drawOrgRoundedRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function truncateOrgCanvasText(ctx, text, maxWidth) {
+      const str = String(text || '');
+      if (ctx.measureText(str).width <= maxWidth) return str;
+      let truncated = str;
+      while (truncated.length > 0 && ctx.measureText(truncated + '…').width > maxWidth) {
+        truncated = truncated.slice(0, -1);
+      }
+      return truncated + '…';
+    }
+
+    async function downloadOrgChartJpg() {
+      const btn = document.getElementById('btn-download-org-jpg');
+      const origHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>Merender JPG...</span>';
+      }
+
+      try {
+        let data = publicOrgData;
+        if (!data || !data.hierarchy || !data.hierarchy.level_1) {
+          const res = await fetch('/api/public/organization');
+          data = await res.json();
+        }
+        const s = (data && data.settings) ? data.settings : {};
+        const h = (data && data.hierarchy) ? data.hierarchy : {};
+        const isAdmin = !!(data && data.is_admin);
+
+        const W = 2400;
+        const H = 1680;
+        const canvas = document.createElement('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        const ctx = canvas.getContext('2d');
+
+        // 1. Cream-White Background & Institutional Frame
+        ctx.fillStyle = '#FAF8F3';
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.strokeStyle = '#0B3B24';
+        ctx.lineWidth = 12;
+        ctx.strokeRect(20, 20, W - 40, H - 40);
+        ctx.strokeStyle = '#D4AF37';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(34, 34, W - 68, H - 68);
+
+        const [logoLeft, logoRight, watermarkImg] = await Promise.all([
+          loadOrgCanvasImage(s.logo_left || '/static/images/logo-kejari.svg'),
+          loadOrgCanvasImage(s.logo_right || '/static/images/logo-wbk.svg'),
+          loadOrgCanvasImage(s.watermark_bg || '/static/images/logo-kejari.svg')
+        ]);
+
+        // 2. Center Watermark
+        if (watermarkImg) {
+          ctx.save();
+          ctx.globalAlpha = Math.max(0.04, Math.min(0.35, (s.watermark_opacity || 12) / 100));
+          ctx.drawImage(watermarkImg, (W - 620) / 2, (H - 620) / 2 + 60, 620, 620);
+          ctx.restore();
+        }
+
+        // 3. Header Section
+        if (logoLeft) ctx.drawImage(logoLeft, 85, 65, 130, 130);
+        if (logoRight) ctx.drawImage(logoRight, W - 215, 65, 130, 130);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#B45309';
+        ctx.font = 'bold 16px sans-serif';
+        ctx.fillText('BAGAN STRUKTURAL RESMI KEJAKSAAN RI', W / 2, 85);
+
+        ctx.fillStyle = '#0F172A';
+        ctx.font = '900 44px Georgia, serif';
+        ctx.fillText((s.title || 'STRUKTUR ORGANISASI').toUpperCase(), W / 2, 136);
+
+        ctx.fillStyle = '#0B3B24';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText((s.subtitle || 'KEJAKSAAN NEGERI KLUNGKUNG').toUpperCase(), W / 2, 170);
+
+        ctx.fillStyle = '#64748B';
+        ctx.font = '15px sans-serif';
+        ctx.fillText(s.legal_basis || 'Berdasarkan Peraturan Kejaksaan RI Nomor PER-006/A/JA/07/2017 tentang Organisasi dan Tata Kerja Kejaksaan RI', W / 2, 198);
+
+        ctx.strokeStyle = '#E2E8F0';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(75, 222);
+        ctx.lineTo(W - 75, 222);
+        ctx.stroke();
+
+        async function drawNodeCard(m, x, y, w, cardH, badgeText, badgeBg, badgeFg, isLarge = false) {
+          if (!m) return;
+          ctx.save();
+          ctx.shadowColor = 'rgba(15, 23, 42, 0.08)';
+          ctx.shadowBlur = 14;
+          ctx.shadowOffsetY = 4;
+          drawOrgRoundedRect(ctx, x, y, w, cardH, 16);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fill();
+          ctx.restore();
+
+          drawOrgRoundedRect(ctx, x, y, w, cardH, 16);
+          ctx.strokeStyle = '#CBD5E1';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.fillStyle = '#F59E0B';
+          ctx.fillRect(x + 12, y, w - 24, 6);
+
+          const photoSize = isLarge ? 92 : (cardH >= 120 ? 64 : 52);
+          const px = x + 16;
+          const py = y + (cardH - photoSize) / 2 + 2;
+
+          const photoImg = await loadOrgCanvasImage(m.photo_url || '/static/images/avatar-officer-male.svg');
+          ctx.save();
+          drawOrgRoundedRect(ctx, px, py, photoSize, photoSize, 12);
+          ctx.fillStyle = '#F1F5F9';
+          ctx.fill();
+          ctx.clip();
+          if (photoImg) {
+            ctx.drawImage(photoImg, px, py, photoSize, photoSize);
+          }
+          ctx.restore();
+          drawOrgRoundedRect(ctx, px, py, photoSize, photoSize, 12);
+          ctx.strokeStyle = '#F59E0B';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          const tx = px + photoSize + 14;
+          const maxTw = w - (photoSize + 44);
+          ctx.textAlign = 'left';
+
+          if (badgeText) {
+            ctx.fillStyle = badgeBg || '#FEF3C7';
+            const bw = Math.min(maxTw, ctx.measureText(badgeText).width + 20);
+            drawOrgRoundedRect(ctx, tx, y + 16, bw, 22, 6);
+            ctx.fill();
+            ctx.fillStyle = badgeFg || '#92400E';
+            ctx.font = 'bold 11px sans-serif';
+            ctx.fillText(truncateOrgCanvasText(ctx, badgeText, maxTw - 8), tx + 8, y + 31);
+          }
+
+          ctx.fillStyle = '#475569';
+          ctx.font = isLarge ? '600 15px sans-serif' : '600 13px sans-serif';
+          const posY = badgeText ? y + 56 : y + 36;
+          ctx.fillText(truncateOrgCanvasText(ctx, m.position || '', maxTw), tx, posY);
+
+          ctx.fillStyle = '#0F172A';
+          ctx.font = isLarge ? 'bold 21px sans-serif' : 'bold 15px sans-serif';
+          ctx.fillText(truncateOrgCanvasText(ctx, m.name || '', maxTw), tx, posY + (isLarge ? 26 : 22));
+
+          if (isAdmin && m.nip) {
+            ctx.fillStyle = '#92400E';
+            ctx.font = 'bold 11px monospace';
+            ctx.fillText(truncateOrgCanvasText(ctx, 'NIP. ' + m.nip, maxTw), tx, posY + (isLarge ? 48 : 40));
+          }
+        }
+
+        // 4. Level 1 Card (Pimpinan)
+        const l1 = (h.level_1 && h.level_1[0]) ? h.level_1[0] : {
+          name: 'R. Indra Senjaya, S.H., M.H.',
+          position: 'Kepala Kejaksaan Negeri Klungkung',
+          photo_url: '/static/images/kajari-portrait.jpg'
+        };
+        const l1W = 660, l1H = 132, l1X = (W - l1W) / 2, l1Y = 246;
+        await drawNodeCard(l1, l1X, l1Y, l1W, l1H, 'LEVEL 1 • KEPALA KEJAKSAAN NEGERI', '#FEF3C7', '#92400E', true);
+
+        // 5. Orthogonal Gold Bus & Stems
+        const l2List = (h.level_2 || []).slice(0, 6);
+        const colCount = Math.max(1, l2List.length || 6);
+        const gridLeft = 56;
+        const gridGap = 24;
+        const colW = (W - gridLeft * 2 - gridGap * (colCount - 1)) / colCount;
+        const busY = 415;
+        const l2Y = 450;
+
+        ctx.strokeStyle = '#D97706';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(W / 2, l1Y + l1H);
+        ctx.lineTo(W / 2, busY);
+        ctx.stroke();
+
+        if (colCount > 1) {
+          const firstCenter = gridLeft + colW / 2;
+          const lastCenter = gridLeft + (colCount - 1) * (colW + gridGap) + colW / 2;
+          ctx.beginPath();
+          ctx.moveTo(firstCenter, busY);
+          ctx.lineTo(lastCenter, busY);
+          ctx.stroke();
+        }
+
+        // 6. Level 2 & Level 3 Columns
+        for (let i = 0; i < l2List.length; i++) {
+          const kasi = l2List[i];
+          const cx = gridLeft + i * (colW + gridGap);
+          const centerColX = cx + colW / 2;
+
+          ctx.strokeStyle = '#D97706';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(centerColX, busY);
+          ctx.lineTo(centerColX, l2Y);
+          ctx.stroke();
+
+          await drawNodeCard(kasi, cx, l2Y, colW, 128, 'ESELON IV • LEVEL 2', '#ECFDF5', '#065F46', false);
+
+          const children = kasi.children || [];
+          let curSubY = l2Y + 128 + 26;
+          for (let j = 0; j < children.length; j++) {
+            ctx.strokeStyle = '#94A3B8';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(centerColX, curSubY - 26);
+            ctx.lineTo(centerColX, curSubY);
+            ctx.stroke();
+
+            await drawNodeCard(children[j], cx, curSubY, colW, 114, 'SUB-BAGIAN / SEKSI', '#F1F5F9', '#334155', false);
+            curSubY += 114 + 20;
+          }
+        }
+
+        // 7. Level 4 (Jabatan Fungsional)
+        const l4YHeader = 1040;
+        ctx.strokeStyle = '#CBD5E1';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(75, l4YHeader);
+        ctx.lineTo(W - 75, l4YHeader);
+        ctx.stroke();
+
+        ctx.textAlign = 'center';
+        drawOrgRoundedRect(ctx, W / 2 - 280, l4YHeader - 18, 560, 36, 18);
+        ctx.fillStyle = '#0B3B24';
+        ctx.fill();
+        ctx.fillStyle = '#FCD34D';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText('LEVEL 4: KELOMPOK JABATAN FUNGSIONAL & AHLI YUSTISIAL', W / 2, l4YHeader + 5);
+
+        const l4List = h.level_4 || [];
+        const l4Cols = 5;
+        const l4Gap = 24;
+        const l4W = (W - gridLeft * 2 - l4Gap * (l4Cols - 1)) / l4Cols;
+        for (let k = 0; k < l4List.length; k++) {
+          const rowIdx = Math.floor(k / l4Cols);
+          const colIdx = k % l4Cols;
+          const fx = gridLeft + colIdx * (l4W + l4Gap);
+          const fy = l4YHeader + 42 + rowIdx * (122 + 20);
+          await drawNodeCard(l4List[k], fx, fy, l4W, 122, 'JABATAN FUNGSIONAL', '#FEF3C7', '#92400E', false);
+        }
+
+        // 8. Footer Bar
+        ctx.fillStyle = '#0B3B24';
+        ctx.fillRect(34, H - 84, W - 68, 50);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText('PORTAL PELAYANAN PUBLIK TERPADU KERTAGOSA — KEJAKSAAN NEGERI KLUNGKUNG', 64, H - 53);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#FCD34D';
+        ctx.font = 'bold 14px sans-serif';
+        ctx.fillText('Diunduh Resmi • ' + new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }), W - 64, H - 53);
+
+        // 9. Trigger JPG Download
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+        const link = document.createElement('a');
+        link.download = 'Struktur-Organisasi-Kejari-Klungkung.jpg';
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error('Failed to render Org Chart JPG:', err);
+        alert('Gagal mengunduh bagan struktur organisasi dalam format JPG.');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origHtml;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+    }
+
+    function filterChartLive(query) {
+      query = (query || '').toLowerCase().trim();
+      document.querySelectorAll('.org-node-card').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        if (!query || text.includes(query)) {
+          card.style.opacity = '1';
+          card.style.filter = 'none';
+        } else {
+          card.style.opacity = '0.25';
+          card.style.filter = 'grayscale(80%)';
+        }
+      });
+    }
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('hidden');
+        el.classList.add('flex');
+      }
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+      }
+    }
+
+    async function trackTicket() {
+      const code = document.getElementById('ticket-search-input')?.value.trim();
+      const resBox = document.getElementById('ticket-result-box');
+      if (!code) return;
+      resBox.classList.remove('hidden');
+      resBox.innerHTML = '<span class="text-slate-500">Mencari tiket ' + escapeHtml(code) + '...</span>';
+      try {
+        const res = await fetch('/api/public/ticket/' + encodeURIComponent(code));
+        const data = await res.json();
+        if (data.found) {
+          const item = data.data;
+          resBox.innerHTML = `
+            <div class="font-bold text-emerald-900 border-b border-slate-200 pb-1">STATUS: ${escapeHtml(item.status || 'DIPROSES')}</div>
+            <div><strong>Layanan:</strong> ${escapeHtml(data.type)}</div>
+            <div><strong>Pelapor / Pemohon:</strong> ${escapeHtml(item.reporter_name || item.applicant_name)}</div>
+            <div><strong>Tgl Pengajuan:</strong> ${escapeHtml(item.created_at)}</div>
+          `;
+        } else {
+          resBox.innerHTML = '<span class="text-red-600 font-semibold">Tiket tidak ditemukan. Periksa kembali kode tiket Anda.</span>';
+        }
+      } catch (err) {
+        resBox.innerHTML = '<span class="text-red-600 font-semibold">Gagal memeriksa tiket. Coba beberapa saat lagi.</span>';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+    }
+
+    function escapeAttr(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function toggleMobileMenu() {
+      const drawer = document.getElementById('mobile-nav-drawer');
+      if (!drawer) return;
+      const isNowOpen = drawer.classList.toggle('hidden') === false;
+      if (isNowOpen && window.lucide) lucide.createIcons();
+    }
+
+    function setOrgTreeZoom(mode) {
+      const canvas = document.getElementById('org-tree-canvas-inner');
+      const btnFit = document.getElementById('btn-org-zoom-fit');
+      const btn100 = document.getElementById('btn-org-zoom-100');
+      if (!canvas) return;
+      if (mode === 'fit') {
+        canvas.classList.add('org-tree-zoom-fit');
+        if (btnFit) btnFit.className = 'px-2.5 py-1 rounded-md bg-[#0B3B24] text-white shadow-sm transition-colors';
+        if (btn100) btn100.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-colors';
+      } else {
+        canvas.classList.remove('org-tree-zoom-fit');
+        if (btn100) btn100.className = 'px-2.5 py-1 rounded-md bg-[#0B3B24] text-white shadow-sm transition-colors';
+        if (btnFit) btnFit.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-colors';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      loadPublicOrgData();
+    });
+  </script>
+
+  <!-- =========================================================================
+       MOBILE STICKY BOTTOM NAVIGATION DOCK (APP-LIKE UX ON SMARTPHONES)
+       ========================================================================= -->
+  <nav id="mobile-bottom-dock" class="lg:hidden fixed bottom-0 inset-x-0 z-40 px-2 pt-1.5 no-print" aria-label="Navigasi Bawah Mobile">
+    <div class="grid grid-cols-5 items-center max-w-md mx-auto">
+      <a href="/" data-dock-path="/" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="home" class="w-4 h-4"></i></div>
+        <span>Beranda</span>
+      </a>
+      <a href="/informasi/jadwal-sidang" data-dock-path="/informasi/jadwal-sidang" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="gavel" class="w-4 h-4"></i></div>
+        <span>Sidang</span>
+      </a>
+      <div class="flex flex-col items-center justify-center">
+        <a href="/#layanan-digital" class="mobile-dock-center-btn" title="Layanan Digital Terpadu">
+          <i data-lucide="layout-grid" class="w-5 h-5"></i>
+        </a>
+        <span class="text-[10px] font-extrabold text-[#0B3B24] mt-0.5">Layanan</span>
+      </div>
+      <a href="/akuntabilitas-kinerja" data-dock-path="/akuntabilitas-kinerja" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="file-check" class="w-4 h-4"></i></div>
+        <span>SAKIP</span>
+      </a>
+      <button type="button" onclick="toggleMobileMenu(true)" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="menu" class="w-4 h-4"></i></div>
+        <span>Menu</span>
+      </button>
+    </div>
+  </nav>
+</body>
+</html>

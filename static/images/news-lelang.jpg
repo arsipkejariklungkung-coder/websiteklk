@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <rect width="600" height="400" fill="#0F172A"/>
+  <rect x="50" y="50" width="500" height="300" rx="12" fill="#1E293B" stroke="#F59E0B" stroke-width="2"/>
+  <text x="300" y="110" font-family="'Plus Jakarta Sans', sans-serif" font-size="18" font-weight="800" fill="#FBBF24" text-anchor="middle">LELANG BARANG RAMPASAN NEGARA</text>
+  <text x="300" y="140" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" fill="#94A3B8" text-anchor="middle">KPKNL Denpasar &amp; Kejari Klungkung</text>
+  <circle cx="300" cy="220" r="50" fill="#D97706"/>
+  <!-- Gavel Icon -->
+  <path d="M 285,205 L 315,190 L 325,210 L 295,225 Z" fill="#FFFBEB"/>
+  <line x1="305" y1="210" x2="335" y2="250" stroke="#FFFBEB" stroke-width="6" stroke-linecap="round"/>
+</svg>

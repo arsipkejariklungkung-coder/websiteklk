@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jadwal Sidang JAGADITA - Kejaksaan Negeri Klungkung</title>
+  <meta name="description" content="Papan Kendali & Jadwal Giat Sidang Digital (JAGADITA) perkara Pidana Umum dan Pidana Khusus Kejaksaan Negeri Klungkung di Pengadilan Negeri Semarapura.">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forest: {
+              DEFAULT: '#0B3B24',
+              dark: '#072A19',
+              light: '#14532D',
+              deep: '#03190E'
+            },
+            gold: {
+              DEFAULT: '#EAB308',
+              dark: '#CA8A04',
+              amber: '#D97706',
+              light: '#FEF08A'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            heading: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/css/styles.css?v=2.8">
+  <link rel="icon" type="image/svg+xml" href="/static/images/logo-kejari.svg">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased selection:bg-amber-400 selection:text-slate-900">
+
+  <!-- TOP UTILITY BAR & MAIN NAVBAR -->
+  <header class="w-full bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm transition-all">
+    <div class="border-b border-slate-100 bg-slate-50/70 text-xs">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <a href="/" class="w-9 h-9 flex-shrink-0">
+            <img id="header-logo" src="/static/images/logo-kejari.svg" alt="Logo Kejaksaan RI" class="w-full h-full object-contain site-logo-img">
+          </a>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5">
+            <a href="/" class="font-heading font-extrabold text-slate-900 tracking-tight text-xs sm:text-sm uppercase hover:text-emerald-900 transition-colors">
+              KEJAKSAAN REPUBLIK INDONESIA - KEJAKSAAN NEGERI KLUNGKUNG
+            </a>
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 shadow-sm w-fit">
+              ⭐ ZONA INTEGRITAS WBK / WBBM
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 ml-auto">
+          <div class="hidden md:flex items-center gap-1.5 text-slate-600 font-medium text-xs">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-800"></i>
+            <span>Senin - Jumat: 08.00 - 16.00 WITA</span>
+          </div>
+          <button onclick="openModal('modal-ticket-tracker')" class="px-3.5 py-1.5 rounded-lg bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-colors">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span>Lacak Tiket Layanan</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between">
+      <!-- Mobile Menu Trigger (Left side of Navbar on < 1024px) -->
+      <button type="button" onclick="toggleMobileMenu()" class="lg:hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-800 border border-slate-200 font-heading font-bold text-xs transition-all active:scale-95">
+        <i data-lucide="menu" class="w-4 h-4 text-[#0B3B24]"></i>
+        <span>Menu Navigasi</span>
+      </button>
+
+      <div class="hidden lg:flex items-center gap-1 text-sm font-semibold text-slate-700">
+        <a href="/" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1.5">
+          <i data-lucide="home" class="w-4 h-4 text-emerald-800"></i>
+          Beranda
+        </a>
+
+        <!-- Profil Dropdown -->
+        <div class="relative group">
+          <button class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center gap-1 transition-colors">
+            Profil <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
+          </button>
+          <div class="absolute left-0 mt-1 w-60 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
+            <a href="/profil/struktur-organisasi" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="network" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Struktur Organisasi</span>
+            </a>
+            <a href="/profil/visi-misi" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Visi dan Misi</span>
+            </a>
+            <a href="/profil/sejarah" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="landmark" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Sejarah</span>
+            </a>
+            <a href="/profil/logo-makna" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Logo dan Maknanya</span>
+            </a>
+            <a href="/profil/tugas-wewenang" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="scale" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Tugas dan Wewenang</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Informasi Dropdown (ACTIVE ON THIS PAGE) -->
+        <div class="relative group">
+          <button class="px-4 py-2 rounded-full bg-[#0B3B24] text-white shadow-sm flex items-center gap-1.5 transition-colors">
+            Informasi <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-amber-400 group-hover:rotate-180 transition-transform"></i>
+          </button>
+          <div class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
+            <a href="/informasi/berita" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="newspaper" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Berita &amp; Publikasi Hukum</span>
+            </a>
+            <a href="/informasi/pengumuman" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="bell" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Pengumuman Resmi</span>
+            </a>
+            <a href="/informasi/jadwal-sidang" class="block px-3 py-2 text-xs font-bold text-emerald-900 bg-emerald-50 rounded-lg flex items-center gap-2">
+              <i data-lucide="gavel" class="w-3.5 h-3.5 text-amber-600"></i>
+              <span>Jadwal Sidang JAGADITA</span>
+            </a>
+            <a href="/informasi/skm" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
+              <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Indeks Kepuasan (SKM)</span>
+            </a>
+          </div>
+        </div>
+
+        <a href="/#pilar-layanan" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Pelayanan</a>
+        <a href="/akuntabilitas-kinerja" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Akuntabilitas Kinerja</a>
+        <a href="/#kantor-peta" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Kontak</a>
+      </div>
+
+      <a href="tel:081138004444" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-50 border border-amber-300 text-amber-950 flex items-center gap-2 shadow-sm hover:bg-amber-100 transition-colors">
+        <i data-lucide="phone-call" class="w-3.5 h-3.5 text-amber-700"></i>
+        <span>Hotline PTSP: 0811-3800-4444</span>
+      </a>
+    </nav>
+
+    <!-- Collapsible Categorized Mobile Navigation Drawer -->
+    <div id="mobile-nav-drawer" class="hidden lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-4 shadow-2xl">
+      <!-- Section 1: Navigasi Utama -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Navigasi Utama</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+          <a href="/" class="p-2.5 rounded-xl bg-[#0B3B24] text-white flex items-center gap-2 shadow-sm">
+            <i data-lucide="home" class="w-4 h-4 text-amber-400 shrink-0"></i>
+            <span class="truncate">Beranda</span>
+          </a>
+          <a href="/#layanan-digital" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-amber-50 text-amber-950 border border-amber-200 flex items-center gap-2">
+            <i data-lucide="globe" class="w-4 h-4 text-amber-700 shrink-0"></i>
+            <span class="truncate">Layanan Digital</span>
+          </a>
+          <a href="/akuntabilitas-kinerja" class="p-2.5 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-200 flex items-center gap-2">
+            <i data-lucide="file-check" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Akuntabilitas (SAKIP)</span>
+          </a>
+          <a href="/#kantor-peta" onclick="toggleMobileMenu()" class="p-2.5 rounded-xl bg-slate-50 text-slate-700 border border-slate-200 flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Kontak &amp; Lokasi</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 2: Profil Instansi (5 Halaman) -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Profil Instansi</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+          <a href="/profil/struktur-organisasi" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="network" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Struktur Organisasi</span>
+          </a>
+          <a href="/profil/visi-misi" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Visi &amp; Misi</span>
+          </a>
+          <a href="/profil/sejarah" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="landmark" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Sejarah</span>
+          </a>
+          <a href="/profil/logo-makna" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Logo &amp; Makna</span>
+          </a>
+          <a href="/profil/tugas-wewenang" class="col-span-2 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="scale" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Tugas Pokok &amp; Wewenang Kejaksaan</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 3: Informasi Publik (4 Halaman) -->
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Informasi Publik</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+          <a href="/informasi/berita" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="newspaper" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Pusat Berita</span>
+          </a>
+          <a href="/informasi/pengumuman" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-600 shrink-0"></i>
+            <span class="truncate">Pengumuman</span>
+          </a>
+          <a href="/informasi/jadwal-sidang" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="gavel" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Jadwal Sidang</span>
+          </a>
+          <a href="/informasi/skm" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-700 border border-slate-200/80 flex items-center gap-2">
+            <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-700 shrink-0"></i>
+            <span class="truncate">Skor IKM / SKM</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Section 4: Portal Layanan Digital Eksternal -->
+      <div class="pt-2 border-t border-slate-100">
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 mb-2 px-1">Akses Cepat Layanan Digital</div>
+        <div class="grid grid-cols-4 gap-1.5 text-[10px] font-bold text-center">
+          <a href="https://halojpn.kejaksaan.go.id/" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-200 flex flex-col items-center gap-1">
+            <i data-lucide="message-square-heart" class="w-4 h-4 text-emerald-700"></i>
+            <span>HaloJPN</span>
+          </a>
+          <a href="https://tilang.kejaksaan.go.id/home" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-blue-50 text-blue-950 border border-blue-200 flex flex-col items-center gap-1">
+            <i data-lucide="car" class="w-4 h-4 text-blue-700"></i>
+            <span>E-Tilang</span>
+          </a>
+          <a href="https://ppid.kejaksaan.go.id/satker/kn-klungkung" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-amber-50 text-amber-950 border border-amber-200 flex flex-col items-center gap-1">
+            <i data-lucide="folder-search" class="w-4 h-4 text-amber-700"></i>
+            <span>E-PPID</span>
+          </a>
+          <a href="https://www.lapor.go.id/" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-rose-50 text-rose-950 border border-rose-200 flex flex-col items-center gap-1">
+            <i data-lucide="megaphone" class="w-4 h-4 text-rose-700"></i>
+            <span>LAPOR!</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- PAGE HERO BANNER -->
+  <section class="hero-forest-bg hero-mesh-pattern text-white py-12 lg:py-16 relative border-b border-emerald-950">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <!-- Breadcrumbs -->
+      <nav class="flex items-center gap-2 text-xs text-emerald-200/80 mb-4 font-medium">
+        <a href="/" class="hover:text-white transition-colors">Beranda</a>
+        <span>/</span>
+        <span class="text-emerald-300">Informasi</span>
+        <span>/</span>
+        <span class="text-amber-300 font-bold">Jadwal Sidang JAGADITA</span>
+      </nav>
+
+      <div class="max-w-3xl">
+        <span class="inline-block px-3 py-1 rounded-full text-xs font-extrabold tracking-wider border border-amber-400/50 bg-amber-950/50 text-amber-300 mb-3">
+          TRANSPARANSI PERADILAN &amp; PENUNTUTAN UMUM
+        </span>
+        <h1 data-cms-key="info_sidang_hero_title" data-cms-label="Judul Hero Jadwal Sidang" class="font-serif font-black text-3xl sm:text-5xl text-white tracking-wide mb-4 hero-title-shimmer">
+          JAGADITA — Jadwal Giat Sidang Digital
+        </h1>
+        <p data-cms-key="info_sidang_hero_subtitle" data-cms-label="Subjudul Hero Jadwal Sidang" class="text-emerald-100/90 text-sm sm:text-base leading-relaxed font-light">
+          Pusat pemantauan jadwal persidangan perkara Tindak Pidana Umum (PIDUM) dan Tindak Pidana Khusus (TIPIKOR/PIDSUS) Kejaksaan Negeri Klungkung secara real-time dan terbuka bagi masyarakat luas.
+        </p>
+
+        <!-- Quick Status Metrics Bar -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
+          <div class="bg-emerald-950/60 backdrop-blur-sm border border-emerald-700/50 rounded-xl p-3">
+            <span class="block text-[11px] text-emerald-300 font-medium">Total Jadwal Hari Ini</span>
+            <span id="metric-total-sidang" class="text-xl sm:text-2xl font-bold font-serif text-white">12</span>
+            <span class="text-[10px] text-emerald-200/70 block mt-0.5">Perkara Terjadwal</span>
+          </div>
+          <div class="bg-emerald-950/60 backdrop-blur-sm border border-emerald-700/50 rounded-xl p-3">
+            <span class="block text-[11px] text-emerald-300 font-medium">Pidana Umum (PIDUM)</span>
+            <span id="metric-pidum-sidang" class="text-xl sm:text-2xl font-bold font-serif text-amber-300">8</span>
+            <span class="text-[10px] text-emerald-200/70 block mt-0.5">PN Semarapura</span>
+          </div>
+          <div class="bg-emerald-950/60 backdrop-blur-sm border border-emerald-700/50 rounded-xl p-3">
+            <span class="block text-[11px] text-emerald-300 font-medium">Pidana Khusus (PIDSUS)</span>
+            <span id="metric-pidsus-sidang" class="text-xl sm:text-2xl font-bold font-serif text-red-300">4</span>
+            <span class="text-[10px] text-emerald-200/70 block mt-0.5">PN Tipikor Denpasar</span>
+          </div>
+          <div class="bg-emerald-950/60 backdrop-blur-sm border border-emerald-700/50 rounded-xl p-3">
+            <span class="block text-[11px] text-emerald-300 font-medium">Akses Sidang Terbuka</span>
+            <span class="text-xl sm:text-2xl font-bold font-serif text-white">100%</span>
+            <span class="text-[10px] text-emerald-200/70 block mt-0.5">Keterbukaan Informasi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- Admin Live Toolbar Slot -->
+    <div id="info-admin-toolbar" class="hidden"></div>
+    <div id="jagadita-admin-add-slot"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Left Content (8 cols) -->
+      <div class="lg:col-span-8 space-y-8">
+
+        <!-- Search & Filter Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+            <div>
+              <h2 class="font-heading font-bold text-lg text-slate-900 flex items-center gap-2">
+                <i data-lucide="calendar-search" class="w-5 h-5 text-emerald-700"></i>
+                Pencarian &amp; Filter Jadwal Sidang
+              </h2>
+              <p class="text-xs text-slate-500">Cari berdasarkan nomor perkara, nama terdakwa, atau nama Jaksa Penuntut Umum (JPU).</p>
+            </div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-semibold self-start sm:self-auto">
+              <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span id="current-date-badge">Hari Ini: Selasa, 20 Oktober 2026</span>
+            </div>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="jagadita-search-input" placeholder="Ketik nomor perkara, nama terdakwa (contoh: I Wayan..., Made...), atau JPU..." class="w-full pl-10 pr-24 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-700/30 focus:border-emerald-700 text-sm bg-slate-50/50">
+            <button id="btn-clear-search" onclick="clearSearch()" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-slate-600 px-2 py-1 rounded bg-slate-100">
+              Reset
+            </button>
+          </div>
+
+          <!-- Filter Pills -->
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <span class="text-xs font-semibold text-slate-500 mr-1">Kategori:</span>
+            <button onclick="setFilterCategory('Semua')" id="filter-all" class="filter-pill-btn px-3 py-1.5 rounded-full text-xs font-bold transition-all bg-[#0B3B24] text-white shadow-sm">
+              Semua Perkara (<span id="count-badge-all">12</span>)
+            </button>
+            <button onclick="setFilterCategory('PIDUM')" id="filter-pidum" class="filter-pill-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200">
+              Pidum Semarapura (<span id="count-badge-pidum">8</span>)
+            </button>
+            <button onclick="setFilterCategory('TIPIKOR')" id="filter-pidsus" class="filter-pill-btn px-3 py-1.5 rounded-full text-xs font-semibold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200">
+              Tipikor / Pidsus (<span id="count-badge-pidsus">4</span>)
+            </button>
+            
+            <div class="ml-auto flex items-center gap-2 text-xs">
+              <span class="text-slate-400 hidden sm:inline">|</span>
+              <button onclick="window.print()" class="text-emerald-800 hover:text-emerald-950 font-bold inline-flex items-center gap-1">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                <span>Cetak Jadwal</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table Container -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <i data-lucide="scale" class="w-4 h-4 text-emerald-800"></i>
+              <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Daftar Sidang Terdaftar Hari Ini</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="sm:hidden inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-bold text-amber-800">
+                <i data-lucide="move-horizontal" class="w-3 h-3"></i> Geser tabel
+              </span>
+              <span id="results-count" class="text-xs text-slate-500 font-medium">Menampilkan 12 sidang</span>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="bg-slate-100/80 text-slate-700 border-b border-slate-200 uppercase font-heading text-[11px] tracking-wider">
+                  <th class="py-3 px-4 font-bold">Waktu &amp; Ruang</th>
+                  <th class="py-3 px-4 font-bold">No. Perkara &amp; Terdakwa</th>
+                  <th class="py-3 px-3 font-bold text-center">Jenis</th>
+                  <th class="py-3 px-4 font-bold">Agenda Sidang</th>
+                  <th class="py-3 px-4 font-bold">Jaksa Penuntut (JPU)</th>
+                  <th class="py-3 px-3 font-bold text-center">Status</th>
+                  <th class="py-3 px-3 font-bold text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="jadwal-tbody" class="divide-y divide-slate-100">
+                <!-- Dynamic or pre-rendered rows inserted by JS -->
+                <tr class="hover:bg-emerald-50/50 transition-colors">
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    <div class="font-bold text-slate-900 text-sm">09.00 WITA</div>
+                    <div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                      <i data-lucide="map-pin" class="w-3 h-3 text-emerald-700"></i> Ruang Cakra (PN Semarapura)
+                    </div>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span class="font-mono font-bold text-emerald-900 block text-xs">84/Pid.B/2026/PN Srp</span>
+                    <span class="font-semibold text-slate-800 text-xs block mt-0.5">I Wayan Suardana alias Yan Belog</span>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-900 border border-blue-200">
+                      PIDUM
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span class="font-semibold text-slate-900 block">Pemeriksaan Saksi (Ahli Forensik)</span>
+                    <span class="text-[11px] text-slate-500 block mt-0.5">Pasal 363 ayat (1) KUHP</span>
+                  </td>
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    <div class="font-medium text-slate-800">I Kadek Wahyudi, S.H.</div>
+                    <div class="text-[11px] text-slate-500">Seksi Pidum Kejari Klungkung</div>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping"></span>
+                      Sedang Sidang
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <button onclick="viewDetail('84/Pid.B/2026/PN Srp', 'I Wayan Suardana', 'Ruang Cakra (PN Semarapura)', '09.00 WITA', 'Pemeriksaan Saksi (Ahli Forensik)', 'I Kadek Wahyudi, S.H.', 'PIDUM', 'Sedang Sidang')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-emerald-100 text-emerald-900 font-bold text-[11px] transition-colors">
+                      Detail
+                    </button>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-emerald-50/50 transition-colors">
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    <div class="font-bold text-slate-900 text-sm">10.00 WITA</div>
+                    <div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                      <i data-lucide="map-pin" class="w-3 h-3 text-emerald-700"></i> Ruang Kartika (PN Semarapura)
+                    </div>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span class="font-mono font-bold text-emerald-900 block text-xs">91/Pid.Sus/2026/PN Srp</span>
+                    <span class="font-semibold text-slate-800 text-xs block mt-0.5">Ni Komang Ayu Astuti</span>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-900 border border-blue-200">
+                      PIDUM
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span class="font-semibold text-slate-900 block">Pembacaan Surat Dakwaan</span>
+                    <span class="text-[11px] text-slate-500 block mt-0.5">UU Narkotika No. 35 Tahun 2009</span>
+                  </td>
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    <div class="font-medium text-slate-800">Ni Made Lestari, S.H., M.H.</div>
+                    <div class="text-[11px] text-slate-500">Seksi Pidum Kejari Klungkung</div>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                      Terjadwal
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <button onclick="viewDetail('91/Pid.Sus/2026/PN Srp', 'Ni Komang Ayu Astuti', 'Ruang Kartika (PN Semarapura)', '10.00 WITA', 'Pembacaan Surat Dakwaan', 'Ni Made Lestari, S.H., M.H.', 'PIDUM', 'Terjadwal')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-emerald-100 text-emerald-900 font-bold text-[11px] transition-colors">
+                      Detail
+                    </button>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-emerald-50/50 transition-colors">
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    <div class="font-bold text-slate-900 text-sm">11.15 WITA</div>
+                    <div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                      <i data-lucide="map-pin" class="w-3 h-3 text-red-700"></i> Ruang Sidang Tipikor (PN Dps)
+                    </div>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span class="font-mono font-bold text-red-900 block text-xs">12/Pid.Sus-TPK/2026/PN Dps</span>
+                    <span class="font-semibold text-slate-800 text-xs block mt-0.5">I Gusti Ngurah Dharma Putra</span>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-red-100 text-red-900 border border-red-200">
+                      TIPIKOR
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span class="font-semibold text-slate-900 block">Pembacaan Surat Tuntutan (Requisitoir)</span>
+                    <span class="text-[11px] text-slate-500 block mt-0.5">Pasal 2 &amp; 3 UU Pemberantasan Tipikor</span>
+                  </td>
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    <div class="font-medium text-slate-800">Putu Gede Darmawan, S.H.</div>
+                    <div class="text-[11px] text-slate-500">Kasi Pidsus Kejari Klungkung</div>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                      Terjadwal
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <button onclick="viewDetail('12/Pid.Sus-TPK/2026/PN Dps', 'I Gusti Ngurah Dharma Putra', 'Ruang Sidang Tipikor (PN Dps)', '11.15 WITA', 'Pembacaan Surat Tuntutan (Requisitoir)', 'Putu Gede Darmawan, S.H.', 'TIPIKOR', 'Terjadwal')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-emerald-100 text-emerald-900 font-bold text-[11px] transition-colors">
+                      Detail
+                    </button>
+                  </td>
+                </tr>
+
+                <tr class="hover:bg-emerald-50/50 transition-colors">
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    <div class="font-bold text-slate-900 text-sm">13.30 WITA</div>
+                    <div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                      <i data-lucide="map-pin" class="w-3 h-3 text-emerald-700"></i> Ruang Cakra (PN Semarapura)
+                    </div>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span class="font-mono font-bold text-emerald-900 block text-xs">96/Pid.B/2026/PN Srp</span>
+                    <span class="font-semibold text-slate-800 text-xs block mt-0.5">Dewa Ketut Alit</span>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-900 border border-blue-200">
+                      PIDUM
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-4">
+                    <span class="font-semibold text-slate-900 block">Pembacaan Putusan (Vonis Hakim)</span>
+                    <span class="text-[11px] text-slate-500 block mt-0.5">Pasal 351 KUHP (Penganiayaan)</span>
+                  </td>
+                  <td class="py-3.5 px-4 whitespace-nowrap">
+                    <div class="font-medium text-slate-800">Ida Bagus Made Yoga, S.H.</div>
+                    <div class="text-[11px] text-slate-500">Seksi Pidum Kejari Klungkung</div>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                      Terjadwal
+                    </span>
+                  </td>
+                  <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                    <button onclick="viewDetail('96/Pid.B/2026/PN Srp', 'Dewa Ketut Alit', 'Ruang Cakra (PN Semarapura)', '13.30 WITA', 'Pembacaan Putusan (Vonis Hakim)', 'Ida Bagus Made Yoga, S.H.', 'PIDUM', 'Terjadwal')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-emerald-100 text-emerald-900 font-bold text-[11px] transition-colors">
+                      Detail
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="p-3 bg-slate-50 border-t border-slate-200 text-center text-xs text-slate-500">
+            * Jadwal persidangan dapat berubah sewaktu-waktu sesuai penetapan Majelis Hakim Pengadilan Negeri. Data diperbarui otomatis dari Sistem Manajemen Perkara.
+          </div>
+        </div>
+
+        <!-- Courtroom Etiquette & Stages Guides -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-6">
+          <div class="flex items-center gap-3 border-b border-slate-100 pb-4">
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center font-bold">
+              <i data-lucide="book-open" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-heading font-bold text-slate-900 text-base">Alur &amp; Tahapan Sidang Pidana di Pengadilan</h3>
+              <p class="text-xs text-slate-500">Memahami 6 tahapan utama proses penuntutan dan persidangan menurut KUHAP.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-900">Tahap 1</span>
+                <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold flex items-center justify-center">1</span>
+              </div>
+              <h4 class="font-bold text-slate-800 text-xs mb-1">Pembacaan Surat Dakwaan</h4>
+              <p class="text-[11px] text-slate-500 leading-relaxed">JPU membacakan uraian cermat peristiwa pidana dan pasal yang disangkakan kepada terdakwa.</p>
+            </div>
+
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-900">Tahap 2</span>
+                <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold flex items-center justify-center">2</span>
+              </div>
+              <h4 class="font-bold text-slate-800 text-xs mb-1">Eksepsi &amp; Putusan Sela</h4>
+              <p class="text-[11px] text-slate-500 leading-relaxed">Keberatan terdakwa/penasihat hukum atas kewenangan pengadilan, disusul putusan sela Majelis Hakim.</p>
+            </div>
+
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-900">Tahap 3</span>
+                <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold flex items-center justify-center">3</span>
+              </div>
+              <h4 class="font-bold text-slate-800 text-xs mb-1">Pemeriksaan Saksi &amp; Ahli</h4>
+              <p class="text-[11px] text-slate-500 leading-relaxed">Pembuktian alat bukti, keterangan saksi korban, saksi mahkota, saksi ahli, dan barang bukti.</p>
+            </div>
+
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-900">Tahap 4</span>
+                <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold flex items-center justify-center">4</span>
+              </div>
+              <h4 class="font-bold text-slate-800 text-xs mb-1">Tuntutan Pidana (Requisitoir)</h4>
+              <p class="text-[11px] text-slate-500 leading-relaxed">JPU membacakan analisis yuridis dan amar tuntutan hukuman pidana yang pantas dijatuhkan.</p>
+            </div>
+
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-900">Tahap 5</span>
+                <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold flex items-center justify-center">5</span>
+              </div>
+              <h4 class="font-bold text-slate-800 text-xs mb-1">Pembelaan (Pledoi)</h4>
+              <p class="text-[11px] text-slate-500 leading-relaxed">Hak terdakwa menyampaikan pembelaan, dilanjutkan replik dari JPU dan duplik dari terdakwa.</p>
+            </div>
+
+            <div class="p-4 rounded-xl border border-emerald-300 bg-emerald-50/40">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-emerald-900">Tahap 6</span>
+                <span class="w-6 h-6 rounded-full bg-amber-400 text-amber-950 text-[11px] font-bold flex items-center justify-center">6</span>
+              </div>
+              <h4 class="font-bold text-slate-900 text-xs mb-1">Putusan Majelis Hakim</h4>
+              <p class="text-[11px] text-slate-600 leading-relaxed">Pembacaan vonis akhir majelis hakim (pidana penjara, denda, atau bebas jika dakwaan tidak terbukti).</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Sidebar (4 cols) -->
+      <div class="lg:col-span-4 space-y-6">
+
+        <!-- Courtroom Rules Card -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <h3 class="font-heading font-bold text-slate-900 text-base mb-3 flex items-center gap-2">
+            <i data-lucide="shield-alert" class="w-4 h-4 text-amber-600"></i>
+            Tata Tertib Ruang Sidang
+          </h3>
+          <p class="text-xs text-slate-500 mb-4">Pengunjung sidang wajib mematuhi ketentuan demi kelancaran dan kewibawaan peradilan:</p>
+
+          <ul class="space-y-3 text-xs text-slate-700">
+            <li class="flex items-start gap-2.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+              <span><strong>Berpakaian Sopan &amp; Rapi:</strong> Tidak mengenakan sandal jepit, kaos oblong, atau topi di dalam ruang sidang.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+              <span><strong>Senyapkan Ponsel:</strong> Nonaktifkan nada dering handphone selama sidang berlangsung.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+              <span><strong>Dilarang Membawa Senjata:</strong> Dilarang membawa senjata tajam, senjata api, atau benda berbahaya.</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5"></i>
+              <span><strong>Izin Dokumentasi:</strong> Pengambilan foto atau rekaman video wajib meminta izin kepada Ketua Majelis Hakim sebelum sidang dimulai.</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Witness & Victim Support Desk -->
+        <div class="bg-gradient-to-br from-emerald-950 to-emerald-900 text-white rounded-2xl p-6 shadow-md relative overflow-hidden border border-emerald-800">
+          <div class="relative z-10 space-y-3">
+            <span class="inline-block px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-amber-400 text-amber-950">
+              Layanan Perlindungan Saksi
+            </span>
+            <h4 class="font-heading font-bold text-base text-white">Dipanggil Menjadi Saksi?</h4>
+            <p class="text-xs text-emerald-100/80 leading-relaxed">
+              Kejaksaan Negeri Klungkung menyediakan ruang tunggu saksi terpisah, pendampingan ramah anak &amp; lansia, serta fasilitas transportasi bagi saksi yang membutuhkan.
+            </p>
+            <div class="pt-2">
+              <a href="tel:081138004444" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs shadow transition-colors">
+                <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+                <span>Hubungi Petugas Saksi PTSP</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Sub-Menu Informasi -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+          <h4 class="font-heading font-bold text-xs uppercase tracking-wider text-slate-400 mb-3">
+            Menu Informasi Terkait
+          </h4>
+          <nav class="space-y-1.5 text-xs font-semibold">
+            <a href="/informasi/berita" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-slate-700 transition-colors">
+              <span class="flex items-center gap-2">
+                <i data-lucide="newspaper" class="w-4 h-4 text-emerald-700"></i>
+                Berita &amp; Publikasi Hukum
+              </span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+            </a>
+            <a href="/informasi/pengumuman" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-slate-700 transition-colors">
+              <span class="flex items-center gap-2">
+                <i data-lucide="bell" class="w-4 h-4 text-emerald-700"></i>
+                Pengumuman Resmi
+              </span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+            </a>
+            <a href="/informasi/jadwal-sidang" class="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 text-emerald-950 border border-emerald-200/60 font-bold">
+              <span class="flex items-center gap-2">
+                <i data-lucide="gavel" class="w-4 h-4 text-emerald-700"></i>
+                Jadwal Sidang JAGADITA
+              </span>
+              <span class="w-2 h-2 rounded-full bg-emerald-700"></span>
+            </a>
+            <a href="/informasi/skm" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 text-slate-700 transition-colors">
+              <span class="flex items-center gap-2">
+                <i data-lucide="award" class="w-4 h-4 text-emerald-700"></i>
+                Indeks Kepuasan (SKM)
+              </span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400"></i>
+            </a>
+          </nav>
+        </div>
+
+        <!-- Location Information -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
+          <h4 class="font-heading font-bold text-xs uppercase tracking-wider text-slate-400">
+            Lokasi Pengadilan
+          </h4>
+          <div class="text-xs space-y-2 text-slate-600">
+            <div>
+              <strong class="text-slate-800 block">Pengadilan Negeri Semarapura</strong>
+              <span>Jl. Untung Surapati No. 43, Semarapura Tengah, Klungkung</span>
+            </div>
+            <div class="border-t border-slate-100 pt-2">
+              <strong class="text-slate-800 block">Pengadilan Tipikor Denpasar</strong>
+              <span>Jl. P.B. Sudirman No. 1, Denpasar Barat, Bali</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- DETAIL MODAL FOR SCHEDULE -->
+  <div id="modal-jadwal-detail" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in duration-200">
+      <div class="p-5 bg-gradient-to-r from-emerald-950 to-emerald-900 text-white flex items-center justify-between">
+        <div>
+          <span class="text-[10px] uppercase font-bold tracking-wider text-amber-400 block">Informasi Detail Perkara</span>
+          <h3 id="modal-case-number" class="font-mono font-bold text-base text-white">84/Pid.B/2026/PN Srp</h3>
+        </div>
+        <button onclick="closeDetailModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <div>
+          <span class="text-slate-400 block mb-0.5 font-medium">Nama Terdakwa:</span>
+          <p id="modal-defendant" class="font-bold text-slate-900 text-sm">I Wayan Suardana alias Yan Belog</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100">
+          <div>
+            <span class="text-slate-400 block mb-0.5">Waktu Sidang:</span>
+            <span id="modal-time" class="font-bold text-slate-800">09.00 WITA</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block mb-0.5">Klasifikasi:</span>
+            <span id="modal-type" class="px-2 py-0.5 rounded font-bold text-[10px] bg-blue-100 text-blue-900">PIDUM</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block mb-0.5">Ruang Sidang:</span>
+            <span id="modal-room" class="font-medium text-slate-800">Ruang Cakra (PN Semarapura)</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block mb-0.5">Status:</span>
+            <span id="modal-status" class="font-bold text-amber-600">Sedang Berlangsung</span>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-slate-400 block mb-0.5 font-medium">Agenda Persidangan Hari Ini:</span>
+          <p id="modal-agenda" class="font-semibold text-slate-800">Pemeriksaan Saksi (Ahli Forensik)</p>
+        </div>
+
+        <div>
+          <span class="text-slate-400 block mb-0.5 font-medium">Jaksa Penuntut Umum (JPU):</span>
+          <p id="modal-prosecutor" class="font-semibold text-slate-800">I Kadek Wahyudi, S.H. (Seksi Pidum)</p>
+        </div>
+
+        <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900">
+          <p class="text-[11px] leading-relaxed">
+            Sidang ini terbuka untuk umum kecuali ditentukan lain oleh Majelis Hakim. Pengunjung diwajibkan tertib dan menjaga etika ruang sidang.
+          </p>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <button onclick="closeDetailModal()" class="px-4 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs transition-colors">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TICKET TRACKER MODAL -->
+  <div id="modal-ticket-tracker" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-2">
+          <i data-lucide="ticket" class="w-5 h-5 text-emerald-800"></i>
+          <h3 class="font-heading font-bold text-base text-slate-900">Lacak Tiket Layanan</h3>
+        </div>
+        <button onclick="closeModal('modal-ticket-tracker')" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="py-4 space-y-3">
+        <p class="text-xs text-slate-500">Masukkan kode tiket laporan pengaduan (MASADU) atau pengantaran barang bukti (SEMARA BAKTI) Anda:</p>
+        <div class="flex gap-2">
+          <input type="text" id="ticket-search-input" placeholder="Contoh: TKT-20261019-XXXX" class="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs uppercase font-mono focus:ring-2 focus:ring-emerald-700 outline-none">
+          <button onclick="trackTicket()" class="px-4 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs transition-colors">
+            Cek
+          </button>
+        </div>
+        <div id="ticket-result-box" class="hidden p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2 mt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-[#03190E] text-white border-t border-emerald-950 pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-emerald-900/60">
+        
+        <!-- Col 1: Instansi -->
+        <div class="space-y-4">
+          <div class="flex items-center gap-3">
+            <img id="footer-logo" src="/static/images/logo-kejari.svg" alt="Logo Kejaksaan RI" class="w-10 h-10 object-contain site-logo-img">
+            <div>
+              <span class="block font-heading font-extrabold text-sm uppercase tracking-tight text-white">KEJAKSAAN NEGERI KLUNGKUNG</span>
+              <span class="block text-[10px] text-amber-400 font-bold">PORTAL RESMI PELAYANAN TERPADU KERTAGOSA</span>
+            </div>
+          </div>
+          <p class="text-xs text-emerald-200/70 leading-relaxed">
+            Mewujudkan penegakan hukum yang berkeadilan, humanis, transparan, serta mengedepankan integritas berpredikat WBK / WBBM.
+          </p>
+        </div>
+
+        <!-- Col 2: Navigasi Cepat -->
+        <div>
+          <h4 class="font-heading font-bold text-xs uppercase tracking-wider text-amber-400 mb-4">Navigasi Utama</h4>
+          <ul class="space-y-2 text-xs text-emerald-100/80">
+            <li><a href="/" class="hover:text-amber-300 transition-colors">Beranda</a></li>
+            <li><a href="/profil/struktur-organisasi" class="hover:text-amber-300 transition-colors">Struktur Organisasi</a></li>
+            <li><a href="/profil/visi-misi" class="hover:text-amber-300 transition-colors">Visi &amp; Misi</a></li>
+            <li><a href="/informasi/berita" class="hover:text-amber-300 transition-colors">Pusat Berita &amp; Publikasi</a></li>
+            <li><a href="/informasi/pengumuman" class="hover:text-amber-300 transition-colors">Pengumuman Resmi</a></li>
+            <li><a href="/informasi/jadwal-sidang" class="text-amber-400 font-bold transition-colors">Jadwal Sidang JAGADITA</a></li>
+            <li><a href="/informasi/skm" class="hover:text-amber-300 transition-colors">Indeks Kepuasan (SKM)</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Layanan Unggulan -->
+        <div>
+          <h4 class="font-heading font-bold text-xs uppercase tracking-wider text-amber-400 mb-4">4 Pilar Layanan Unggulan</h4>
+          <ul class="space-y-2 text-xs text-emerald-100/80">
+            <li><a href="/#pilar-layanan" class="hover:text-amber-300 transition-colors">JAGADITA — Jadwal Sidang Digital</a></li>
+            <li><a href="/#pilar-layanan" class="hover:text-amber-300 transition-colors">MASADU — Aduan &amp; Pengaduan Publik</a></li>
+            <li><a href="/#pilar-layanan" class="hover:text-amber-300 transition-colors">SEMARA BAKTI — Pengantaran Barang Bukti</a></li>
+            <li><a href="/#pilar-layanan" class="hover:text-amber-300 transition-colors">YANHAL — Pos Pelayanan Hukum Gratis</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Jam Kerja & Kontak -->
+        <div class="space-y-3">
+          <h4 class="font-heading font-bold text-xs uppercase tracking-wider text-amber-400 mb-4">Kontak &amp; Alamat</h4>
+          <div class="text-xs text-emerald-100/80 space-y-1.5">
+            <p class="font-medium text-white">Kantor Kejaksaan Negeri Klungkung</p>
+            <p>Jl. Ramai No. 1, Semarapura, Klungkung, Bali 80711</p>
+            <p class="pt-1">Telp: (0366) 21105 / 21544</p>
+            <p>WhatsApp PTSP: 0811-3800-4444</p>
+            <p>Email: kejari.klungkung@kejaksaan.go.id</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-emerald-200/60 gap-4">
+        <p>&copy; 2026 Kejaksaan Negeri Klungkung. Hak Cipta Dilindungi Undang-Undang.</p>
+        <div class="flex items-center gap-4">
+          <a href="/admin" class="hover:text-amber-400 transition-colors text-[11px]">Portal Admin</a>
+          <span>&bull;</span>
+          <a href="/" class="hover:text-amber-400 transition-colors text-[11px]">Kebijakan Privasi</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT FOR JAGADITA INTERACTIVITY -->
+  <script>
+    let currentFilter = 'Semua';
+    let allSchedules = [];
+
+    async function loadJagaditaData() {
+      try {
+        const res = await fetch('/api/public/homepage-data');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.schedules && data.schedules.length > 0) {
+            allSchedules = data.schedules;
+            updateCounts(data.schedule_counts);
+            renderScheduleTable(allSchedules);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load dynamic schedule data:', err);
+      }
+    }
+
+    function updateCounts(counts) {
+      if (!counts) return;
+      const countAll = counts.all || allSchedules.length;
+      const countPidum = counts.pidum || 0;
+      const countPidsus = counts.pidsus || 0;
+
+      const badgeAll = document.getElementById('count-badge-all');
+      const badgePidum = document.getElementById('count-badge-pidum');
+      const badgePidsus = document.getElementById('count-badge-pidsus');
+      const metricTotal = document.getElementById('metric-total-sidang');
+      const metricPidum = document.getElementById('metric-pidum-sidang');
+      const metricPidsus = document.getElementById('metric-pidsus-sidang');
+
+      if (badgeAll) badgeAll.textContent = countAll;
+      if (badgePidum) badgePidum.textContent = countPidum;
+      if (badgePidsus) badgePidsus.textContent = countPidsus;
+      if (metricTotal) metricTotal.textContent = countAll;
+      if (metricPidum) metricPidum.textContent = countPidum;
+      if (metricPidsus) metricPidsus.textContent = countPidsus;
+    }
+
+    function renderScheduleTable(items) {
+      const tbody = document.getElementById('jadwal-tbody');
+      const resultsCount = document.getElementById('results-count');
+      if (!tbody) return;
+
+      if (!items || items.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-8 px-4 text-center text-slate-400">
+              <i data-lucide="info" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+              Tidak ditemukan jadwal sidang yang cocok dengan kriteria pencarian Anda.
+            </td>
+          </tr>
+        `;
+        if (resultsCount) resultsCount.textContent = 'Menampilkan 0 sidang';
+        lucide.createIcons();
+        return;
+      }
+
+      if (resultsCount) resultsCount.textContent = `Menampilkan ${items.length} sidang`;
+
+      tbody.innerHTML = items.map(item => {
+        const isTipikor = item.case_type === 'TIPIKOR' || item.case_type === 'PIDSUS';
+        const typeBadge = isTipikor 
+          ? `<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-red-100 text-red-900 border border-red-200">TIPIKOR</span>`
+          : `<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-100 text-blue-900 border border-blue-200">PIDUM</span>`;
+
+        const statusLower = (item.status || '').toLowerCase();
+        let statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">Terjadwal</span>`;
+        if (statusLower.includes('sedang') || statusLower.includes('berlangsung')) {
+          statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping"></span>Sedang Sidang</span>`;
+        } else if (statusLower.includes('selesai')) {
+          statusBadge = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">Selesai</span>`;
+        }
+
+        return `
+          <tr class="hover:bg-emerald-50/50 transition-colors">
+            <td class="py-3.5 px-4 whitespace-nowrap">
+              <div class="font-bold text-slate-900 text-sm">${escapeHtml(item.session_time || '-')}</div>
+              <div class="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                <i data-lucide="map-pin" class="w-3 h-3 ${isTipikor ? 'text-red-700' : 'text-emerald-700'}"></i> ${escapeHtml(item.court_room || '-')}
+              </div>
+            </td>
+            <td class="py-3.5 px-4">
+              <span class="font-mono font-bold ${isTipikor ? 'text-red-900' : 'text-emerald-900'} block text-xs">${escapeHtml(item.case_number || '-')}</span>
+              <span class="font-semibold text-slate-800 text-xs block mt-0.5">${escapeHtml(item.defendant_name || '-')}</span>
+            </td>
+            <td class="py-3.5 px-3 text-center whitespace-nowrap">
+              ${typeBadge}
+            </td>
+            <td class="py-3.5 px-4">
+              <span class="font-semibold text-slate-900 block">${escapeHtml(item.agenda || '-')}</span>
+            </td>
+            <td class="py-3.5 px-4 whitespace-nowrap">
+              <div class="font-medium text-slate-800">${escapeHtml(item.prosecutor || '-')}</div>
+              <div class="text-[11px] text-slate-500">Jaksa Penuntut Umum Kejari Klungkung</div>
+            </td>
+            <td class="py-3.5 px-3 text-center whitespace-nowrap">
+              ${statusBadge}
+            </td>
+            <td class="py-3.5 px-3 text-center whitespace-nowrap">
+              <div class="flex items-center justify-center gap-1">
+                <button onclick="viewDetail('${escapeAttr(item.case_number)}', '${escapeAttr(item.defendant_name)}', '${escapeAttr(item.court_room)}', '${escapeAttr(item.session_time)}', '${escapeAttr(item.agenda)}', '${escapeAttr(item.prosecutor)}', '${escapeAttr(item.case_type)}', '${escapeAttr(item.status)}')" class="px-2.5 py-1 rounded bg-slate-100 hover:bg-emerald-100 text-emerald-900 font-bold text-[11px] transition-colors">
+                  Detail
+                </button>
+                ${(window.state && window.state.currentUser && window.state.currentUser.role === 'ADMIN') ? `
+                  <button onclick="openEditJagaditaModal(${item.id})" class="p-1 rounded bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors" title="Edit Jadwal">
+                    <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                  </button>
+                  <button onclick="handleDeleteJagadita(${item.id}, '${escapeAttr(item.case_number)}')" class="p-1 rounded bg-red-50 text-red-700 hover:bg-red-100 transition-colors" title="Hapus Jadwal">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    function setFilterCategory(category) {
+      currentFilter = category;
+
+      document.querySelectorAll('.filter-pill-btn').forEach(btn => {
+        btn.classList.remove('bg-[#0B3B24]', 'text-white', 'shadow-sm');
+        btn.classList.add('bg-slate-100', 'text-slate-700');
+      });
+
+      if (category === 'Semua') {
+        const btn = document.getElementById('filter-all');
+        if (btn) {
+          btn.classList.add('bg-[#0B3B24]', 'text-white', 'shadow-sm');
+          btn.classList.remove('bg-slate-100', 'text-slate-700');
+        }
+      } else if (category === 'PIDUM') {
+        const btn = document.getElementById('filter-pidum');
+        if (btn) {
+          btn.classList.add('bg-[#0B3B24]', 'text-white', 'shadow-sm');
+          btn.classList.remove('bg-slate-100', 'text-slate-700');
+        }
+      } else if (category === 'TIPIKOR') {
+        const btn = document.getElementById('filter-pidsus');
+        if (btn) {
+          btn.classList.add('bg-[#0B3B24]', 'text-white', 'shadow-sm');
+          btn.classList.remove('bg-slate-100', 'text-slate-700');
+        }
+      }
+
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const query = (document.getElementById('jagadita-search-input').value || '').toLowerCase().trim();
+      const clearBtn = document.getElementById('btn-clear-search');
+      if (clearBtn) {
+        if (query) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+      }
+
+      let filtered = allSchedules;
+      if (currentFilter !== 'Semua') {
+        filtered = filtered.filter(item => {
+          if (currentFilter === 'PIDUM') return item.case_type === 'PIDUM';
+          if (currentFilter === 'TIPIKOR') return item.case_type === 'TIPIKOR' || item.case_type === 'PIDSUS';
+          return true;
+        });
+      }
+
+      if (query) {
+        filtered = filtered.filter(item => {
+          const caseNum = (item.case_number || '').toLowerCase();
+          const def = (item.defendant_name || '').toLowerCase();
+          const pros = (item.prosecutor || '').toLowerCase();
+          const agenda = (item.agenda || '').toLowerCase();
+          return caseNum.includes(query) || def.includes(query) || pros.includes(query) || agenda.includes(query);
+        });
+      }
+
+      renderScheduleTable(filtered);
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('jagadita-search-input');
+      if (input) input.value = '';
+      applyFilters();
+    }
+
+    document.getElementById('jagadita-search-input')?.addEventListener('input', () => {
+      applyFilters();
+    });
+
+    function viewDetail(caseNum, defendant, room, time, agenda, prosecutor, type, status) {
+      document.getElementById('modal-case-number').textContent = caseNum || '-';
+      document.getElementById('modal-defendant').textContent = defendant || '-';
+      document.getElementById('modal-room').textContent = room || '-';
+      document.getElementById('modal-time').textContent = time || '-';
+      document.getElementById('modal-agenda').textContent = agenda || '-';
+      document.getElementById('modal-prosecutor').textContent = prosecutor || '-';
+      document.getElementById('modal-type').textContent = type || 'PIDUM';
+      document.getElementById('modal-status').textContent = status || 'Terjadwal';
+
+      document.getElementById('modal-jadwal-detail').classList.remove('hidden');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('modal-jadwal-detail').classList.add('hidden');
+    }
+
+    function openModal(id) {
+      document.getElementById(id)?.classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id)?.classList.add('hidden');
+    }
+
+    async function trackTicket() {
+      const code = document.getElementById('ticket-search-input')?.value.trim();
+      const resBox = document.getElementById('ticket-result-box');
+      if (!code) return;
+      resBox.classList.remove('hidden');
+      resBox.innerHTML = '<span class="text-slate-500">Mencari tiket ' + escapeHtml(code) + '...</span>';
+      try {
+        const res = await fetch('/api/public/ticket/' + encodeURIComponent(code));
+        const data = await res.json();
+        if (data.found) {
+          const item = data.data;
+          resBox.innerHTML = `
+            <div class="font-bold text-emerald-900 border-b border-slate-200 pb-1">STATUS: ${escapeHtml(item.status || 'DIPROSES')}</div>
+            <div><strong>Layanan:</strong> ${escapeHtml(data.type)}</div>
+            <div><strong>Pelapor / Pemohon:</strong> ${escapeHtml(item.reporter_name || item.applicant_name)}</div>
+            <div><strong>Tgl Pengajuan:</strong> ${escapeHtml(item.created_at)}</div>
+          `;
+        } else {
+          resBox.innerHTML = '<span class="text-red-600 font-semibold">Tiket tidak ditemukan. Periksa kembali kode tiket Anda.</span>';
+        }
+      } catch (err) {
+        resBox.innerHTML = '<span class="text-red-600 font-semibold">Gagal memeriksa tiket. Coba beberapa saat lagi.</span>';
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
+    }
+
+    function escapeAttr(str) {
+      if (!str) return '';
+      return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/api/public/homepage-data').then(r => r.json()).then(d => {
+        if (d.success && d.contents && d.contents.header_logo_url && d.contents.header_logo_url.value) {
+          const lUrl = d.contents.header_logo_url.value;
+          const h = document.getElementById('header-logo');
+          const f = document.getElementById('footer-logo');
+          if (h) h.src = lUrl;
+          if (f) f.src = lUrl;
+        }
+      }).catch(() => {});
+      lucide.createIcons();
+      loadJagaditaData();
+    });
+  </script>
+<script src="/static/js/app.js?v=2.8"></script>
+
+  <!-- =========================================================================
+       MOBILE STICKY BOTTOM NAVIGATION DOCK (APP-LIKE UX ON SMARTPHONES)
+       ========================================================================= -->
+  <nav id="mobile-bottom-dock" class="lg:hidden fixed bottom-0 inset-x-0 z-40 px-2 pt-1.5 no-print" aria-label="Navigasi Bawah Mobile">
+    <div class="grid grid-cols-5 items-center max-w-md mx-auto">
+      <a href="/" data-dock-path="/" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="home" class="w-4 h-4"></i></div>
+        <span>Beranda</span>
+      </a>
+      <a href="/informasi/jadwal-sidang" data-dock-path="/informasi/jadwal-sidang" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="gavel" class="w-4 h-4"></i></div>
+        <span>Sidang</span>
+      </a>
+      <div class="flex flex-col items-center justify-center">
+        <a href="/#layanan-digital" class="mobile-dock-center-btn" title="Layanan Digital Terpadu">
+          <i data-lucide="layout-grid" class="w-5 h-5"></i>
+        </a>
+        <span class="text-[10px] font-extrabold text-[#0B3B24] mt-0.5">Layanan</span>
+      </div>
+      <a href="/akuntabilitas-kinerja" data-dock-path="/akuntabilitas-kinerja" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="file-check" class="w-4 h-4"></i></div>
+        <span>SAKIP</span>
+      </a>
+      <button type="button" onclick="toggleMobileMenu(true)" class="mobile-dock-item">
+        <div class="dock-icon-wrap"><i data-lucide="menu" class="w-4 h-4"></i></div>
+        <span>Menu</span>
+      </button>
+    </div>
+  </nav>
+</body>
+</html>
