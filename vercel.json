@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/admin/(.*)",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/profil/:path*",
+      "destination": "/profil-:path*.html"
+    },
+    {
+      "source": "/informasi/:path*",
+      "destination": "/informasi-:path*.html"
+    },
+    {
+      "source": "/akuntabilitas-kinerja",
+      "destination": "/akuntabilitas-kinerja.html"
+    }
+  ],
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "{server.py,totp_mfa.py,excel_io.py,data/**}"
+    }
+  },
+  "cleanUrls": true
+}

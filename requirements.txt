@@ -1,0 +1,5 @@
+# KERTAGOSA Web Portal Dependencies
+# Arsitektur backend ini menggunakan modul Standard Library bawaan Python (Zero Dependency).
+# Jika di masa mendatang Anda ingin menambahkan pustaka pihak ketiga, cantumkan di bawah ini:
+# flask>=3.0.0
+# requests>=2.31.0

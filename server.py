@@ -21,9 +21,30 @@ import excel_io
 
 PORT = 8000
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'data', 'kertagosa.db')
-UPLOADS_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
-os.makedirs(UPLOADS_DIR, exist_ok=True)
+IS_VERCEL = bool(os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
+
+if IS_VERCEL:
+    TMP_DIR = '/tmp'
+    DB_PATH = os.path.join(TMP_DIR, 'kertagosa.db')
+    UPLOADS_DIR = os.path.join(TMP_DIR, 'uploads')
+    try:
+        os.makedirs(UPLOADS_DIR, exist_ok=True)
+    except Exception:
+        pass
+    seed_db = os.path.join(BASE_DIR, 'data', 'kertagosa.db')
+    if not os.path.exists(DB_PATH) and os.path.exists(seed_db):
+        import shutil
+        try:
+            shutil.copy2(seed_db, DB_PATH)
+        except Exception as e:
+            print(f"Error copying seed DB to /tmp: {e}")
+else:
+    DB_PATH = os.path.join(BASE_DIR, 'data', 'kertagosa.db')
+    UPLOADS_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
+    try:
+        os.makedirs(UPLOADS_DIR, exist_ok=True)
+    except Exception:
+        pass
 
 # In-memory session store (token -> user_dict)
 SESSIONS = {}
@@ -31,9 +52,20 @@ SESSIONS = {}
 MFA_CHALLENGES = {}
 
 def get_db():
+    if IS_VERCEL and not os.path.exists(DB_PATH):
+        seed_db = os.path.join(BASE_DIR, 'data', 'kertagosa.db')
+        if os.path.exists(seed_db):
+            import shutil
+            try:
+                shutil.copy2(seed_db, DB_PATH)
+            except Exception as e:
+                print(f"Copying seed db: {e}")
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL;")
+    try:
+        conn.execute("PRAGMA journal_mode=WAL;")
+    except Exception:
+        pass
     return conn
 
 def hash_password(password: str) -> str:
@@ -494,7 +526,9 @@ def get_current_user(handler):
 
 class KertagosaHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=BASE_DIR, **kwargs)
+        if 'directory' not in kwargs:
+            kwargs['directory'] = BASE_DIR
+        super().__init__(*args, **kwargs)
 
     def send_json(self, data, status_code=200):
         body = json.dumps(data, ensure_ascii=False).encode('utf-8')
