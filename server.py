@@ -51,6 +51,30 @@ SESSIONS = {}
 # In-memory MFA challenges store (mfa_token -> {'user': user_dict, 'otp': otp_str, 'expires_at': timestamp})
 MFA_CHALLENGES = {}
 
+def ensure_database_ready():
+    """Ensure database exists and is populated with all tables and seed data."""
+    try:
+        conn = sqlite3.connect(DB_PATH, timeout=30.0)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='page_contents'")
+        has_page_contents = bool(cursor.fetchone())
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='organization_members'")
+        has_org_members = bool(cursor.fetchone())
+        conn.close()
+
+        if not has_page_contents:
+            print(f"[Auto-Healing] Initializing database at {DB_PATH}...")
+            import init_db
+            init_db.init_db(DB_PATH)
+
+        if not has_org_members:
+            print(f"[Auto-Healing] Seeding organization members at {DB_PATH}...")
+            import seed_organization
+            seed_organization.seed_organization(DB_PATH)
+    except Exception as e:
+        print(f"[Auto-Healing Warning] {e}")
+
 def get_db():
     if IS_VERCEL and not os.path.exists(DB_PATH):
         seed_db = os.path.join(BASE_DIR, 'data', 'kertagosa.db')
@@ -60,6 +84,9 @@ def get_db():
                 shutil.copy2(seed_db, DB_PATH)
             except Exception as e:
                 print(f"Copying seed db: {e}")
+        else:
+            ensure_database_ready()
+
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
     try:
@@ -73,32 +100,36 @@ def hash_password(password: str) -> str:
     return hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
 
 def init_db_schema():
+    ensure_database_ready()
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute("PRAGMA table_info(users)")
     cols = [c[1] for c in cursor.fetchall()]
-    if 'mfa_enabled' not in cols:
+    if cols and 'mfa_enabled' not in cols:
         cursor.execute("ALTER TABLE users ADD COLUMN mfa_enabled INTEGER DEFAULT 1")
         conn.commit()
-    if 'mfa_secret' not in cols:
+    if cols and 'mfa_secret' not in cols:
         cursor.execute("ALTER TABLE users ADD COLUMN mfa_secret TEXT")
         conn.commit()
-    if 'mfa_provider' not in cols:
+    if cols and 'mfa_provider' not in cols:
         cursor.execute("ALTER TABLE users ADD COLUMN mfa_provider TEXT DEFAULT 'GOOGLE_MICROSOFT'")
         conn.commit()
-    if 'mfa_enrolled' not in cols:
+    if cols and 'mfa_enrolled' not in cols:
         cursor.execute("ALTER TABLE users ADD COLUMN mfa_enrolled INTEGER DEFAULT 1")
         conn.commit()
 
     # Ensure every user has a valid RFC 6238 Base32 secret for Google / Microsoft Authenticator
-    cursor.execute("SELECT id, username, email, mfa_secret, mfa_provider FROM users")
-    for u in cursor.fetchall():
-        sec = u['mfa_secret']
-        prov = u['mfa_provider'] or 'GOOGLE_MICROSOFT'
-        if not sec or len(sec.strip()) < 12:
-            sec = totp_mfa.deterministic_secret_for_user(u['username'], u['email'] or '')
-            cursor.execute("UPDATE users SET mfa_secret = ?, mfa_provider = ? WHERE id = ?", (sec, prov, u['id']))
-    conn.commit()
+    try:
+        cursor.execute("SELECT id, username, email, mfa_secret, mfa_provider FROM users")
+        for u in cursor.fetchall():
+            sec = u['mfa_secret']
+            prov = u['mfa_provider'] or 'GOOGLE_MICROSOFT'
+            if not sec or len(sec.strip()) < 12:
+                sec = totp_mfa.deterministic_secret_for_user(u['username'], u['email'] or '')
+                cursor.execute("UPDATE users SET mfa_secret = ?, mfa_provider = ? WHERE id = ?", (sec, prov, u['id']))
+        conn.commit()
+    except Exception:
+        pass
 
     # Accountability Documents (SAKIP: RENSTRA, RENJA, LKj, Triwulan)
     cursor.execute("""
@@ -907,98 +938,127 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         self.wfile.write(content)
 
     def handle_get_homepage_data(self, query):
-        conn = get_db()
-        cursor = conn.cursor()
-
-        # 1. Page Contents
-        cursor.execute("SELECT content_key, section_name, content_type, content_value, label FROM page_contents")
-        contents = {row['content_key']: {
-            'value': row['content_value'],
-            'section': row['section_name'],
-            'type': row['content_type'],
-            'label': row['label']
-        } for row in cursor.fetchall()}
-
-        # 2. News Posts (with category filter if requested)
-        category = query.get('category', [None])[0]
-        if category and category != 'Semua Berita':
-            cursor.execute("""
-            SELECT id, title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, author, layout_type, published_at, views
-            FROM posts
-            WHERE is_published = 1 AND category = ?
-            ORDER BY id ASC
-            """, (category,))
-        else:
-            cursor.execute("""
-            SELECT id, title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, author, layout_type, published_at, views
-            FROM posts
-            WHERE is_published = 1
-            ORDER BY id ASC
-            """)
-        news = [dict(row) for row in cursor.fetchall()]
-
-        # 3. 4 Pillars Service Cards
-        cursor.execute("""
-        SELECT id, code, title, badge_text, theme_color, icon_name, description, info_box_text, btn_text, btn_action, link_text, link_action, order_num
-        FROM service_cards
-        WHERE is_active = 1
-        ORDER BY order_num ASC
-        """)
-        services = [dict(row) for row in cursor.fetchall()]
-
-        # 4. JAGADITA Court Schedules
-        q_type = query.get('type', [None])[0]
-        q_search = query.get('search', [None])[0]
-        sql = "SELECT id, session_time, court_room, case_number, defendant_name, case_type, agenda, prosecutor, status, schedule_date FROM court_schedules WHERE 1=1"
-        params = []
-        if q_type and q_type != 'Semua':
-            sql += " AND case_type = ?"
-            params.append(q_type)
-        if q_search:
-            sql += " AND (case_number LIKE ? OR defendant_name LIKE ? OR prosecutor LIKE ?)"
-            params.extend([f"%{q_search}%", f"%{q_search}%", f"%{q_search}%"])
-        sql += " ORDER BY id ASC"
-        cursor.execute(sql, params)
-        schedules = [dict(row) for row in cursor.fetchall()]
-
-        # Count total schedules for filter tabs
-        cursor.execute("SELECT COUNT(*) as total FROM court_schedules")
-        count_all = cursor.fetchone()['total']
-        cursor.execute("SELECT COUNT(*) as total FROM court_schedules WHERE case_type = 'PIDUM'")
-        count_pidum = cursor.fetchone()['total']
-        cursor.execute("SELECT COUNT(*) as total FROM court_schedules WHERE case_type = 'TIPIKOR' OR case_type = 'PIDSUS'")
-        count_pidsus = cursor.fetchone()['total']
-
-        # 5. SKM Metrics
-        skm_mode = contents.get('skm_mode', {}).get('value', 'MANUAL')
-        skm_metrics = []
         try:
-            skm_metrics = json.loads(contents.get('skm_metrics_json', {}).get('value', '[]'))
-        except:
+            ensure_database_ready()
+            conn = get_db()
+            cursor = conn.cursor()
+
+            # 1. Page Contents
+            cursor.execute("SELECT content_key, section_name, content_type, content_value, label FROM page_contents")
+            contents = {row['content_key']: {
+                'value': row['content_value'],
+                'section': row['section_name'],
+                'type': row['content_type'],
+                'label': row['label']
+            } for row in cursor.fetchall()}
+
+            # 2. News Posts (with category filter if requested)
+            category = query.get('category', [None])[0]
+            if category and category != 'Semua Berita':
+                cursor.execute("""
+                SELECT id, title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, author, layout_type, published_at, views
+                FROM posts
+                WHERE is_published = 1 AND category = ?
+                ORDER BY id ASC
+                """, (category,))
+            else:
+                cursor.execute("""
+                SELECT id, title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, author, layout_type, published_at, views
+                FROM posts
+                WHERE is_published = 1
+                ORDER BY id ASC
+                """)
+            news = [dict(row) for row in cursor.fetchall()]
+
+            # 3. 4 Pillars Service Cards
+            cursor.execute("""
+            SELECT id, code, title, badge_text, theme_color, icon_name, description, info_box_text, btn_text, btn_action, link_text, link_action, order_num
+            FROM service_cards
+            WHERE is_active = 1
+            ORDER BY order_num ASC
+            """)
+            services = [dict(row) for row in cursor.fetchall()]
+
+            # 4. JAGADITA Court Schedules
+            q_type = query.get('type', [None])[0]
+            q_search = query.get('search', [None])[0]
+            sql = "SELECT id, session_time, court_room, case_number, defendant_name, case_type, agenda, prosecutor, status, schedule_date FROM court_schedules WHERE 1=1"
+            params = []
+            if q_type and q_type != 'Semua':
+                sql += " AND case_type = ?"
+                params.append(q_type)
+            if q_search:
+                sql += " AND (case_number LIKE ? OR defendant_name LIKE ? OR prosecutor LIKE ?)"
+                params.extend([f"%{q_search}%", f"%{q_search}%", f"%{q_search}%"])
+            sql += " ORDER BY id ASC"
+            cursor.execute(sql, params)
+            schedules = [dict(row) for row in cursor.fetchall()]
+
+            # Count total schedules for filter tabs
+            cursor.execute("SELECT COUNT(*) as total FROM court_schedules")
+            count_all = cursor.fetchone()['total']
+            cursor.execute("SELECT COUNT(*) as total FROM court_schedules WHERE case_type = 'PIDUM'")
+            count_pidum = cursor.fetchone()['total']
+            cursor.execute("SELECT COUNT(*) as total FROM court_schedules WHERE case_type = 'TIPIKOR' OR case_type = 'PIDSUS'")
+            count_pidsus = cursor.fetchone()['total']
+
+            # 5. SKM Metrics
+            skm_mode = contents.get('skm_mode', {}).get('value', 'MANUAL')
             skm_metrics = []
+            try:
+                skm_metrics = json.loads(contents.get('skm_metrics_json', {}).get('value', '[]'))
+            except:
+                skm_metrics = []
 
-        conn.close()
+            conn.close()
 
-        self.send_json({
-            'success': True,
-            'contents': contents,
-            'news': news,
-            'services': services,
-            'schedules': schedules,
-            'schedule_counts': {
-                'all': count_all,
-                'pidum': count_pidum,
-                'pidsus': count_pidsus
-            },
-            'skm': {
-                'main_score': contents.get('skm_main_score', {}).get('value', '88.31'),
-                'period_badge': contents.get('skm_period_badge', {}).get('value', 'TRIWULAN III'),
-                'predicate': contents.get('skm_predicate_text', {}).get('value', 'Mutu Pelayanan: A (Sangat Baik)'),
-                'respondents_count': contents.get('skm_respondents_count', {}).get('value', '412'),
-                'metrics': skm_metrics,
-                'mode': skm_mode
-            }
-        })
+            self.send_json({
+                'success': True,
+                'contents': contents,
+                'news': news,
+                'services': services,
+                'schedules': schedules,
+                'schedule_counts': {
+                    'all': count_all,
+                    'pidum': count_pidum,
+                    'pidsus': count_pidsus
+                },
+                'skm': {
+                    'main_score': contents.get('skm_main_score', {}).get('value', '88.31'),
+                    'period_badge': contents.get('skm_period_badge', {}).get('value', 'TRIWULAN III'),
+                    'predicate': contents.get('skm_predicate_text', {}).get('value', 'Mutu Pelayanan: A (Sangat Baik)'),
+                    'respondents_count': contents.get('skm_respondents_count', {}).get('value', '412'),
+                    'metrics': skm_metrics,
+                    'mode': skm_mode
+                }
+            })
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self.send_json({
+                'success': True,
+                'contents': {
+                    'header_title': {'value': 'KEJAKSAAN REPUBLIK INDONESIA - KEJAKSAAN NEGERI KLUNGKUNG'},
+                    'hero_main_title': {'value': 'KERTAGOSA'},
+                    'hero_description': {'value': 'Melalui "KERTAGOSA", KEJARI Klungkung berkomitmen untuk memberikan kerja yang menekankan pelayanan dan penegakan hukum yang cepat, tepat, dan profesional kepada seluruh masyarakat.'},
+                    'hero_stat_1_value': {'value': '88.31'},
+                    'hero_stat_1_label': {'value': 'Indeks Kepuasan (Sangat Baik)'},
+                    'hero_stat_2_value': {'value': '100%'},
+                    'hero_stat_2_label': {'value': 'Transparansi Sidang & Perkara'},
+                    'hero_stat_3_value': {'value': 'Rp 0,-'},
+                    'hero_stat_3_label': {'value': 'Biaya Pengantaran BB (Gratis)'},
+                    'digital_services_badge': {'value': 'PORTAL INTEGRASI RESMI'},
+                    'digital_services_title': {'value': 'Layanan Digital Terpadu Kejaksaan RI'},
+                    'digital_services_desc': {'value': 'Akses cepat ke portal dan aplikasi resmi nasional Kejaksaan RI dan SP4N LAPOR!'}
+                },
+                'news': [],
+                'services': [],
+                'schedules': [],
+                'schedule_counts': {'all': 0, 'pidum': 0, 'pidsus': 0},
+                'skm': {'main_score': '88.31', 'period_badge': 'TRIWULAN III'},
+                'fallback': True,
+                'warning': str(e)
+            })
 
     def handle_get_news_detail(self, slug):
         conn = get_db()

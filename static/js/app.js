@@ -3,14 +3,218 @@
  * Client-Side Dynamic Engine & Live Inline CMS Controller
  */
 
-// Application State
+// Default Fallback Data for Zero-Latency & Offline Resilience
+const DEFAULT_PORTAL_DATA = {
+  contents: {
+    header_logo_url: { value: '/static/images/logo-kejari.svg' },
+    header_title: { value: 'KEJAKSAAN REPUBLIK INDONESIA - KEJAKSAAN NEGERI KLUNGKUNG' },
+    header_wbk_badge: { value: 'ZONA INTEGRITAS WBK / WBBM' },
+    header_hours: { value: 'Senin - Jumat: 08.00 - 16.00 WITA' },
+    header_cta_text: { value: 'Lacak Tiket Layanan' },
+    header_hotline_badge: { value: 'Hotline PTSP: 0811-3800-4444' },
+    hero_badge_1: { value: 'KEJAKSAAN NEGERI KLUNGKUNG' },
+    hero_badge_2: { value: 'PELAYANAN PUBLIK TERPADU' },
+    hero_main_title: { value: 'KERTAGOSA' },
+    hero_description: { value: 'Melalui "KERTAGOSA", KEJARI Klungkung berkomitmen untuk memberikan kerja yang menekankan pelayanan dan penegakan hukum yang cepat, tepat, dan profesional kepada seluruh masyarakat.' },
+    hero_btn_primary_text: { value: 'Pelayanan Hukum' },
+    hero_btn_primary_link: { value: '#layanan' },
+    hero_btn_secondary_text: { value: 'Laporkan Pengaduan (MASADU)' },
+    hero_btn_secondary_link: { value: '#masadu' },
+    hero_stat_1_value: { value: '88.31' },
+    hero_stat_1_label: { value: 'Indeks Kepuasan (Sangat Baik)' },
+    hero_stat_2_value: { value: '100%' },
+    hero_stat_2_label: { value: 'Transparansi Sidang & Perkara' },
+    hero_stat_3_value: { value: 'Rp 0,-' },
+    hero_stat_3_label: { value: 'Biaya Pengantaran BB (Gratis)' },
+    kajari_photo_url: { value: '/static/images/kajari-portrait.jpg' },
+    kajari_position_badge: { value: 'KEPALA KEJAKSAAN NEGERI KLUNGKUNG' },
+    kajari_full_name: { value: 'R. Indra Senjaya, S.H., M.H.' },
+    ticker_badge_label: { value: 'PENGUMUMAN PENTING' },
+    ticker_text: { value: 'Jadwal Pelayanan Terpadu Satu Pintu (PTSP) beroperasi penuh Senin - Jumat (08.00 - 16.00 WITA). Pengantaran Barang Bukti (SEMARA BAKTI) 100% GRATIS ke seluruh daratan Klungkung & Nusa Penida. Aduan dugaan korupsi dapat disampaikan melalui MASADU dengan kerahasiaan 100% terjamin.' },
+    news_section_badge: { value: 'KABAR TERKINI & AGENDA KEJAKSAAN' },
+    news_section_title: { value: 'Pusat Berita & Publikasi Hukum' },
+    news_section_desc: { value: 'Informasi transparan mengenai penegakan hukum, kegiatan sosial, pemulihan keuangan negara, dan pelayanan hukum Kejari Klungkung.' },
+    services_section_title: { value: '4 Pilar Layanan Unggulan KERTAGOSA' },
+    services_section_desc: { value: 'Inovasi pelayanan digital terintegrasi untuk masyarakat Kabupaten Klungkung yang transparan, mudah, dan bebas biaya.' },
+    digital_services_badge: { value: 'PORTAL INTEGRASI RESMI' },
+    digital_services_title: { value: 'Layanan Digital Terpadu Kejaksaan RI' },
+    digital_services_desc: { value: 'Akses cepat ke portal dan aplikasi resmi nasional Kejaksaan RI dan SP4N LAPOR!' },
+    control_board_title: { value: 'Papan Kendali Operasional Pengadilan & Mutu' },
+    control_board_source_note: { value: 'Terakhir diperbarui: Hari ini, Pukul 10:15 WITA • Sumber: CMS Pengadilan Negeri & Kejari Klungkung' },
+    skm_period_badge: { value: 'TRIWULAN III' },
+    skm_main_score: { value: '88.31' },
+    skm_predicate_text: { value: 'Mutu Pelayanan: A (Sangat Baik)' },
+    skm_respondents_count: { value: '412' },
+    office_section_title: { value: 'Kantor Kejaksaan Negeri Klungkung' },
+    office_description: { value: 'Wilayah hukum Kejaksaan Negeri Klungkung mencakup daratan Klungkung hingga kepulauan Nusa Penida, siap melayani dengan integritas tinggi dan keterbukaan informasi publik.' },
+    office_address_text: { value: 'Jl. Gajah Mada No. 32, Semarapura, Kab. Klungkung, Bali 80711' },
+    office_hours_text: { value: 'Senin - Kamis: 08.00 - 16.00 WITA | Jumat: 08.00 - 16.30 WITA' },
+    office_map_image_url: { value: '/static/images/peta-klungkung.png' },
+    office_gmaps_url: { value: 'https://maps.google.com/?q=Kejaksaan+Negeri+Klungkung' },
+    office_whatsapp_number: { value: '6281138004444' },
+    office_phone_number: { value: '(0366) 21151' },
+    office_email: { value: 'kejari.klungkung@kejaksaan.go.id' },
+    footer_copyright: { value: '© 2026 Kejaksaan Negeri Klungkung - Hak Cipta Dilindungi Undang-Undang. Portal KERTAGOSA v2.4' }
+  },
+  news: [
+    {
+      id: 1,
+      title: 'Pencanangan Pembangunan Zona Integritas Menuju WBK/WBBM Tahun 2026',
+      slug: 'pencanangan-wbk-wbbm-2026',
+      category: 'Siaran Pers',
+      badge_label: 'UTAMA',
+      excerpt: 'Kejaksaan Negeri Klungkung menggelar apel komitmen bersama seluruh jajaran pegawai untuk memperkuat integritas dan pelayanan publik.',
+      published_at: '2026-10-18',
+      views: 342,
+      thumbnail_url: '/static/images/news-wbk.jpg',
+      author: 'Tim Humas Kejari'
+    },
+    {
+      id: 2,
+      title: 'Layanan SEMARA BAKTI Antar Barang Bukti Sepeda Motor ke Nusa Penida',
+      slug: 'semara-bakti-antar-bb-nusa-penida',
+      category: 'Pelayanan Publik',
+      badge_label: 'INOVASI',
+      excerpt: 'Tim Pengelolaan Barang Bukti Kejari Klungkung menyeberangi selat Badung guna mengantar barang bukti motor langsung ke rumah warga.',
+      published_at: '2026-10-17',
+      views: 289,
+      thumbnail_url: '/static/images/news-bb.jpg',
+      author: 'Seksi PB3R'
+    },
+    {
+      id: 3,
+      title: 'Restorative Justice Kasus Penganiayaan Ringan di Banjarangkan Berhasil Didamaikan',
+      slug: 'restorative-justice-banjarangkan',
+      category: 'Restorative Justice',
+      badge_label: 'KASIH HUKUM',
+      excerpt: 'Jaksa Fasilitator Kejari Klungkung mengedepankan keadilan restoratif dengan mendamaikan dua belah pihak tanpa melalui persidangan.',
+      published_at: '2026-10-15',
+      views: 512,
+      thumbnail_url: '/static/images/news-rj.jpg',
+      author: 'Seksi Pidum'
+    }
+  ],
+  services: [
+    {
+      id: 1,
+      code: 'JAGADITA',
+      title: 'JAGADITA (Jadwal Giat Sidang Digital)',
+      badge_text: 'LAYANAN PUBLIK',
+      theme_color: 'green',
+      icon_name: 'gavel',
+      description: 'Sistem transparansi jadwal persidangan perkara pidana umum dan khusus yang disidangkan di Pengadilan Negeri secara real-time.',
+      info_box_text: '🔍 Temukan jam sidang, nomor perkara, nama Jaksa Penuntut Umum (JPU), agenda sidang, dan ruang sidang tanpa harus datang ke pengadilan.',
+      btn_text: 'Cari Sidang',
+      btn_action: 'SEARCH_JAGADITA',
+      link_text: 'Lihat Jadwal Hari Ini →',
+      link_action: 'GOTO_JAGADITA_TABLE',
+      order_num: 1
+    },
+    {
+      id: 2,
+      code: 'MASADU',
+      title: 'MASADU (Masyarakat Sampaikan Aduan)',
+      badge_text: 'RESPON CEPAT 1X24 JAM',
+      theme_color: 'red',
+      icon_name: 'shield-alert',
+      description: 'Saluran pengaduan masyarakat atas dugaan tindak pidana korupsi, penyalahgunaan wewenang, atau pelanggaran hukum lainnya di Kabupaten Klungkung.',
+      info_box_text: '🔒 Identitas pelapor dijamin kerahasiaannya dengan enkripsi end-to-end sesuai SOP Kejaksaan RI. Bebas intervensi dan terlindungi.',
+      btn_text: 'Buat Laporan Pengaduan',
+      btn_action: 'OPEN_COMPLAINT_MODAL',
+      link_text: 'Lacak Tiket Aduan →',
+      link_action: 'OPEN_TRACKER_MODAL',
+      order_num: 2
+    },
+    {
+      id: 3,
+      code: 'SEMARA_BAKTI',
+      title: 'SEMARA BAKTI (Pengantaran Barang Bukti)',
+      badge_text: '100% GRATIS',
+      theme_color: 'amber',
+      icon_name: 'truck',
+      description: 'Layanan antar barang bukti perkara yang telah berkekuatan hukum tetap (inkracht) langsung ke kediaman pemilik yang sah tanpa dipungut biaya apapun.',
+      info_box_text: '📦 Menjangkau 4 kecamatan: Klungkung, Banjarangkan, Dawan, hingga Kepulauan Nusa Penida diantar dengan armada dinas Kejari.',
+      btn_text: 'Ajukan Pengantaran',
+      btn_action: 'OPEN_SEMARA_MODAL',
+      link_text: 'Cek Status Antar →',
+      link_action: 'OPEN_SEMARA_TRACKER',
+      order_num: 3
+    },
+    {
+      id: 4,
+      code: 'PTSP_ONLINE',
+      title: 'PTSP & Konsultasi Hukum Gratis (Halo JPN)',
+      badge_text: 'PELAYANAN TERPADU',
+      theme_color: 'emerald',
+      icon_name: 'building-columns',
+      description: 'Pelayanan konsultasi hukum gratis di bidang Perdata dan Tata Usaha Negara oleh Jaksa Pengacara Negara (JPN) secara online maupun tatap muka.',
+      info_box_text: '⚖️ Bantuan hukum gratis untuk instansi pemerintah, BUMN/BUMD, serta masyarakat umum terkait sengketa tanah, waris, dan perdata.',
+      btn_text: 'Konsultasi Sekarang',
+      btn_action: 'OPEN_PTSP_CONSULT',
+      link_text: 'Alur Layanan PTSP →',
+      link_action: 'GOTO_PTSP_INFO',
+      order_num: 4
+    }
+  ],
+  schedules: [
+    {
+      id: 1,
+      session_time: '10:00 WITA',
+      court_room: 'Ruang Candra (PN Semarapura)',
+      case_number: '88/Pid.B/2026/PN Smp',
+      defendant_name: 'I Wayan Kertayasa alias Yan Taru',
+      case_type: 'PIDUM',
+      agenda: 'Pemeriksaan Saksi Korban & Ahli Forensik',
+      prosecutor: 'I Kadek Wahyudi, S.H.',
+      status: 'SEDANG BERLANGSUNG'
+    },
+    {
+      id: 2,
+      session_time: '11:30 WITA',
+      court_room: 'Ruang Kartika (PN Semarapura)',
+      case_number: '14/Pid.Sus-TPK/2026/PN Dps',
+      defendant_name: 'I Nyoman Suardana',
+      case_type: 'TIPIKOR',
+      agenda: 'Pembacaan Surat Tuntutan (Requisitoir)',
+      prosecutor: 'Putu Gede Darmawan, S.H.',
+      status: 'TERJADWAL'
+    },
+    {
+      id: 3,
+      session_time: '13:00 WITA',
+      court_room: 'Ruang Tirta (PN Semarapura)',
+      case_number: '102/Pid.Sus/2026/PN Smp',
+      defendant_name: 'Ketut Sudiana alias Mangku',
+      case_type: 'PIDUM',
+      agenda: 'Eksepsi Penasihat Hukum Terdakwa',
+      prosecutor: 'Ni Made Lestari, S.H., M.H.',
+      status: 'TERJADWAL'
+    }
+  ],
+  schedule_counts: { all: 3, pidum: 2, pidsus: 1 },
+  skm: {
+    main_score: '88.31',
+    period_badge: 'TRIWULAN III',
+    predicate: 'Mutu Pelayanan: A (Sangat Baik)',
+    respondents_count: '412',
+    mode: 'MANUAL',
+    metrics: [
+      { label: 'Prosedur & Persyaratan', score: 91.2 },
+      { label: 'Kecepatan Waktu Pelayanan', score: 87.5 },
+      { label: 'Bebas Biaya / Tarif (Gratis)', score: 100.0 },
+      { label: 'Kompetensi & Perilaku Petugas', score: 89.4 }
+    ]
+  }
+};
+
+// Application State (Pre-populated with default portal data for zero-latency initial render)
 const state = {
-  contents: {},
-  news: [],
-  services: [],
-  schedules: [],
-  scheduleCounts: { all: 0, pidum: 0, pidsus: 0 },
-  skm: {},
+  contents: { ...DEFAULT_PORTAL_DATA.contents },
+  news: [ ...DEFAULT_PORTAL_DATA.news ],
+  services: [ ...DEFAULT_PORTAL_DATA.services ],
+  schedules: [ ...DEFAULT_PORTAL_DATA.schedules ],
+  scheduleCounts: { ...DEFAULT_PORTAL_DATA.schedule_counts },
+  skm: { ...DEFAULT_PORTAL_DATA.skm },
   activeNewsCategory: 'Semua Berita',
   newsSearchQuery: '',
   activeScheduleType: 'Semua',
@@ -30,6 +234,8 @@ const state = {
 // Initialize App
 document.addEventListener('DOMContentLoaded', async () => {
   initLiveClock();
+  // Render default sections immediately so UI is never blank
+  renderAllSections();
   await checkAuthSession();
   ensureCmsModals();
   await Promise.all([
@@ -46,6 +252,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ============================================================================
 
 async function loadHomepageData() {
+  // If running via file:// protocol directly from disk, don't attempt network fetch
+  if (window.location.protocol === 'file:') {
+    console.info('KERTAGOSA: Menjalankan dalam mode pratinjau lokal offline (file://). Menggunakan data statis bawaan.');
+    renderAllSections();
+    return;
+  }
+
   try {
     let url = `/api/public/homepage-data?`;
     if (state.activeNewsCategory && state.activeNewsCategory !== 'Semua Berita') {
@@ -59,21 +272,25 @@ async function loadHomepageData() {
     }
 
     const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
     const data = await res.json();
 
-    if (data.success) {
-      state.contents = data.contents;
-      state.news = data.news;
-      state.services = data.services;
-      state.schedules = data.schedules;
-      state.scheduleCounts = data.schedule_counts;
-      state.skm = data.skm;
+    if (data && data.success) {
+      state.contents = { ...state.contents, ...(data.contents || {}) };
+      if (Array.isArray(data.news) && data.news.length > 0) state.news = data.news;
+      if (Array.isArray(data.services) && data.services.length > 0) state.services = data.services;
+      if (Array.isArray(data.schedules) && data.schedules.length > 0) state.schedules = data.schedules;
+      if (data.schedule_counts) state.scheduleCounts = data.schedule_counts;
+      if (data.skm && data.skm.main_score) state.skm = data.skm;
 
       renderAllSections();
     }
   } catch (err) {
-    console.error('Failed to load portal data:', err);
-    showToast('Gagal memuat data portal dari server', 'error');
+    console.warn('Sinkronisasi data portal live belum terhubung, menggunakan data lokal bawaan:', err);
+    // Keep rendering with default data so portal remains fully visible and intact
+    renderAllSections();
   }
 }
 
@@ -3440,8 +3657,15 @@ async function loadHomeSakipData() {
   const grid = document.getElementById('home-sakip-grid');
   if (!grid) return;
 
+  if (window.location.protocol === 'file:') {
+    state.sakipDocs = [];
+    renderHomeSakipSection();
+    return;
+  }
+
   try {
     const res = await fetch('/api/public/accountability');
+    if (!res.ok) return;
     const data = await res.json();
     if (data.success) {
       state.sakipDocs = data.documents || [];

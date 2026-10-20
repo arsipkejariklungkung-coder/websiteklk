@@ -16,9 +16,11 @@ def hash_password(password: str) -> str:
     salt = "k3rTaG0s4_kLunkUnG_2026"
     return hashlib.sha256((password + salt).encode('utf-8')).hexdigest()
 
-def init_db():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+def init_db(target_path=None):
+    if target_path is None:
+        target_path = DB_PATH
+    os.makedirs(os.path.dirname(os.path.abspath(target_path)), exist_ok=True)
+    conn = sqlite3.connect(target_path)
     cursor = conn.cursor()
 
     # 1. Page Contents (Single Source of Truth for Dynamic Content)

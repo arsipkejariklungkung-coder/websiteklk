@@ -4,9 +4,27 @@ import sqlite3
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'data', 'kertagosa.db')
 
-def seed_organization():
-    conn = sqlite3.connect(DB_PATH)
+def seed_organization(target_path=None):
+    if target_path is None:
+        target_path = DB_PATH
+    os.makedirs(os.path.dirname(os.path.abspath(target_path)), exist_ok=True)
+    conn = sqlite3.connect(target_path)
     cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS organization_members (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        position TEXT NOT NULL,
+        level INTEGER NOT NULL,
+        parent_id INTEGER,
+        photo_url TEXT,
+        nip TEXT,
+        rank TEXT,
+        order_num INTEGER DEFAULT 1,
+        is_active INTEGER DEFAULT 1
+    );
+    """)
 
     cursor.execute("DELETE FROM organization_members")
 
