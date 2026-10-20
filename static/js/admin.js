@@ -373,11 +373,145 @@ function renderAdminNewsTable() {
   `).join('');
 }
 
+function setNewsThumbnailPreview(src, labelText) {
+  const hiddenInput = document.getElementById('news-form-thumbnail');
+  const emptyState = document.getElementById('news-thumbnail-empty-state');
+  const previewWrap = document.getElementById('news-thumbnail-preview-wrap');
+  const previewImg = document.getElementById('news-thumbnail-preview-img');
+  const previewName = document.getElementById('news-thumbnail-preview-name');
+  const errEl = document.getElementById('news-thumbnail-error');
+
+  if (errEl) {
+    errEl.textContent = '';
+    errEl.classList.add('hidden');
+  }
+
+  if (src) {
+    if (hiddenInput) hiddenInput.value = src;
+    if (previewImg) previewImg.src = src;
+    if (previewName) {
+      previewName.textContent = labelText || (src.startsWith('data:') ? 'Gambar terpilih' : src.split('/').pop() || 'thumbnail.jpg');
+    }
+    if (emptyState) emptyState.classList.add('hidden');
+    if (previewWrap) {
+      previewWrap.classList.remove('hidden');
+      previewWrap.classList.add('flex');
+    }
+  } else {
+    if (hiddenInput) hiddenInput.value = '/static/images/news-featured.jpg';
+    if (previewImg) previewImg.src = '';
+    if (emptyState) emptyState.classList.remove('hidden');
+    if (previewWrap) {
+      previewWrap.classList.add('hidden');
+      previewWrap.classList.remove('flex');
+    }
+  }
+}
+
+function clearNewsThumbnail() {
+  const fileInput = document.getElementById('news-form-thumbnail-file');
+  if (fileInput) fileInput.value = '';
+  setNewsThumbnailPreview('', '');
+}
+
+function handleNewsThumbnailDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('news-thumbnail-dropzone');
+  if (dz) {
+    dz.classList.add('border-emerald-600', 'bg-emerald-50/60');
+  }
+}
+
+function handleNewsThumbnailDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('news-thumbnail-dropzone');
+  if (dz) {
+    dz.classList.remove('border-emerald-600', 'bg-emerald-50/60');
+  }
+}
+
+function handleNewsThumbnailDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  handleNewsThumbnailDragLeave(e);
+  const files = e.dataTransfer && e.dataTransfer.files;
+  if (files && files.length > 0) {
+    processNewsThumbnailFile(files[0]);
+  }
+}
+
+function handleNewsThumbnailFileSelect(e) {
+  const files = e.target && e.target.files;
+  if (files && files.length > 0) {
+    processNewsThumbnailFile(files[0]);
+  }
+}
+
+function processNewsThumbnailFile(file) {
+  const errEl = document.getElementById('news-thumbnail-error');
+  const fileInput = document.getElementById('news-form-thumbnail-file');
+
+  const validMime = ['image/jpeg', 'image/jpg', 'image/png'];
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const validExt = ['jpg', 'jpeg', 'png'];
+
+  if (!validMime.includes(file.type) && !validExt.includes(ext)) {
+    if (errEl) {
+      errEl.textContent = 'Format file tidak didukung. Harap unggah gambar dengan format JPG atau PNG.';
+      errEl.classList.remove('hidden');
+    }
+    if (fileInput) fileInput.value = '';
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    if (errEl) {
+      errEl.textContent = 'Ukuran gambar terlalu besar (Maksimal 5MB).';
+      errEl.classList.remove('hidden');
+    }
+    if (fileInput) fileInput.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    const base64Data = evt.target.result;
+    // Immediately display preview inside the dropzone box
+    setNewsThumbnailPreview(base64Data, file.name);
+
+    // Upload to backend media endpoint if available
+    try {
+      const res = await fetch('/api/admin/upload-media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          file_data: base64Data,
+          filename: file.name
+        })
+      });
+      const data = await res.json();
+      if (data && data.success && data.url) {
+        const hiddenInput = document.getElementById('news-form-thumbnail');
+        if (hiddenInput) hiddenInput.value = data.url;
+      }
+    } catch (_) {
+      // Keep base64Data in hidden input as fallback
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
 function openNewsCreateModal() {
   document.getElementById('news-form-id').value = '';
   document.getElementById('news-form-title').textContent = 'Tambah Artikel Berita Baru';
   document.getElementById('admin-news-form').reset();
+  clearNewsThumbnail();
+  const ytInput = document.getElementById('news-form-youtube');
+  if (ytInput) ytInput.value = '';
   openModal('modal-admin-news-form');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function openNewsEditModal(id) {
@@ -395,12 +529,25 @@ function openNewsEditModal(id) {
   document.getElementById('news-form-quote').value = item.highlight_quote || '';
   document.getElementById('news-form-content').value = item.content || '';
 
+  const ytInput = document.getElementById('news-form-youtube');
+  if (ytInput) ytInput.value = item.youtube_url || '';
+
+  if (item.thumbnail_url) {
+    setNewsThumbnailPreview(item.thumbnail_url, item.thumbnail_url.split('/').pop() || 'thumbnail.jpg');
+  } else {
+    clearNewsThumbnail();
+  }
+
   openModal('modal-admin-news-form');
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 async function handleSaveNews(e) {
   e.preventDefault();
   const id = document.getElementById('news-form-id').value;
+  const thumbnailVal = (document.getElementById('news-form-thumbnail')?.value || '').trim() || '/static/images/news-featured.jpg';
+  const youtubeVal = (document.getElementById('news-form-youtube')?.value || '').trim();
+
   const payload = {
     title: document.getElementById('news-form-title-input').value,
     category: document.getElementById('news-form-category').value,
@@ -409,6 +556,8 @@ async function handleSaveNews(e) {
     author: document.getElementById('news-form-author').value,
     excerpt: document.getElementById('news-form-excerpt').value,
     highlight_quote: document.getElementById('news-form-quote').value,
+    thumbnail_url: thumbnailVal,
+    youtube_url: youtubeVal || null,
     content: document.getElementById('news-form-content').value,
   };
 

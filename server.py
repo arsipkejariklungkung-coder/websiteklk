@@ -169,6 +169,13 @@ def init_db_schema():
         cursor.execute("ALTER TABLE users ADD COLUMN mfa_enrolled INTEGER DEFAULT 1")
         conn.commit()
 
+    # Ensure posts table has youtube_url column
+    cursor.execute("PRAGMA table_info(posts)")
+    post_cols = [c[1] for c in cursor.fetchall()]
+    if post_cols and 'youtube_url' not in post_cols:
+        cursor.execute("ALTER TABLE posts ADD COLUMN youtube_url TEXT")
+        conn.commit()
+
     # Ensure every user has a valid RFC 6238 Base32 secret for Google / Microsoft Authenticator
     try:
         cursor.execute("SELECT id, username, email, mfa_secret, mfa_provider FROM users")
@@ -1050,14 +1057,14 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             category = query.get('category', [None])[0]
             if category and category != 'Semua Berita':
                 cursor.execute("""
-                SELECT id, title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, author, layout_type, published_at, views
+                SELECT id, title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, youtube_url, author, layout_type, published_at, views
                 FROM posts
                 WHERE is_published = 1 AND category = ?
                 ORDER BY id ASC
                 """, (category,))
             else:
                 cursor.execute("""
-                SELECT id, title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, author, layout_type, published_at, views
+                SELECT id, title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, youtube_url, author, layout_type, published_at, views
                 FROM posts
                 WHERE is_published = 1
                 ORDER BY id ASC
@@ -1638,7 +1645,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         excerpt = data.get('excerpt', '').strip()
         content = data.get('content', '').strip()
         highlight_quote = data.get('highlight_quote', None)
-        thumbnail_url = data.get('thumbnail_url', '/static/images/news-featured.jpg')
+        thumbnail_url = (data.get('thumbnail_url') or '/static/images/news-featured.jpg').strip()
+        youtube_url = (data.get('youtube_url') or '').strip() or None
         layout_type = data.get('layout_type', 'COMPACT_BOTTOM')
         author = data.get('author', 'Tim Publikasi Kejari')
         published_at = data.get('published_at', time.strftime('%Y-%m-%d'))
@@ -1654,9 +1662,9 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         conn = get_db()
         cursor = conn.cursor()
         cursor.execute("""
-        INSERT INTO posts (title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, author, layout_type, published_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, author, layout_type, published_at))
+        INSERT INTO posts (title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, youtube_url, author, layout_type, published_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, youtube_url, author, layout_type, published_at))
         new_id = cursor.lastrowid
         conn.commit()
         conn.close()
@@ -1680,7 +1688,7 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
         fields = []
         params = []
-        for col in ['title', 'category', 'badge_label', 'excerpt', 'content', 'highlight_quote', 'thumbnail_url', 'author', 'layout_type', 'published_at', 'is_published']:
+        for col in ['title', 'category', 'badge_label', 'excerpt', 'content', 'highlight_quote', 'thumbnail_url', 'youtube_url', 'author', 'layout_type', 'published_at', 'is_published']:
             if col in data:
                 fields.append(f"{col} = ?")
                 params.append(data[col])

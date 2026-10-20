@@ -1164,6 +1164,60 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertEqual(vc_admin.response_code, 200)
         self.assertTrue(vc_admin.get_response_json()['success'])
 
+    def test_22_news_modal_thumbnail_upload_and_youtube_url(self):
+        """Verify 'Tambah Artikel Berita Baru' modal UI fields and backend persistence for thumbnail_url and youtube_url."""
+        # 1. Verify Admin HTML modal structure & field ordering above 'Isi Berita Lengkap'
+        adm_page = MockHandler('GET', '/admin')
+        adm_page.do_GET()
+        adm_html = adm_page.wfile.getvalue().decode('utf-8')
+        self.assertIn('id="news-thumbnail-dropzone"', adm_html)
+        self.assertIn('accept=".jpg,.jpeg,.png,image/jpeg,image/png"', adm_html)
+        self.assertIn('id="news-thumbnail-preview-img"', adm_html)
+        self.assertIn('Tautan Video YouTube (Opsional)', adm_html)
+        self.assertIn('id="news-form-youtube"', adm_html)
+        self.assertIn('overflow-y-auto', adm_html)
+
+        pos_thumb = adm_html.index('id="news-thumbnail-dropzone"')
+        pos_yt = adm_html.index('id="news-form-youtube"')
+        pos_content = adm_html.index('id="news-form-content"')
+        self.assertLess(pos_thumb, pos_content, "Thumbnail upload must be placed above 'Isi Berita Lengkap'")
+        self.assertLess(pos_yt, pos_content, "YouTube URL input must be placed above 'Isi Berita Lengkap'")
+
+        # 2. Verify POST /api/admin/news saves thumbnail_url and youtube_url
+        news_payload = {
+            'title': 'Uji Berita Dengan Thumbnail & Video YouTube',
+            'category': 'Kegiatan Kejari',
+            'badge_label': 'LIPUTAN KHUSUS',
+            'layout_type': 'COMPACT_BOTTOM',
+            'author': 'Tim Publikasi Kejari',
+            'excerpt': 'Ringkasan berita uji coba upload gambar dan tautan YouTube.',
+            'highlight_quote': 'Transparansi publikasi digital.',
+            'thumbnail_url': '/static/images/news-jms.jpg',
+            'youtube_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'content': 'Isi berita lengkap dengan dokumentasi video YouTube.'
+        }
+        body = json.dumps(news_payload).encode('utf-8')
+        create_h = MockHandler('POST', '/api/admin/news', {
+            'Content-Length': str(len(body)),
+            'Authorization': f'Bearer {self.token}'
+        }, body)
+        create_h.do_POST()
+        self.assertEqual(create_h.response_code, 200)
+        new_id = create_h.get_response_json()['id']
+
+        # 3. Verify GET /api/public/news/<id> returns thumbnail_url and youtube_url
+        detail_h = MockHandler('GET', f'/api/public/news/{new_id}')
+        detail_h.do_GET()
+        self.assertEqual(detail_h.response_code, 200)
+        post = detail_h.get_response_json()['post']
+        self.assertEqual(post['thumbnail_url'], '/static/images/news-jms.jpg')
+        self.assertEqual(post['youtube_url'], 'https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+
+        # 4. Clean up test news article
+        del_h = MockHandler('DELETE', f'/api/admin/news/{new_id}', {'Authorization': f'Bearer {self.token}'})
+        del_h.do_DELETE()
+        self.assertEqual(del_h.response_code, 200)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1183,6 +1183,14 @@ function showSuccessTicketModal(ticketCode, serviceTitle) {
   }
 }
 
+// Helper to extract YouTube Video ID from URL
+function extractYouTubeVideoId(url) {
+  if (!url) return null;
+  const regExp = /^.*(?:youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[1] && match[1].length === 11) ? match[1] : null;
+}
+
 // 5. Read Full News Detail
 async function openNewsDetail(slug) {
   try {
@@ -1190,6 +1198,7 @@ async function openNewsDetail(slug) {
     const data = await res.json();
     if (data.success) {
       const p = data.post;
+      const ytId = extractYouTubeVideoId(p.youtube_url);
       const modalBody = document.getElementById('news-detail-content');
       modalBody.innerHTML = `
         <div class="relative h-64 sm:h-80 w-full overflow-hidden rounded-xl mb-6">
@@ -1217,11 +1226,27 @@ async function openNewsDetail(slug) {
         </div>
         ` : ''}
 
+        ${ytId ? `
+        <div class="mb-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-950">
+          <div class="aspect-video w-full">
+            <iframe class="w-full h-full" src="https://www.youtube.com/embed/${ytId}" title="Video Dokumentasi Berita" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          </div>
+        </div>
+        ` : (p.youtube_url ? `
+        <div class="mb-6">
+          <a href="${p.youtube_url}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-bold transition-colors">
+            <i data-lucide="youtube" class="w-4 h-4"></i>
+            <span>Tonton Video Dokumentasi di YouTube</span>
+          </a>
+        </div>
+        ` : '')}
+
         <div class="prose prose-slate max-w-none text-slate-700 text-sm leading-relaxed space-y-4">
           ${p.content || p.excerpt}
         </div>
       `;
       openModal('modal-news-detail');
+      if (typeof lucide !== 'undefined') lucide.createIcons();
     }
   } catch (err) {
     showToast('Gagal memuat detail artikel', 'error');
@@ -1994,16 +2019,17 @@ function ensureCmsModals() {
     div.id = 'modal-news-form';
     div.className = 'fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto';
     div.innerHTML = `
-      <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
-        <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+      <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-200 my-8 max-h-[90vh] flex flex-col">
+        <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
           <h3 id="modal-news-form-title" class="font-heading font-bold text-sm text-slate-900 flex items-center gap-2">
             <i data-lucide="newspaper" class="w-4 h-4 text-emerald-800"></i>
-            <span>Kelola Artikel Berita</span>
+            <span>Tambah Artikel Berita Baru</span>
           </h3>
           <button type="button" onclick="closeModal('modal-news-form')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
-        <form onsubmit="handleSaveNews(event)" class="p-6 space-y-4 text-xs">
+        <form onsubmit="handleSaveNews(event)" class="p-6 space-y-4 text-xs overflow-y-auto flex-1">
           <input type="hidden" id="form-news-id">
+          <input type="hidden" id="form-news-thumbnail" value="/static/images/news-featured.jpg">
           
           <div>
             <label class="block font-bold text-slate-700 mb-1">Judul Berita *</label>
@@ -2017,8 +2043,9 @@ function ensureCmsModals() {
                 <option value="Kegiatan Kejari">Kegiatan Kejari</option>
                 <option value="Tindak Pidana Umum">Tindak Pidana Umum</option>
                 <option value="Tindak Pidana Khusus">Tindak Pidana Khusus</option>
-                <option value="Intelijen & JMS">Intelijen & JMS</option>
-                <option value="Perdata & Tata Usaha Negara">Perdata & Tata Usaha Negara</option>
+                <option value="Intelijen & JMS">Intelijen &amp; JMS</option>
+                <option value="Perdata & Tata Usaha Negara">Perdata &amp; Tata Usaha Negara</option>
+                <option value="Pengumuman">Pengumuman</option>
               </select>
             </div>
             <div>
@@ -2043,11 +2070,6 @@ function ensureCmsModals() {
           </div>
 
           <div>
-            <label class="block font-bold text-slate-700 mb-1">URL Foto Thumbnail</label>
-            <input type="text" id="form-news-thumbnail" placeholder="/static/images/news-featured.jpg" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs">
-          </div>
-
-          <div>
             <label class="block font-bold text-slate-700 mb-1">Ringkasan Berita *</label>
             <textarea id="form-news-excerpt" rows="2" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs"></textarea>
           </div>
@@ -2055,6 +2077,77 @@ function ensureCmsModals() {
           <div>
             <label class="block font-bold text-slate-700 mb-1">Kutipan Highlight (Opsional)</label>
             <input type="text" id="form-news-quote" placeholder="Kutipan penting..." class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 text-xs">
+          </div>
+
+          <!-- Fitur Upload Gambar (Thumbnail/Cover Berita) -->
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Upload Gambar (Thumbnail/Cover Berita)</label>
+            <div id="form-news-thumbnail-dropzone"
+                 ondragover="handleFormNewsThumbnailDragOver(event)"
+                 ondragleave="handleFormNewsThumbnailDragLeave(event)"
+                 ondrop="handleFormNewsThumbnailDrop(event)"
+                 onclick="document.getElementById('form-news-thumbnail-file').click()"
+                 class="relative w-full border-2 border-dashed border-slate-300 hover:border-emerald-600 rounded-xl p-4 text-center transition-colors cursor-pointer bg-slate-50/60 hover:bg-emerald-50/30">
+              <input type="file"
+                     id="form-news-thumbnail-file"
+                     accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                     onchange="handleFormNewsThumbnailFileSelect(event)"
+                     class="hidden">
+
+              <!-- Default Empty State -->
+              <div id="form-news-thumbnail-empty" class="flex flex-col items-center justify-center py-2 space-y-1.5">
+                <div class="w-9 h-9 rounded-full bg-emerald-100/80 text-emerald-800 flex items-center justify-center">
+                  <i data-lucide="image-plus" class="w-4 h-4"></i>
+                </div>
+                <div class="text-xs font-semibold text-slate-700">
+                  Klik untuk memilih gambar <span class="font-normal text-slate-500">atau seret &amp; lepas (drag &amp; drop) ke sini</span>
+                </div>
+                <p class="text-[11px] text-slate-400">Hanya menerima format gambar <span class="font-semibold text-slate-500">JPG, PNG</span> (Maks. 5MB)</p>
+              </div>
+
+              <!-- Image Preview State (Small/Medium Preview Inside Box) -->
+              <div id="form-news-thumbnail-preview-wrap" class="hidden flex-col items-center justify-center space-y-2.5">
+                <div class="relative inline-block">
+                  <img id="form-news-thumbnail-preview-img"
+                       src=""
+                       alt="Preview Thumbnail Berita"
+                       class="h-32 sm:h-36 w-auto max-w-full object-cover rounded-lg border border-slate-200 shadow-sm mx-auto">
+                  <span class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-slate-900/75 text-white text-[10px] font-semibold backdrop-blur-sm">
+                    Preview Cover
+                  </span>
+                </div>
+                <div class="flex items-center justify-center gap-2 text-[11px]">
+                  <span id="form-news-thumbnail-preview-name" class="text-slate-600 font-medium truncate max-w-[200px]">thumbnail.jpg</span>
+                  <button type="button"
+                          onclick="event.stopPropagation(); document.getElementById('form-news-thumbnail-file').click();"
+                          class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold rounded-md shadow-sm transition-colors">
+                    Ganti Gambar
+                  </button>
+                  <button type="button"
+                          onclick="event.stopPropagation(); clearFormNewsThumbnail();"
+                          class="px-2.5 py-1 bg-red-50 border border-red-200 hover:bg-red-100 text-red-700 font-semibold rounded-md transition-colors">
+                    Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+            <p id="form-news-thumbnail-error" class="hidden text-[11px] text-red-600 font-medium mt-1"></p>
+          </div>
+
+          <!-- Input Tautan Video YouTube (Opsional) -->
+          <div>
+            <label for="form-news-youtube" class="block font-bold text-slate-700 mb-1">Tautan Video YouTube (Opsional)</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-red-600">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+              </div>
+              <input type="url"
+                     id="form-news-youtube"
+                     placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/..."
+                     class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-xs text-slate-800 placeholder-slate-400">
+            </div>
           </div>
 
           <div>
@@ -3050,6 +3143,134 @@ async function handleDeleteAnnouncement(id, title) {
 // B. BERITA (NEWS) ON-PAGE CONTROLLERS
 // ----------------------------------------------------------------------------
 
+function setFormNewsThumbnailPreview(src, labelText) {
+  const hiddenInput = document.getElementById('form-news-thumbnail');
+  const emptyState = document.getElementById('form-news-thumbnail-empty');
+  const previewWrap = document.getElementById('form-news-thumbnail-preview-wrap');
+  const previewImg = document.getElementById('form-news-thumbnail-preview-img');
+  const previewName = document.getElementById('form-news-thumbnail-preview-name');
+  const errEl = document.getElementById('form-news-thumbnail-error');
+
+  if (errEl) {
+    errEl.textContent = '';
+    errEl.classList.add('hidden');
+  }
+
+  if (src) {
+    if (hiddenInput) hiddenInput.value = src;
+    if (previewImg) previewImg.src = src;
+    if (previewName) {
+      previewName.textContent = labelText || (src.startsWith('data:') ? 'Gambar terpilih' : src.split('/').pop() || 'thumbnail.jpg');
+    }
+    if (emptyState) emptyState.classList.add('hidden');
+    if (previewWrap) {
+      previewWrap.classList.remove('hidden');
+      previewWrap.classList.add('flex');
+    }
+  } else {
+    if (hiddenInput) hiddenInput.value = '/static/images/news-featured.jpg';
+    if (previewImg) previewImg.src = '';
+    if (emptyState) emptyState.classList.remove('hidden');
+    if (previewWrap) {
+      previewWrap.classList.add('hidden');
+      previewWrap.classList.remove('flex');
+    }
+  }
+}
+
+function clearFormNewsThumbnail() {
+  const fileInput = document.getElementById('form-news-thumbnail-file');
+  if (fileInput) fileInput.value = '';
+  setFormNewsThumbnailPreview('', '');
+}
+
+function handleFormNewsThumbnailDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('form-news-thumbnail-dropzone');
+  if (dz) {
+    dz.classList.add('border-emerald-600', 'bg-emerald-50/60');
+  }
+}
+
+function handleFormNewsThumbnailDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('form-news-thumbnail-dropzone');
+  if (dz) {
+    dz.classList.remove('border-emerald-600', 'bg-emerald-50/60');
+  }
+}
+
+function handleFormNewsThumbnailDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  handleFormNewsThumbnailDragLeave(e);
+  const files = e.dataTransfer && e.dataTransfer.files;
+  if (files && files.length > 0) {
+    processFormNewsThumbnailFile(files[0]);
+  }
+}
+
+function handleFormNewsThumbnailFileSelect(e) {
+  const files = e.target && e.target.files;
+  if (files && files.length > 0) {
+    processFormNewsThumbnailFile(files[0]);
+  }
+}
+
+function processFormNewsThumbnailFile(file) {
+  const errEl = document.getElementById('form-news-thumbnail-error');
+  const fileInput = document.getElementById('form-news-thumbnail-file');
+
+  const validMime = ['image/jpeg', 'image/jpg', 'image/png'];
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const validExt = ['jpg', 'jpeg', 'png'];
+
+  if (!validMime.includes(file.type) && !validExt.includes(ext)) {
+    if (errEl) {
+      errEl.textContent = 'Format file tidak didukung. Harap unggah gambar dengan format JPG atau PNG.';
+      errEl.classList.remove('hidden');
+    }
+    if (fileInput) fileInput.value = '';
+    return;
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    if (errEl) {
+      errEl.textContent = 'Ukuran gambar terlalu besar (Maksimal 5MB).';
+      errEl.classList.remove('hidden');
+    }
+    if (fileInput) fileInput.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    const base64Data = evt.target.result;
+    setFormNewsThumbnailPreview(base64Data, file.name);
+
+    try {
+      const res = await fetch('/api/admin/upload-media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          file_data: base64Data,
+          filename: file.name
+        })
+      });
+      const data = await res.json();
+      if (data && data.success && data.url) {
+        const hiddenInput = document.getElementById('form-news-thumbnail');
+        if (hiddenInput) hiddenInput.value = data.url;
+      }
+    } catch (_) {
+      // Keep base64Data in hidden input as fallback
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
 function openAddNewsModal() {
   ensureCmsModals();
   document.getElementById('form-news-id').value = '';
@@ -3058,14 +3279,16 @@ function openAddNewsModal() {
   document.getElementById('form-news-badge').value = 'BERITA TERBARU';
   document.getElementById('form-news-author').value = state.currentUser ? state.currentUser.full_name : 'Tim Publikasi Kejari';
   document.getElementById('form-news-layout').value = 'COMPACT_BOTTOM';
-  document.getElementById('form-news-thumbnail').value = '/static/images/news-featured.jpg';
+  clearFormNewsThumbnail();
+  const ytInput = document.getElementById('form-news-youtube');
+  if (ytInput) ytInput.value = '';
   document.getElementById('form-news-excerpt').value = '';
   document.getElementById('form-news-quote').value = '';
   document.getElementById('form-news-content').value = '';
 
   document.getElementById('modal-news-form-title').innerHTML = `
     <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-800"></i>
-    <span>Tambah Berita Baru</span>
+    <span>Tambah Artikel Berita Baru</span>
   `;
   openModal('modal-news-form');
   lucide.createIcons();
@@ -3082,29 +3305,48 @@ function openEditNewsModal(id) {
   document.getElementById('form-news-badge').value = item.badge_label || '';
   document.getElementById('form-news-author').value = item.author || '';
   document.getElementById('form-news-layout').value = item.layout_type || 'COMPACT_BOTTOM';
-  document.getElementById('form-news-thumbnail').value = item.thumbnail_url || '';
+  if (item.thumbnail_url) {
+    setFormNewsThumbnailPreview(item.thumbnail_url, item.thumbnail_url.split('/').pop() || 'thumbnail.jpg');
+  } else {
+    clearFormNewsThumbnail();
+  }
+  const ytInput = document.getElementById('form-news-youtube');
+  if (ytInput) ytInput.value = item.youtube_url || '';
   document.getElementById('form-news-excerpt').value = item.excerpt || '';
   document.getElementById('form-news-quote').value = item.highlight_quote || '';
   document.getElementById('form-news-content').value = item.content || '';
 
   document.getElementById('modal-news-form-title').innerHTML = `
     <i data-lucide="edit-3" class="w-4 h-4 text-emerald-800"></i>
-    <span>Edit Berita (#${item.id})</span>
+    <span>Edit Artikel Berita (#${item.id})</span>
   `;
   openModal('modal-news-form');
   lucide.createIcons();
 }
 
+// Aliases for homepage Bento Grid buttons
+function openNewsEditModal(id) {
+  openEditNewsModal(id);
+}
+function deleteNewsItem(id) {
+  const item = (state.news || []).find(n => Number(n.id) === Number(id));
+  handleDeleteNews(id, item ? item.title : `#${id}`);
+}
+
 async function handleSaveNews(e) {
   e.preventDefault();
   const id = document.getElementById('form-news-id').value;
+  const thumbnailVal = (document.getElementById('form-news-thumbnail')?.value || '').trim() || '/static/images/news-featured.jpg';
+  const youtubeVal = (document.getElementById('form-news-youtube')?.value || '').trim();
+
   const payload = {
     title: document.getElementById('form-news-title').value.trim(),
     category: document.getElementById('form-news-category').value.trim(),
     badge_label: document.getElementById('form-news-badge').value.trim(),
     author: document.getElementById('form-news-author').value.trim(),
     layout_type: document.getElementById('form-news-layout').value.trim(),
-    thumbnail_url: document.getElementById('form-news-thumbnail').value.trim(),
+    thumbnail_url: thumbnailVal,
+    youtube_url: youtubeVal || null,
     excerpt: document.getElementById('form-news-excerpt').value.trim(),
     highlight_quote: document.getElementById('form-news-quote').value.trim() || null,
     content: document.getElementById('form-news-content').value.trim() || null,

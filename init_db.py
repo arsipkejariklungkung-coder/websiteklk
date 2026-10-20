@@ -60,6 +60,7 @@ def init_db(target_path=None):
         content TEXT NOT NULL,
         highlight_quote TEXT,
         thumbnail_url TEXT NOT NULL,
+        youtube_url TEXT,
         author TEXT DEFAULT 'Tim Publikasi Kejari',
         layout_type TEXT NOT NULL, -- 'FEATURED_MAIN', 'FEATURED_SIDE', 'COMPACT_BOTTOM'
         published_at DATE DEFAULT CURRENT_DATE,
