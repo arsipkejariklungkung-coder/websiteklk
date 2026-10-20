@@ -9,9 +9,11 @@ import sys
 import json
 import sqlite3
 import hashlib
+import hmac
+import stat
 import mimetypes
 import urllib.parse
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import HTTPServer, SimpleHTTPRequestHandler, BaseHTTPRequestHandler
 import base64
 import time
 import random
@@ -21,7 +23,23 @@ import excel_io
 
 PORT = 8000
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-IS_VERCEL = bool(os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
+IS_VERCEL = bool(
+    os.environ.get('VERCEL')
+    or os.environ.get('VERCEL_ENV')
+    or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
+    or BASE_DIR.startswith('/var/task')
+    or not os.access(BASE_DIR, os.W_OK)
+)
+
+def _copy_seed_db_writable(seed_db: str, dst_db: str):
+    """Copy seed SQLite database to /tmp and ensure read-write (0666) permissions."""
+    import shutil
+    try:
+        os.makedirs(os.path.dirname(os.path.abspath(dst_db)), exist_ok=True)
+        shutil.copyfile(seed_db, dst_db)
+        os.chmod(dst_db, 0o666)
+    except Exception as e:
+        print(f"Error copying seed DB to {dst_db}: {e}")
 
 if IS_VERCEL:
     TMP_DIR = '/tmp'
@@ -33,11 +51,12 @@ if IS_VERCEL:
         pass
     seed_db = os.path.join(BASE_DIR, 'data', 'kertagosa.db')
     if not os.path.exists(DB_PATH) and os.path.exists(seed_db):
-        import shutil
+        _copy_seed_db_writable(seed_db, DB_PATH)
+    elif os.path.exists(DB_PATH):
         try:
-            shutil.copy2(seed_db, DB_PATH)
-        except Exception as e:
-            print(f"Error copying seed DB to /tmp: {e}")
+            os.chmod(DB_PATH, 0o666)
+        except Exception:
+            pass
 else:
     DB_PATH = os.path.join(BASE_DIR, 'data', 'kertagosa.db')
     UPLOADS_DIR = os.path.join(BASE_DIR, 'static', 'uploads')
@@ -46,14 +65,45 @@ else:
     except Exception:
         pass
 
-# In-memory session store (token -> user_dict)
+# In-memory session store (token -> user_dict) + Stateless HMAC Signed Tokens for Serverless
 SESSIONS = {}
-# In-memory MFA challenges store (mfa_token -> {'user': user_dict, 'otp': otp_str, 'expires_at': timestamp})
+# In-memory MFA challenges store (mfa_token -> challenge_dict)
 MFA_CHALLENGES = {}
+TOKEN_SECRET = b"k3rTaG0s4_s3rV3rL3sS_hMaC_2026_kLuNgKuNg"
+
+def create_signed_token(payload: dict) -> str:
+    """Create a stateless HMAC-SHA256 signed token that survives serverless cold starts."""
+    raw = json.dumps(payload, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
+    b64 = base64.urlsafe_b64encode(raw).decode('ascii').rstrip('=')
+    sig = hmac.new(TOKEN_SECRET, b64.encode('ascii'), hashlib.sha256).hexdigest()
+    return f"{b64}.{sig}"
+
+def verify_signed_token(token_str: str):
+    """Verify and decode a stateless HMAC-SHA256 signed token."""
+    if not token_str or '.' not in token_str:
+        return None
+    try:
+        b64, sig = token_str.rsplit('.', 1)
+        expected_sig = hmac.new(TOKEN_SECRET, b64.encode('ascii'), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected_sig):
+            return None
+        pad = '=' * ((4 - len(b64) % 4) % 4)
+        raw = base64.urlsafe_b64decode((b64 + pad).encode('ascii'))
+        payload = json.loads(raw.decode('utf-8'))
+        if payload.get('expires_at') and time.time() > payload['expires_at']:
+            return None
+        return payload
+    except Exception:
+        return None
 
 def ensure_database_ready():
-    """Ensure database exists and is populated with all tables and seed data."""
+    """Ensure database exists, is writable, and is populated with all tables and seed data."""
     try:
+        if IS_VERCEL and os.path.exists(DB_PATH):
+            try:
+                os.chmod(DB_PATH, 0o666)
+            except Exception:
+                pass
         conn = sqlite3.connect(DB_PATH, timeout=30.0)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -79,13 +129,14 @@ def get_db():
     if IS_VERCEL and not os.path.exists(DB_PATH):
         seed_db = os.path.join(BASE_DIR, 'data', 'kertagosa.db')
         if os.path.exists(seed_db):
-            import shutil
-            try:
-                shutil.copy2(seed_db, DB_PATH)
-            except Exception as e:
-                print(f"Copying seed db: {e}")
+            _copy_seed_db_writable(seed_db, DB_PATH)
         else:
             ensure_database_ready()
+    elif IS_VERCEL and os.path.exists(DB_PATH):
+        try:
+            os.chmod(DB_PATH, 0o666)
+        except Exception:
+            pass
 
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
@@ -533,7 +584,10 @@ def seed_accountability_docs(cursor):
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, docs)
 
-init_db_schema()
+try:
+    init_db_schema()
+except Exception as _init_err:
+    print(f"[Startup Schema Init Warning] {_init_err}")
 
 def get_current_user(handler):
     # Check Authorization header: Bearer <token>
@@ -551,8 +605,13 @@ def get_current_user(handler):
                 token = c.split('=', 1)[1]
                 break
 
-    if token and token in SESSIONS:
-        return SESSIONS[token]
+    if token:
+        if token in SESSIONS:
+            return SESSIONS[token]
+        verified = verify_signed_token(token)
+        if verified and verified.get('type') == 'session' and verified.get('user'):
+            SESSIONS[token] = verified['user']
+            return verified['user']
     return None
 
 class KertagosaHandler(SimpleHTTPRequestHandler):
@@ -560,6 +619,26 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         if 'directory' not in kwargs:
             kwargs['directory'] = BASE_DIR
         super().__init__(*args, **kwargs)
+
+    def _normalize_request_path(self):
+        """Normalize path and query string when routed via Vercel rewrites."""
+        parsed = urllib.parse.urlparse(self.path)
+        path = parsed.path
+        qs = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+        vc_path = qs.pop('__vc_path', None)
+        if path in ('/api/index', '/api/index.py', '/api', '/api/') and vc_path:
+            sub = vc_path[0].lstrip('/')
+            path = f"/api/{sub}" if sub else "/api"
+        if path in ('/api/index', '/api/index.py') and hasattr(self, 'headers') and self.headers:
+            for hdr in ('x-matched-path', 'x-original-url', 'x-rewrite-url', 'x-vercel-forwarded-url'):
+                val = self.headers.get(hdr)
+                if val and '/api/' in val:
+                    p_val = urllib.parse.urlparse(val).path
+                    if p_val not in ('/api/index', '/api/index.py'):
+                        path = p_val
+                        break
+        clean_query = urllib.parse.urlencode(qs, doseq=True)
+        self.path = f"{path}?{clean_query}" if clean_query else path
 
     def send_json(self, data, status_code=200):
         body = json.dumps(data, ensure_ascii=False).encode('utf-8')
@@ -580,6 +659,7 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+        self._normalize_request_path()
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
@@ -729,10 +809,22 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             self.handle_get_admin_announcements()
             return
 
-        # 4. Fallback to static files
+        # 4. Serve uploaded files from UPLOADS_DIR (/tmp/uploads on Vercel or static/uploads locally)
+        if path.startswith('/static/uploads/'):
+            fname = os.path.basename(path)
+            cand_tmp = os.path.join(UPLOADS_DIR, fname)
+            cand_static = os.path.join(BASE_DIR, 'static', 'uploads', fname)
+            target_file = cand_tmp if os.path.exists(cand_tmp) else cand_static
+            if os.path.exists(target_file):
+                ctype, _ = mimetypes.guess_type(target_file)
+                self.serve_file(target_file, ctype or 'application/octet-stream')
+                return
+
+        # 5. Fallback to static files
         super().do_GET()
 
     def do_POST(self):
+        self._normalize_request_path()
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
@@ -813,6 +905,7 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             self.send_json({'error': 'Endpoint not found'}, 404)
 
     def do_PUT(self):
+        self._normalize_request_path()
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
@@ -871,6 +964,7 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         self.send_json({'error': 'Endpoint not found'}, 404)
 
     def do_DELETE(self):
+        self._normalize_request_path()
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
@@ -1146,15 +1240,16 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         account_name = user_dict.get('email') or user_dict.get('username')
         otpauth_uri = totp_mfa.build_otpauth_uri(secret, account_name, issuer="KERTAGOSA Kejari Klungkung")
         qr_svg = totp_mfa.generate_qr_svg(otpauth_uri)
-        mfa_token = str(uuid.uuid4())
         provider_val = 'MICROSOFT' if (user_dict.get('mfa_provider') or '').upper() == 'MICROSOFT' else 'GOOGLE'
-
-        MFA_CHALLENGES[mfa_token] = {
+        challenge_obj = {
+            'type': 'mfa',
             'user': safe_user,
             'secret': secret,
             'account_name': account_name,
-            'expires_at': time.time() + 300  # 5 minutes challenge session
+            'expires_at': time.time() + 600  # 10 minutes challenge session
         }
+        mfa_token = create_signed_token(challenge_obj)
+        MFA_CHALLENGES[mfa_token] = challenge_obj
 
         # Mask email for privacy
         email = user_dict.get('email', '')
@@ -1185,6 +1280,10 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
     def handle_get_mfa_status(self, query):
         mfa_token = (query.get('mfa_token', [''])[0] or '').strip()
         challenge = MFA_CHALLENGES.get(mfa_token)
+        if not challenge:
+            verified = verify_signed_token(mfa_token)
+            if verified and verified.get('type') == 'mfa':
+                challenge = verified
         if not challenge or time.time() > challenge['expires_at']:
             self.send_json({'error': 'Sesi MFA tidak valid atau kedaluwarsa'}, 401)
             return
@@ -1207,6 +1306,10 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
         challenge = MFA_CHALLENGES.get(mfa_token)
         if not challenge:
+            verified = verify_signed_token(mfa_token)
+            if verified and verified.get('type') == 'mfa':
+                challenge = verified
+        if not challenge:
             self.send_json({'error': 'Sesi verifikasi MFA tidak ditemukan atau telah kedaluwarsa. Silakan login kembali.'}, 401)
             return
 
@@ -1222,10 +1325,14 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             self.send_json({'error': 'Kode 6-digit Authenticator salah atau sudah berganti! Periksa kode terbaru di aplikasi Google / Microsoft Authenticator Anda.'}, 400)
             return
 
-        # Verification successful! Issue full session token
+        # Verification successful! Issue full stateless & in-memory session token
         user_dict = challenge['user']
         MFA_CHALLENGES.pop(mfa_token, None)
-        token = str(uuid.uuid4())
+        token = create_signed_token({
+            'type': 'session',
+            'user': user_dict,
+            'expires_at': time.time() + 86400 * 7
+        })
         SESSIONS[token] = user_dict
 
         body = json.dumps({

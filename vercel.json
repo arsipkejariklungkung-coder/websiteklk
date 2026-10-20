@@ -1,16 +1,17 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "source": "/api/:path*",
+      "destination": "/api/index?__vc_path=:path*"
     },
     {
       "source": "/admin",
       "destination": "/admin.html"
     },
     {
-      "source": "/admin/(.*)",
+      "source": "/admin/:path*",
       "destination": "/admin.html"
     },
     {
@@ -24,12 +25,15 @@
     {
       "source": "/akuntabilitas-kinerja",
       "destination": "/akuntabilitas-kinerja.html"
+    },
+    {
+      "source": "/sakip",
+      "destination": "/akuntabilitas-kinerja.html"
     }
   ],
   "functions": {
     "api/index.py": {
       "includeFiles": "{server.py,totp_mfa.py,excel_io.py,init_db.py,seed_organization.py,data/**}"
     }
-  },
-  "cleanUrls": true
+  }
 }

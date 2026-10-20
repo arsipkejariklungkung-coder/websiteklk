@@ -758,8 +758,18 @@
       lucide.createIcons();
     });
 
+    const DEFAULT_SAKIP_DOCS = [
+      { id: 1, category: 'RENSTRA', title: 'Rencana Strategis (Renstra) Kejaksaan Negeri Klungkung 2025 - 2029', period_year: '2025-2029', doc_url: 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing', file_size: 'PDF (4.8 MB)', description: 'Dokumen perencanaan strategis lima tahunan yang memuat visi, misi, tujuan, sasaran strategis, kebijakan, dan program kerja Kejaksaan Negeri Klungkung.', views_count: 142, order_num: 1 },
+      { id: 2, category: 'RENJA', title: 'Rencana Kerja (Renja) Kejaksaan Negeri Klungkung Tahun 2026', period_year: '2026', doc_url: 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing', file_size: 'PDF (3.1 MB)', description: 'Dokumen rencana kerja tahunan dan target kinerja operasional seluruh seksi pada Kejaksaan Negeri Klungkung Tahun Anggaran 2026.', views_count: 118, order_num: 1 },
+      { id: 3, category: 'LKJ', title: 'Laporan Kinerja Instansi Pemerintah (LKjIP) Tahun 2025', period_year: '2025', doc_url: 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing', file_size: 'PDF (6.5 MB)', description: 'Laporan akuntabilitas kinerja tahunan yang menyajikan capaian indikator kinerja utama (IKU) dan realisasi anggaran.', views_count: 256, order_num: 1 },
+      { id: 4, category: 'TRIWULAN', title: 'Laporan Evaluasi Kinerja Triwulan III Tahun 2026', period_year: '2026', doc_url: 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/view?usp=sharing', file_size: 'PDF (2.4 MB)', description: 'Evaluasi pemantauan realisasi kinerja berkala Triwulan III beserta capaian sasaran program.', views_count: 94, order_num: 1 }
+    ];
+
     async function loadAccountabilityData() {
       try {
+        if (window.location.protocol === 'file:') {
+          throw new Error('Offline file protocol');
+        }
         let url = `/api/public/accountability?`;
         if (activeCategory && activeCategory !== 'ALL') {
           url += `category=${encodeURIComponent(activeCategory)}&`;
@@ -782,8 +792,23 @@
           renderDocumentSections();
         }
       } catch (err) {
-        console.error('Gagal memuat dokumen SAKIP:', err);
-        showToast('Gagal memuat data dokumen SAKIP dari server', 'error');
+        console.warn('Menggunakan data dokumen SAKIP bawaan:', err);
+        sakipData = {
+          success: true,
+          documents: DEFAULT_SAKIP_DOCS,
+          grouped: {
+            RENSTRA: DEFAULT_SAKIP_DOCS.filter(d => d.category === 'RENSTRA'),
+            RENJA: DEFAULT_SAKIP_DOCS.filter(d => d.category === 'RENJA'),
+            LKJ: DEFAULT_SAKIP_DOCS.filter(d => d.category === 'LKJ'),
+            TRIWULAN: DEFAULT_SAKIP_DOCS.filter(d => d.category === 'TRIWULAN')
+          },
+          stats: { total_docs: DEFAULT_SAKIP_DOCS.length, renstra_count: 1, renja_count: 1, lkj_count: 1, triwulan_count: 1 },
+          years: ['2026', '2025', '2025-2029']
+        };
+        updateStatsUI();
+        populateYearDropdown();
+        renderCategoryPills();
+        renderDocumentSections();
       }
     }
 

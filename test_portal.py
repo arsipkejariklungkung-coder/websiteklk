@@ -1105,6 +1105,65 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('exportInboxData(', adm_html)
         self.assertIn('openInboxExcelImportModal()', adm_html)
 
+    def test_21_vercel_serverless_rewrites_and_stateless_auth(self):
+        """Verify Vercel path rewrites (__vc_path), read-only DB copy permissions, and stateless auth across cold starts."""
+        import stat
+        import server
+        import totp_mfa
+
+        # 1. Test _copy_seed_db_writable from a read-only (0o444) source file
+        ro_src = '/tmp/test_ro_seed.db'
+        ro_dst = '/tmp/test_rw_target.db'
+        for p in (ro_src, ro_dst):
+            if os.path.exists(p):
+                os.chmod(p, 0o666)
+                os.remove(p)
+        import shutil
+        shutil.copyfile(server.DB_PATH, ro_src)
+        os.chmod(ro_src, 0o444)
+        server._copy_seed_db_writable(ro_src, ro_dst)
+        self.assertTrue(os.access(ro_dst, os.W_OK))
+        self.assertEqual(stat.S_IMODE(os.stat(ro_dst).st_mode), 0o666)
+        for p in (ro_src, ro_dst):
+            if os.path.exists(p):
+                os.chmod(p, 0o666)
+                os.remove(p)
+
+        # 2. Test Vercel rewrite path: /api/index?__vc_path=public/homepage-data
+        vc_home = MockHandler('GET', '/api/index?__vc_path=public/homepage-data')
+        vc_home.do_GET()
+        self.assertEqual(vc_home.response_code, 200)
+        self.assertTrue(vc_home.get_response_json()['success'])
+
+        # 3. Test Stateless Auth & MFA across cold starts (wiping SESSIONS and MFA_CHALLENGES)
+        login_body = json.dumps({'username': 'admin@kejariklungkung.go.id', 'password': 'admin123'}).encode('utf-8')
+        vc_login = MockHandler('POST', '/api/index?__vc_path=auth/login', {'Content-Length': str(len(login_body))}, login_body)
+        vc_login.do_POST()
+        self.assertEqual(vc_login.response_code, 200)
+        login_res = vc_login.get_response_json()
+        self.assertTrue(login_res['require_mfa'])
+        mfa_token = login_res['mfa_token']
+        totp_code = totp_mfa.generate_totp(login_res['totp_secret'])
+
+        # Wipe in-memory challenges to simulate a new Vercel serverless instance
+        server.MFA_CHALLENGES.clear()
+
+        verify_body = json.dumps({'mfa_token': mfa_token, 'otp_code': totp_code}).encode('utf-8')
+        vc_verify = MockHandler('POST', '/api/index?__vc_path=auth/verify-mfa', {'Content-Length': str(len(verify_body))}, verify_body)
+        vc_verify.do_POST()
+        self.assertEqual(vc_verify.response_code, 200)
+        verify_res = vc_verify.get_response_json()
+        self.assertTrue(verify_res['success'])
+        stateless_token = verify_res['token']
+
+        # Wipe in-memory sessions to simulate another Vercel serverless instance
+        server.SESSIONS.clear()
+
+        vc_admin = MockHandler('GET', '/api/index?__vc_path=admin/submissions', {'Authorization': f'Bearer {stateless_token}'})
+        vc_admin.do_GET()
+        self.assertEqual(vc_admin.response_code, 200)
+        self.assertTrue(vc_admin.get_response_json()['success'])
+
 
 if __name__ == '__main__':
     unittest.main()
