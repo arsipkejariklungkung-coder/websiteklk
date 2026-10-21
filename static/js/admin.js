@@ -1356,13 +1356,18 @@ function renderAdminSubmissions() {
         <td class="py-3 px-3">
           <span class="px-2 py-0.5 rounded text-[10px] font-bold ${getSubmissionStatusBadge(item.status)}">${item.status}</span>
         </td>
-        <td class="py-3 px-3 text-right">
+        <td class="py-3 px-3 text-right whitespace-nowrap space-x-1.5">
+          <button onclick="openBa20Modal('${item.ticket_code}')" class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded text-[11px] shadow-sm transition-all" title="Buka & Cetak Berita Acara BA-20 Resmi">
+            <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>BA-20</span>
+          </button>
           <button onclick="openSubmissionStatusModal('delivery', '${item.ticket_code}', '${item.status}', '${(item.admin_notes || '').replace(/'/g, "\\'")}')" class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded text-[11px]">
             Tindak Lanjut
           </button>
         </td>
       </tr>
     `).join('');
+    if (window.lucide) lucide.createIcons();
   }
 }
 
@@ -3363,4 +3368,292 @@ async function deleteAdminAnnouncement(id, title) {
   } catch (err) {
     alert('Gagal menghapus pengumuman.');
   }
+}
+
+// =============================================================================
+// SEMARA BAKTI - BERITA ACARA PENGEMBALIAN BARANG BUKTI (BA-20) CONTROLLER
+// Disesuaikan secara sinkron dengan struktur jabatan (organization_members)
+// =============================================================================
+
+function numberToWordsId(n) {
+  const units = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+  n = parseInt(n, 10);
+  if (isNaN(n)) return '';
+  if (n < 0) return 'Minus ' + numberToWordsId(Math.abs(n));
+  if (n === 0) return 'Nol';
+  if (n < 12) return units[n];
+  if (n < 20) return units[n - 10] + ' Belas';
+  if (n < 100) {
+    const rem = n % 10;
+    return units[Math.floor(n / 10)] + ' Puluh' + (rem === 0 ? '' : ' ' + units[rem]);
+  }
+  if (n < 200) {
+    const rem = n % 100;
+    return 'Seratus' + (rem === 0 ? '' : ' ' + numberToWordsId(rem));
+  }
+  if (n < 1000) {
+    const rem = n % 100;
+    return units[Math.floor(n / 100)] + ' Ratus' + (rem === 0 ? '' : ' ' + numberToWordsId(rem));
+  }
+  if (n < 2000) {
+    const rem = n % 1000;
+    return 'Seribu' + (rem === 0 ? '' : ' ' + numberToWordsId(rem));
+  }
+  if (n < 1000000) {
+    const rem = n % 1000;
+    return numberToWordsId(Math.floor(n / 1000)) + ' Ribu' + (rem === 0 ? '' : ' ' + numberToWordsId(rem));
+  }
+  return String(n);
+}
+
+function formatBaDateIndonesianJs(dateStr) {
+  if (!dateStr) return { day: '', text: '' };
+  const clean = dateStr.trim().split(' ')[0];
+  const parts = clean.split('-');
+  if (parts.length !== 3) return { day: '', text: dateStr };
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  const d = parseInt(parts[2], 10);
+
+  const dt = new Date(y, m - 1, d);
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const months = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+  const dayName = days[dt.getDay()];
+  const daySpelled = numberToWordsId(d);
+  const monthName = months[m] || '';
+  const yearSpelled = numberToWordsId(y);
+
+  return {
+    day: dayName,
+    text: `${daySpelled} bulan ${monthName} tahun ${yearSpelled}`
+  };
+}
+
+function handleBaDateChange(dateVal) {
+  if (!dateVal) return;
+  const res = formatBaDateIndonesianJs(dateVal);
+  const dayEl = document.getElementById('ba20-day');
+  const spelledEl = document.getElementById('ba20-date-spelled');
+  if (dayEl) dayEl.value = res.day;
+  if (spelledEl) spelledEl.value = res.text;
+  updateBaPreview();
+}
+
+let activeBaTicketCode = null;
+let activeKasiPb3rData = null;
+
+async function openBa20Modal(ticketCode) {
+  activeBaTicketCode = ticketCode;
+  const badgeEl = document.getElementById('ba20-ticket-badge');
+  if (badgeEl) badgeEl.textContent = ticketCode;
+
+  try {
+    const res = await fetch(`/api/admin/deliveries/${ticketCode}/ba`);
+    const data = await res.json();
+    if (!data.success) {
+      alert('Gagal memuat data Berita Acara: ' + (data.error || 'Tiket tidak ditemukan.'));
+      return;
+    }
+
+    const d = data.delivery;
+    activeKasiPb3rData = data.active_kasi_pb3r;
+
+    // Fill form fields
+    document.getElementById('ba20-ticket-code').value = d.ticket_code || ticketCode;
+    document.getElementById('ba20-date').value = d.ba_date || '';
+    document.getElementById('ba20-day').value = d.ba_day || '';
+    document.getElementById('ba20-date-spelled').value = d.ba_date_spelled || '';
+    
+    document.getElementById('ba20-officer-name').value = d.officer_name || '';
+    document.getElementById('ba20-officer-rank').value = d.officer_rank || '';
+    document.getElementById('ba20-officer-nip').value = d.officer_nip || '';
+    document.getElementById('ba20-officer-position').value = d.officer_position || '';
+
+    document.getElementById('ba20-sprint-num').value = d.sprint_number || '';
+    document.getElementById('ba20-sprint-date').value = d.sprint_date || '';
+    document.getElementById('ba20-defendant-name').value = d.defendant_name || d.owner_name || '';
+    document.getElementById('ba20-violation-clause').value = d.violation_clause || 'Pasal 378 KUHP';
+    document.getElementById('ba20-court-num').value = d.court_verdict_number || d.case_number || '';
+    document.getElementById('ba20-court-date').value = d.court_verdict_date || d.sprint_date || '';
+
+    document.getElementById('ba20-item-description').value = d.item_description || '';
+    document.getElementById('ba20-owner-name').value = d.owner_name || '';
+    document.getElementById('ba20-owner-job').value = d.owner_job || 'Wiraswasta';
+    document.getElementById('ba20-delivery-address').value = d.delivery_address || '';
+
+    document.getElementById('ba20-kasi-name').value = d.kasi_name || (activeKasiPb3rData ? activeKasiPb3rData.name : '');
+    document.getElementById('ba20-kasi-rank').value = d.kasi_rank || (activeKasiPb3rData ? activeKasiPb3rData.rank : '');
+    document.getElementById('ba20-kasi-nip').value = d.kasi_nip || (activeKasiPb3rData ? activeKasiPb3rData.nip : '');
+
+    document.getElementById('ba20-witness-1').value = d.witness_1 || 'I Wayan Gede Sunarta, A.Md.';
+    document.getElementById('ba20-witness-2').value = d.witness_2 || 'I Made Sujana, S.Kom.';
+
+    document.getElementById('ba20-status').value = d.status || 'SELESAI';
+    document.getElementById('ba20-notes').value = d.ba_notes || d.admin_notes || '';
+
+    // Update sync badge
+    const syncBadge = document.getElementById('ba20-kasi-sync-badge');
+    if (syncBadge && activeKasiPb3rData) {
+      syncBadge.textContent = `${activeKasiPb3rData.name} (${activeKasiPb3rData.rank || 'Jaksa'}) - NIP. ${activeKasiPb3rData.nip || '-'}`;
+    }
+
+    // Trigger calculation if date exists but day/spelled empty
+    if (d.ba_date && (!d.ba_day || !d.ba_date_spelled)) {
+      handleBaDateChange(d.ba_date);
+    } else {
+      updateBaPreview();
+    }
+
+    openModal('modal-ba20');
+    if (window.lucide) lucide.createIcons();
+
+  } catch (err) {
+    alert('Terjadi kesalahan memuat data Berita Acara BA-20.');
+  }
+}
+
+function updateBaPreview() {
+  const getVal = id => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
+  const setTxt = (id, val, fallback) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || fallback || '-';
+  };
+
+  const day = getVal('ba20-day') || 'Rabu';
+  const spelled = getVal('ba20-date-spelled') || 'Dua Puluh Satu bulan Oktober tahun Dua Ribu Dua Puluh Enam';
+  setTxt('pv-ba-day', day);
+  setTxt('pv-ba-date-spelled', spelled);
+
+  const offName = getVal('ba20-officer-name');
+  const offRank = getVal('ba20-officer-rank');
+  const offNip = getVal('ba20-officer-nip');
+  const offPos = getVal('ba20-officer-position');
+  setTxt('pv-officer-name', offName);
+  setTxt('pv-officer-rank-nip', `${offRank} / NIP. ${offNip}`);
+  setTxt('pv-officer-position', offPos);
+  setTxt('pv-sig-officer', offName);
+  setTxt('pv-sig-officer-nip', `${offRank} / NIP. ${offNip}`);
+
+  setTxt('pv-sprint-number', getVal('ba20-sprint-num'));
+  setTxt('pv-sprint-date', getVal('ba20-sprint-date'));
+  setTxt('pv-defendant-name', getVal('ba20-defendant-name'));
+  setTxt('pv-violation-clause', getVal('ba20-violation-clause'));
+  setTxt('pv-court-num', getVal('ba20-court-num'));
+  setTxt('pv-court-date', getVal('ba20-court-date'));
+
+  setTxt('pv-item-description', getVal('ba20-item-description'));
+
+  const ownName = getVal('ba20-owner-name');
+  const ownJob = getVal('ba20-owner-job');
+  const ownAddr = getVal('ba20-delivery-address');
+  setTxt('pv-owner-name', ownName);
+  setTxt('pv-owner-job', ownJob);
+  setTxt('pv-delivery-address', ownAddr);
+  setTxt('pv-sig-owner', ownName);
+
+  const kasiName = getVal('ba20-kasi-name');
+  const kasiRank = getVal('ba20-kasi-rank');
+  const kasiNip = getVal('ba20-kasi-nip');
+  setTxt('pv-sig-kasi', kasiName);
+  setTxt('pv-sig-kasi-nip', `${kasiRank} / NIP. ${kasiNip}`);
+
+  setTxt('pv-witness-1', getVal('ba20-witness-1'));
+  setTxt('pv-witness-2', getVal('ba20-witness-2'));
+}
+
+async function resyncKasiFromOrg() {
+  try {
+    const res = await fetch('/api/public/organization');
+    const data = await res.json();
+    if (data.success && data.members) {
+      const kasi = data.members.find(m => 
+        (m.position && (m.position.includes('PB3R') || m.position.includes('Barang Bukti') || m.position.includes('Pemulihan Aset')))
+      );
+      if (kasi) {
+        document.getElementById('ba20-kasi-name').value = kasi.name;
+        if (kasi.rank) document.getElementById('ba20-kasi-rank').value = kasi.rank;
+        if (kasi.nip) document.getElementById('ba20-kasi-nip').value = kasi.nip;
+        
+        const syncBadge = document.getElementById('ba20-kasi-sync-badge');
+        if (syncBadge) {
+          syncBadge.textContent = `${kasi.name} (${kasi.rank || 'Jaksa'}) - NIP. ${kasi.nip || '-'}`;
+        }
+        updateBaPreview();
+        alert(`Berhasil menyinkronkan pejabat Kasi PB3R: ${kasi.name}`);
+        return;
+      }
+    }
+    alert('Pejabat Kasi PB3R tidak ditemukan di struktur organisasi.');
+  } catch (err) {
+    alert('Gagal mengambil struktur organisasi terbaru.');
+  }
+}
+
+async function handleSaveBa20(e) {
+  e.preventDefault();
+  if (!activeBaTicketCode) return;
+
+  const btn = document.getElementById('btn-save-ba20');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-2">&#9696;</span>Menyimpan...`;
+  }
+
+  const payload = {
+    ba_date: document.getElementById('ba20-date').value.trim(),
+    ba_day: document.getElementById('ba20-day').value.trim(),
+    ba_date_spelled: document.getElementById('ba20-date-spelled').value.trim(),
+    officer_name: document.getElementById('ba20-officer-name').value.trim(),
+    officer_rank: document.getElementById('ba20-officer-rank').value.trim(),
+    officer_nip: document.getElementById('ba20-officer-nip').value.trim(),
+    officer_position: document.getElementById('ba20-officer-position').value.trim(),
+    sprint_number: document.getElementById('ba20-sprint-num').value.trim(),
+    sprint_date: document.getElementById('ba20-sprint-date').value.trim(),
+    defendant_name: document.getElementById('ba20-defendant-name').value.trim(),
+    violation_clause: document.getElementById('ba20-violation-clause').value.trim(),
+    court_verdict_number: document.getElementById('ba20-court-num').value.trim(),
+    court_verdict_date: document.getElementById('ba20-court-date').value.trim(),
+    item_description: document.getElementById('ba20-item-description').value.trim(),
+    owner_name: document.getElementById('ba20-owner-name').value.trim(),
+    owner_job: document.getElementById('ba20-owner-job').value.trim(),
+    delivery_address: document.getElementById('ba20-delivery-address').value.trim(),
+    kasi_name: document.getElementById('ba20-kasi-name').value.trim(),
+    kasi_rank: document.getElementById('ba20-kasi-rank').value.trim(),
+    kasi_nip: document.getElementById('ba20-kasi-nip').value.trim(),
+    witness_1: document.getElementById('ba20-witness-1').value.trim(),
+    witness_2: document.getElementById('ba20-witness-2').value.trim(),
+    status: document.getElementById('ba20-status').value.trim(),
+    ba_notes: document.getElementById('ba20-notes').value.trim()
+  };
+
+  try {
+    const res = await fetch(`/api/admin/deliveries/${activeBaTicketCode}/ba`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message || 'Data Berita Acara BA-20 berhasil disimpan!');
+      if (typeof loadAdminSubmissions === 'function') {
+        await loadAdminSubmissions();
+      }
+    } else {
+      alert('Gagal menyimpan: ' + (data.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Terjadi kesalahan jaringan.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-lucide="save" class="w-4 h-4 text-amber-400"></i><span>Simpan Berita Acara BA-20</span>`;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+function printBa20Document() {
+  updateBaPreview();
+  window.print();
 }

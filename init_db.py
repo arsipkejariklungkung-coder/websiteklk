@@ -158,6 +158,8 @@ def init_db(target_path=None):
         ticket_code TEXT UNIQUE NOT NULL,
         case_number TEXT NOT NULL,
         owner_name TEXT NOT NULL,
+        owner_job TEXT DEFAULT 'Wiraswasta',
+        defendant_name TEXT,
         id_card_number TEXT,
         item_description TEXT NOT NULL,
         delivery_address TEXT NOT NULL,
@@ -166,6 +168,24 @@ def init_db(target_path=None):
         preferred_date TEXT,
         status TEXT DEFAULT 'TERKIRIM', -- 'TERKIRIM', 'DIVERIFIKASI', 'DIJADWALKAN', 'DIANTAR', 'SELESAI'
         admin_notes TEXT,
+        violation_clause TEXT,
+        sprint_number TEXT,
+        sprint_date TEXT,
+        court_verdict_number TEXT,
+        court_verdict_date TEXT,
+        officer_name TEXT,
+        officer_nip TEXT,
+        officer_rank TEXT,
+        officer_position TEXT,
+        kasi_name TEXT,
+        kasi_nip TEXT,
+        kasi_rank TEXT,
+        witness_1 TEXT,
+        witness_2 TEXT,
+        ba_date TEXT,
+        ba_day TEXT,
+        ba_date_spelled TEXT,
+        ba_notes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)

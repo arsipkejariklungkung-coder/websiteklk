@@ -2512,5 +2512,419 @@
     </div>
   </div>
 
+  <!-- =========================================================================
+       MODAL BERITA ACARA PENGEMBALIAN BARANG BUKTI (BA-20)
+       Layanan SEMARA BAKTI - Kejaksaan Negeri Klungkung
+       Sinkron Otomatis dengan Struktur Jabatan (organization_members)
+       ========================================================================= -->
+  <div id="modal-ba20" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-6xl w-full shadow-2xl border border-slate-200 overflow-hidden my-4 max-h-[92vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="p-4 sm:p-5 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shadow font-bold text-sm">
+            <i data-lucide="file-check-2" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-heading font-black text-sm sm:text-base text-white tracking-wide">
+                Formulir BA-20: Berita Acara Pengembalian Barang Bukti
+              </h3>
+              <span id="ba20-ticket-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-400 text-slate-950">
+                TRK-BB-0000
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-300">
+              Layanan SEMARA BAKTI (Pengantaran Barang Bukti Gratis) &bull; Sinkronisasi Data Pejabat Struktur Organisasi
+            </p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="printBa20Document()" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow transition-all">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Cetak Dokumen (PDF)</span>
+          </button>
+          <button type="button" onclick="closeModal('modal-ba20')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sync Status Banner -->
+      <div class="bg-emerald-50 border-b border-emerald-200 px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shrink-0">
+        <div class="flex items-center gap-2">
+          <i data-lucide="shield-check" class="w-4 h-4 text-emerald-800 shrink-0"></i>
+          <span class="text-emerald-950">
+            <strong>Sinkronisasi Jabatan:</strong> Pejabat Penandatangan Mengetahui disinkronkan dengan Seksi PB3R pada Struktur Organisasi:
+            <span id="ba20-kasi-sync-badge" class="font-bold underline text-emerald-900 ml-1">I Dewa Gede Raka, S.H. (Jaksa Muda / III-d)</span>
+          </span>
+        </div>
+        <button type="button" onclick="resyncKasiFromOrg()" class="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg font-bold text-[11px] transition-all self-start sm:self-auto shrink-0 shadow-sm">
+          <i data-lucide="refresh-cw" class="w-3 h-3 text-emerald-700"></i>
+          <span>Sinkronkan Ulang dari Struktur Organisasi</span>
+        </button>
+      </div>
+
+      <!-- Modal Body (Split Editor & Live Preview) -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- LEFT COLUMN: Editor Form (5 cols on LG) -->
+          <form id="form-ba20" onsubmit="handleSaveBa20(event)" class="lg:col-span-5 space-y-4 text-xs bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <input type="hidden" id="ba20-ticket-code">
+            
+            <div class="border-b border-slate-100 pb-2 flex items-center justify-between">
+              <h4 class="font-bold text-slate-900 uppercase text-[11px] tracking-wider flex items-center gap-1.5">
+                <i data-lucide="edit-3" class="w-3.5 h-3.5 text-emerald-800"></i>
+                <span>Data Isian Berita Acara (BA-20)</span>
+              </h4>
+              <span class="text-[10px] text-slate-400">Pratinjau realtime di samping</span>
+            </div>
+
+            <!-- Seksi 1: Waktu & Tanggal Pengembalian (Format Terbilang Otomatis) -->
+            <div class="bg-amber-50/60 p-3 rounded-xl border border-amber-200/70 space-y-2">
+              <div class="font-bold text-amber-950 flex items-center justify-between">
+                <span>1. Waktu &amp; Tanggal Pengembalian</span>
+                <span class="text-[10px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-mono">Format Kalimat</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Tanggal Pelaksanaan *</label>
+                  <input type="date" id="ba20-date" required onchange="handleBaDateChange(this.value)" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg font-bold text-slate-800">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Hari</label>
+                  <input type="text" id="ba20-day" oninput="updateBaPreview()" placeholder="Rabu" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg font-bold bg-slate-50 text-slate-800">
+                </div>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-0.5">Tanggal Terbilang (Format Kalimat bukan Angka) *</label>
+                <textarea id="ba20-date-spelled" rows="2" oninput="updateBaPreview()" placeholder="Dua Puluh Satu bulan Oktober tahun Dua Ribu Dua Puluh Enam" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800 font-medium"></textarea>
+                <p class="text-[10px] text-slate-500 mt-0.5">Dihitung otomatis saat tanggal dipilih, atau dapat disunting langsung.</p>
+              </div>
+            </div>
+
+            <!-- Seksi 2: Pihak Yang Mengembalikan (Jaksa) -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+              <div class="font-bold text-slate-900">2. Pihak Yang Mengembalikan (Jaksa)</div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-0.5">Nama Lengkap Jaksa &amp; Gelar *</label>
+                <input type="text" id="ba20-officer-name" required oninput="updateBaPreview()" placeholder="I Komang Arimbawa, S.H." class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg font-bold text-slate-800">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Pangkat / Golongan *</label>
+                  <input type="text" id="ba20-officer-rank" required oninput="updateBaPreview()" placeholder="Ajun Jaksa / III-b" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">NIP Petugas *</label>
+                  <input type="text" id="ba20-officer-nip" required oninput="updateBaPreview()" placeholder="19940315 201701 1 022" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800 font-mono">
+                </div>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-0.5">Jabatan Jaksa *</label>
+                <input type="text" id="ba20-officer-position" required oninput="updateBaPreview()" placeholder="Jaksa Penuntut Umum / Petugas Pengembalian BB" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+              </div>
+            </div>
+
+            <!-- Seksi 3: Dasar Hukum Pengembalian -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+              <div class="font-bold text-slate-900">3. Dasar Hukum Pengembalian</div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Nomor Sprint Kajari *</label>
+                  <input type="text" id="ba20-sprint-num" required oninput="updateBaPreview()" placeholder="PRINT-341/N.1.12/Eoh.3/10/2026" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800 font-mono">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Tanggal Surat Sprint *</label>
+                  <input type="text" id="ba20-sprint-date" required oninput="updateBaPreview()" placeholder="21 Oktober 2026" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Perkara a.n. Terdakwa *</label>
+                  <input type="text" id="ba20-defendant-name" required oninput="updateBaPreview()" placeholder="I Made Sudira" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800 font-bold">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Melanggar Pasal *</label>
+                  <input type="text" id="ba20-violation-clause" required oninput="updateBaPreview()" placeholder="Pasal 378 KUHP" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Putusan PN Semarapura No. *</label>
+                  <input type="text" id="ba20-court-num" required oninput="updateBaPreview()" placeholder="45/Pid.B/2026/PN Srp" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800 font-mono">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Tanggal Putusan PN *</label>
+                  <input type="text" id="ba20-court-date" required oninput="updateBaPreview()" placeholder="21 Oktober 2026" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+                </div>
+              </div>
+            </div>
+
+            <!-- Seksi 4: Rincian Barang Bukti & Pihak Penerima -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+              <div class="font-bold text-slate-900">4. Barang Bukti &amp; Pihak Penerima</div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-0.5">Rincian Barang Bukti yang Dikembalikan *</label>
+                <textarea id="ba20-item-description" rows="2" required oninput="updateBaPreview()" placeholder="1 Unit Sepeda Motor Honda Vario DK-1234-KLK..." class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800 font-medium"></textarea>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Nama Lengkap Penerima *</label>
+                  <input type="text" id="ba20-owner-name" required oninput="updateBaPreview()" placeholder="I Made Sudira" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg font-bold text-slate-800">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Pekerjaan Penerima *</label>
+                  <input type="text" id="ba20-owner-job" required oninput="updateBaPreview()" placeholder="Wiraswasta" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+                </div>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-0.5">Alamat Lengkap Penerima *</label>
+                <textarea id="ba20-delivery-address" rows="2" required oninput="updateBaPreview()" placeholder="Jl. Gajah Mada No. 12..." class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800"></textarea>
+              </div>
+            </div>
+
+            <!-- Seksi 5: Pejabat Penandatangan Mengetahui (Kasi PB3R) & Saksi -->
+            <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-200 space-y-2">
+              <div class="font-bold text-emerald-950 flex items-center justify-between">
+                <span>5. Mengetahui &amp; Saksi-Saksi</span>
+                <span class="text-[10px] text-emerald-800 font-semibold">Tersinkron dengan Tab 9</span>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-0.5">Nama Kasi PB3R *</label>
+                <input type="text" id="ba20-kasi-name" required oninput="updateBaPreview()" placeholder="I Dewa Gede Raka, S.H." class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg font-bold text-slate-800">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Pangkat Kasi PB3R</label>
+                  <input type="text" id="ba20-kasi-rank" oninput="updateBaPreview()" placeholder="Jaksa Muda / III-d" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">NIP Kasi PB3R</label>
+                  <input type="text" id="ba20-kasi-nip" oninput="updateBaPreview()" placeholder="19811105 200501 1 007" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800 font-mono">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-2 pt-1 border-t border-emerald-200">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Saksi 1 *</label>
+                  <input type="text" id="ba20-witness-1" required oninput="updateBaPreview()" placeholder="I Wayan Gede Sunarta, A.Md." class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Saksi 2 *</label>
+                  <input type="text" id="ba20-witness-2" required oninput="updateBaPreview()" placeholder="I Made Sujana, S.Kom." class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+                </div>
+              </div>
+            </div>
+
+            <!-- Seksi 6: Status & Catatan Penanganan -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Status Pengantaran Tiket</label>
+                  <select id="ba20-status" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg font-bold text-slate-800">
+                    <option value="TERKIRIM">TERKIRIM</option>
+                    <option value="DIVERIFIKASI">DIVERIFIKASI</option>
+                    <option value="DIJADWALKAN">DIJADWALKAN</option>
+                    <option value="DIANTAR">DIANTAR</option>
+                    <option value="SELESAI">SELESAI</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block font-semibold text-slate-700 mb-0.5">Catatan Tambahan Petugas</label>
+                  <input type="text" id="ba20-notes" placeholder="Barang bukti telah diserahkan di kediaman penerima." class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+              <button type="button" onclick="closeModal('modal-ba20')" class="px-4 py-2 border border-slate-300 rounded-xl font-bold text-slate-700 hover:bg-slate-50">
+                Tutup
+              </button>
+              <button type="submit" id="btn-save-ba20" class="px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 transition-all">
+                <i data-lucide="save" class="w-4 h-4 text-amber-400"></i>
+                <span>Simpan Berita Acara BA-20</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- RIGHT COLUMN: Live Official BA-20 Document Preview & Print Sheet (7 cols on LG) -->
+          <div class="lg:col-span-7 space-y-3">
+            <div class="flex items-center justify-between px-2">
+              <span class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-500"></i>
+                <span>Pratinjau Lembar Berita Acara Resmi (A4)</span>
+              </span>
+              <button type="button" onclick="printBa20Document()" class="text-xs font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1">
+                <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                <span>Cetak / Simpan PDF</span>
+              </button>
+            </div>
+
+            <!-- The Official Print Sheet Element -->
+            <div id="ba20-print-sheet" class="bg-white p-8 sm:p-10 shadow-lg rounded-xl border border-slate-200 text-black leading-relaxed font-serif" style="font-family: 'Bookman Old Style', 'Times New Roman', Georgia, serif; font-size: 10.5pt; line-height: 1.55; color: #111;">
+              
+              <!-- Kop Surat Resmi Kejaksaan RI -->
+              <div class="flex items-start justify-between border-b-2 border-black pb-2 mb-0.5">
+                <div class="flex items-start gap-3">
+                  <img src="/static/images/logo-kejaksaan.png" alt="Logo Kejaksaan RI" class="w-14 h-14 object-contain shrink-0" onerror="this.src='/static/images/logo-kejari.png'">
+                  <div>
+                    <div class="font-bold text-[10pt] tracking-wider uppercase">KEJAKSAAN REPUBLIK INDONESIA</div>
+                    <div class="font-bold text-[12pt] tracking-wider uppercase text-emerald-950">KEJAKSAAN NEGERI KLUNGKUNG</div>
+                    <div class="text-[9pt] text-slate-700">Jl. Gajah Mada No. 56 , Klungkung</div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div class="border border-black px-2.5 py-0.5 font-bold text-[10pt] uppercase inline-block">BA-20</div>
+                </div>
+              </div>
+              <div class="border-b border-black mb-4"></div>
+
+              <!-- Doktrin & Judul Berita Acara -->
+              <div class="text-center mb-5">
+                <div class="italic text-[9.5pt] font-semibold mb-2">"Demi Keadilan dan Kebenaran<br>Berdasarkan Ketuhanan Yang Maha Esa"</div>
+                <div class="font-bold text-[10pt] uppercase tracking-widest text-slate-600">BA-20</div>
+                <div class="font-bold text-[12pt] uppercase tracking-wider underline">BERITA ACARA PENGEMBALIAN BARANG BUKTI</div>
+              </div>
+
+              <!-- Pembuka Berita Acara (Format Kalimat bukan Angka) -->
+              <p class="text-justify indent-8 mb-3">
+                Pada hari ini <span id="pv-ba-day" class="font-bold underline">Rabu</span> tanggal <span id="pv-ba-date-spelled" class="font-bold underline">Dua Puluh Satu bulan Oktober tahun Dua Ribu Dua Puluh Enam</span> bertempat di Kantor Kejaksaan Negeri Klungkung, kami :
+              </p>
+
+              <!-- Pihak Jaksa Yang Mengembalikan -->
+              <table class="w-full mb-3 ml-4" style="border-collapse: collapse;">
+                <tr>
+                  <td class="w-28 align-top py-0.5">Nama</td>
+                  <td class="w-3 align-top py-0.5">:</td>
+                  <td class="align-top py-0.5 font-bold" id="pv-officer-name">I Komang Arimbawa, S.H.</td>
+                </tr>
+                <tr>
+                  <td class="align-top py-0.5">Pangkat/NIP</td>
+                  <td class="align-top py-0.5">:</td>
+                  <td class="align-top py-0.5" id="pv-officer-rank-nip">Ajun Jaksa / III-b / NIP. 19940315 201701 1 022</td>
+                </tr>
+                <tr>
+                  <td class="align-top py-0.5">Jabatan</td>
+                  <td class="align-top py-0.5">:</td>
+                  <td class="align-top py-0.5" id="pv-officer-position">Jaksa Penuntut Umum / Petugas Pengembalian BB</td>
+                </tr>
+              </table>
+
+              <!-- Dasar Pengembalian -->
+              <p class="mb-1.5 font-medium">berdasarkan :</p>
+              <ol class="list-decimal list-outside ml-6 space-y-2 mb-3 text-justify">
+                <li>
+                  Surat Perintah Pelaksanaan Putusan Pengadilan Kepala Kejaksaan Negeri Klungkung Nomor Print: <span id="pv-sprint-number" class="font-bold">PRINT-341/N.1.12/Eoh.3/10/2026</span> tanggal <span id="pv-sprint-date" class="font-bold">21 Oktober 2026</span> dalam perkara a.n. Terdakwa <span id="pv-defendant-name" class="font-bold">I Made Sudira</span> melanggar <span id="pv-violation-clause" class="font-bold">Pasal 378 KUHP</span>.
+                </li>
+                <li>
+                  Bahwa, barang bukti tersebut tidak diperlukan lagi untuk kepentingan penuntutan karena perkaranya dihentikan penuntutannya untuk kepentingan umum/untuk pelaksanaan putusan PN Semarapura Nomor: <span id="pv-court-num" class="font-bold">45/Pid.B/2026/PN Srp</span> Tanggal <span id="pv-court-date" class="font-bold">21 Oktober 2026</span> telah mengembalikan barang bukti berupa :
+                  <div id="pv-item-description" class="mt-1.5 p-2 bg-slate-50 border border-slate-300 rounded font-semibold whitespace-pre-line text-justify text-[10pt]">
+                    1 Unit Sepeda Motor Honda Vario DK-1234-KLK beserta STNK asli
+                  </div>
+                </li>
+              </ol>
+
+              <!-- Pihak Penerima -->
+              <p class="mb-1.5 font-bold">Kepada :</p>
+              <table class="w-full mb-4 ml-4" style="border-collapse: collapse;">
+                <tr>
+                  <td class="w-28 align-top py-0.5">N a m a</td>
+                  <td class="w-3 align-top py-0.5">:</td>
+                  <td class="align-top py-0.5 font-bold" id="pv-owner-name">I Made Sudira</td>
+                </tr>
+                <tr>
+                  <td class="align-top py-0.5">Pekerjaan</td>
+                  <td class="align-top py-0.5">:</td>
+                  <td class="align-top py-0.5" id="pv-owner-job">Wiraswasta</td>
+                </tr>
+                <tr>
+                  <td class="align-top py-0.5">Alamat</td>
+                  <td class="align-top py-0.5">:</td>
+                  <td class="align-top py-0.5 text-justify" id="pv-delivery-address">Jl. Flamboyan No. 12, Semarapura Klod, Kec. Klungkung, Kab. Klungkung</td>
+                </tr>
+              </table>
+
+              <!-- Penutup Berita Acara -->
+              <p class="text-justify indent-8 mb-5">
+                Demikian Berita Acara ini dibuat dengan sebenarnya atas kekuatan sumpah jabatan, kemudian ditutup dan tanda tangani pada hari dan tanggal tersebut diatas.
+              </p>
+
+              <!-- Tanda Tangan 3 Pihak + Saksi -->
+              <div class="grid grid-cols-2 gap-6 mb-5 text-center text-[10pt]">
+                <div>
+                  <div>Yang menerima,</div>
+                  <div class="h-16 flex items-center justify-center text-slate-300 italic text-[8.5pt]">(Tanda Tangan)</div>
+                  <div class="font-bold underline" id="pv-sig-owner">I Made Sudira</div>
+                </div>
+                <div>
+                  <div>Yang mengembalikan</div>
+                  <div class="font-semibold">Jaksa</div>
+                  <div class="h-14 flex items-center justify-center text-slate-300 italic text-[8.5pt]">(Tanda Tangan)</div>
+                  <div class="font-bold underline" id="pv-sig-officer">I Komang Arimbawa, S.H.</div>
+                  <div class="text-[8.5pt]" id="pv-sig-officer-nip">Ajun Jaksa / III-b / NIP. 19940315 201701 1 022</div>
+                </div>
+              </div>
+
+              <!-- Mengetahui Kasi PB3R (Sinkron dengan Struktur Organisasi) -->
+              <div class="text-center max-w-sm mx-auto mb-5 text-[10pt]">
+                <div>Mengetahui,</div>
+                <div class="font-semibold">Kepala Seksi Pemulihan Aset dan Pengelolaan Barang Bukti</div>
+                <div class="h-14 flex items-center justify-center text-slate-300 italic text-[8.5pt]">(Tanda Tangan &amp; Cap Dinas)</div>
+                <div class="font-bold underline" id="pv-sig-kasi">I Dewa Gede Raka, S.H.</div>
+                <div class="text-[8.5pt]" id="pv-sig-kasi-nip">Jaksa Muda / III-d / NIP. 19811105 200501 1 007</div>
+              </div>
+
+              <!-- Saksi-Saksi -->
+              <div class="pt-2 border-t border-slate-300 text-[9.5pt]">
+                <div class="font-semibold mb-1.5">Saksi-saksi :</div>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="flex items-center justify-between border-b border-dotted border-slate-400 pb-0.5">
+                    <span>1. <span id="pv-witness-1" class="font-semibold">I Wayan Gede Sunarta, A.Md.</span></span>
+                    <span class="text-slate-400 text-[9pt]">( ................................ )</span>
+                  </div>
+                  <div class="flex items-center justify-between border-b border-dotted border-slate-400 pb-0.5">
+                    <span>2. <span id="pv-witness-2" class="font-semibold">I Made Sujana, S.Kom.</span></span>
+                    <span class="text-slate-400 text-[9pt]">( ................................ )</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <style>
+  @media print {
+    body * {
+      visibility: hidden !important;
+    }
+    #ba20-print-sheet, #ba20-print-sheet * {
+      visibility: visible !important;
+    }
+    #ba20-print-sheet {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 15mm 20mm !important;
+      background: white !important;
+      color: black !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+  }
+  </style>
+
 </body>
 </html>

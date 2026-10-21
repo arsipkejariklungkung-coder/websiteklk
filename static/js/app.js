@@ -1039,7 +1039,9 @@ async function submitDeliveryForm(e) {
 
   const payload = {
     case_number: form.case_number.value,
+    defendant_name: form.defendant_name ? form.defendant_name.value : '',
     owner_name: form.owner_name.value,
+    owner_job: form.owner_job ? form.owner_job.value : 'Wiraswasta',
     id_card_number: form.id_card_number.value,
     item_description: form.item_description.value,
     delivery_address: form.delivery_address.value,
@@ -1128,6 +1130,7 @@ async function lookupTicketCode() {
 
     if (data.success) {
       const t = data.ticket;
+      const isDelivery = t.ticket_code && t.ticket_code.startsWith('TRK-BB-');
       resultContainer.innerHTML = `
         <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-xs">
           <div class="flex items-center justify-between mb-3">
@@ -1139,8 +1142,17 @@ async function lookupTicketCode() {
           <div class="bg-white p-3 rounded-lg border border-emerald-100 text-slate-700">
             <strong>Catatan Petugas:</strong> ${t.admin_notes || 'Sedang dalam proses telaah.'}
           </div>
+          ${isDelivery ? `
+            <div class="mt-3 pt-3 border-t border-emerald-200">
+              <button type="button" onclick="openPublicBa20Modal('${t.ticket_code}')" class="w-full py-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all">
+                <i data-lucide="file-check-2" class="w-4 h-4 text-amber-300"></i>
+                <span>Lihat &amp; Cetak Berita Acara BA-20 Resmi</span>
+              </button>
+            </div>
+          ` : ''}
         </div>
       `;
+      if (window.lucide) lucide.createIcons();
     } else {
       resultContainer.innerHTML = `
         <div class="bg-red-50 border border-red-200 text-red-800 rounded-xl p-4 text-xs text-center">
@@ -4347,4 +4359,55 @@ function toggleQuickAssist() {
   const menu = document.getElementById('quick-assist-menu');
   if (!menu) return;
   menu.classList.toggle('hidden');
+}
+
+// 10. Public BA-20 (Berita Acara Pengembalian Barang Bukti) Modal Handler
+async function openPublicBa20Modal(ticketCode) {
+  try {
+    const res = await fetch(`/api/public/deliveries/${encodeURIComponent(ticketCode)}/ba`);
+    const data = await res.json();
+    if (!data.success) {
+      showToast(data.error || 'Data Berita Acara belum tersedia.', 'warning');
+      return;
+    }
+
+    const d = data.delivery;
+    const setTxt = (id, val, fallback) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val || fallback || '-';
+    };
+
+    setTxt('pub-pv-ba-day', d.ba_day, 'Rabu');
+    setTxt('pub-pv-ba-date-spelled', d.ba_date_spelled, 'Dua Puluh Satu bulan Oktober tahun Dua Ribu Dua Puluh Enam');
+    setTxt('pub-pv-officer-name', d.officer_name, 'I Komang Arimbawa, S.H.');
+    setTxt('pub-pv-officer-rank-nip', `${d.officer_rank || 'Jaksa'} / NIP. ${d.officer_nip || '-'}`);
+    setTxt('pub-pv-officer-position', d.officer_position || 'Jaksa Penuntut Umum / Petugas Pengembalian BB');
+    
+    setTxt('pub-pv-sprint-number', d.sprint_number);
+    setTxt('pub-pv-sprint-date', d.sprint_date);
+    setTxt('pub-pv-defendant-name', d.defendant_name || d.owner_name);
+    setTxt('pub-pv-violation-clause', d.violation_clause || 'Pasal 378 KUHP');
+    setTxt('pub-pv-court-num', d.court_verdict_number || d.case_number);
+    setTxt('pub-pv-court-date', d.court_verdict_date || d.sprint_date);
+    
+    setTxt('pub-pv-item-description', d.item_description);
+    setTxt('pub-pv-owner-name', d.owner_name);
+    setTxt('pub-pv-owner-job', d.owner_job || 'Wiraswasta');
+    setTxt('pub-pv-delivery-address', d.delivery_address);
+
+    setTxt('pub-pv-sig-owner', d.owner_name);
+    setTxt('pub-pv-sig-officer', d.officer_name);
+    setTxt('pub-pv-sig-officer-nip', `${d.officer_rank || 'Jaksa'} / NIP. ${d.officer_nip || '-'}`);
+    setTxt('pub-pv-sig-kasi', d.kasi_name || 'I Dewa Gede Raka, S.H.');
+    setTxt('pub-pv-sig-kasi-nip', `${d.kasi_rank || 'Jaksa Muda / III-d'} / NIP. ${d.kasi_nip || '19811105 200501 1 007'}`);
+
+    setTxt('pub-pv-witness-1', d.witness_1 || 'I Wayan Gede Sunarta, A.Md.');
+    setTxt('pub-pv-witness-2', d.witness_2 || 'I Made Sujana, S.Kom.');
+
+    openModal('modal-public-ba20');
+    if (window.lucide) lucide.createIcons();
+
+  } catch (err) {
+    showToast('Gagal memuat Berita Acara BA-20.', 'error');
+  }
 }

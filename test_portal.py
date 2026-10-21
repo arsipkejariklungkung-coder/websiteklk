@@ -1353,6 +1353,127 @@ class TestKertagosaPortal(unittest.TestCase):
         conn.commit()
         conn.close()
 
+    def test_24_semara_bakti_ba20_and_kasi_pb3r_sync(self):
+        """Verify SEMARA BAKTI BA-20 (Berita Acara Pengembalian Barang Bukti) template fields, date terbilang, dynamic Kasi PB3R sync, and API endpoints."""
+        from server import number_to_words_id, format_ba_date_indonesian, get_active_kasi_pb3r
+
+        # 1. Test helper number_to_words_id & format_ba_date_indonesian
+        self.assertEqual(number_to_words_id(21), 'Dua Puluh Satu')
+        self.assertEqual(number_to_words_id(2026), 'Dua Ribu Dua Puluh Enam')
+        day_name, date_spelled = format_ba_date_indonesian('2026-10-21')
+        self.assertEqual(day_name, 'Rabu')
+        self.assertEqual(date_spelled, 'Dua Puluh Satu bulan Oktober tahun Dua Ribu Dua Puluh Enam')
+
+        # 2. Test get_active_kasi_pb3r dynamic sync from organization_members
+        conn = get_db()
+        kasi = get_active_kasi_pb3r(conn)
+        conn.close()
+        self.assertIsNotNone(kasi)
+        self.assertIn('name', kasi)
+        self.assertIn('I Dewa Gede Raka', kasi['name'])
+        self.assertIn('PB3R', kasi['position'])
+
+        # 3. Test public submission of SEMARA BAKTI with owner_job & defendant_name
+        bb_payload = {
+            'case_number': '124/Pid.B/2026/PN Semarapura',
+            'defendant_name': 'I Wayan Semara',
+            'owner_name': 'Ni Wayan Sari',
+            'owner_job': 'Wiraswasta Kuliner',
+            'id_card_number': '5105012345678901',
+            'item_description': '1 Unit Sepeda Motor Yamaha NMAX DK-5566-KLK & STNK Asli',
+            'delivery_address': 'Jl. Diponegoro No. 8, Semarapura Kangin',
+            'district': 'Klungkung',
+            'phone_number': '081234567890',
+            'preferred_date': '2026-10-25'
+        }
+        body = json.dumps(bb_payload).encode('utf-8')
+        sub_h = MockHandler('POST', '/api/public/bb-deliveries', {'Content-Length': str(len(body))}, body)
+        sub_h.do_POST()
+        self.assertEqual(sub_h.response_code, 200)
+        sub_res = sub_h.get_response_json()
+        self.assertTrue(sub_res['success'])
+        ticket_code = sub_res['ticket_code']
+        self.assertTrue(ticket_code.startswith('TRK-BB-'))
+
+        # 4. Test public GET /api/public/deliveries/<ticket_code>/ba
+        pub_ba_h = MockHandler('GET', f'/api/public/deliveries/{ticket_code}/ba')
+        pub_ba_h.do_GET()
+        self.assertEqual(pub_ba_h.response_code, 200)
+        pub_ba_res = pub_ba_h.get_response_json()
+        self.assertTrue(pub_ba_res['success'])
+        deliv = pub_ba_res['delivery']
+        self.assertEqual(deliv['ticket_code'], ticket_code)
+        self.assertEqual(deliv['owner_name'], 'Ni Wayan Sari')
+        self.assertEqual(deliv['owner_job'], 'Wiraswasta Kuliner')
+        self.assertEqual(deliv['defendant_name'], 'I Wayan Semara')
+        self.assertEqual(deliv['kasi_name'], kasi['name'])
+        self.assertTrue(len(deliv['ba_day']) > 0)
+        self.assertTrue(len(deliv['ba_date_spelled']) > 0)
+
+        # 5. Test admin GET /api/admin/deliveries/<ticket_code>/ba
+        adm_ba_h = MockHandler('GET', f'/api/admin/deliveries/{ticket_code}/ba', {'Authorization': f'Bearer {self.token}'})
+        adm_ba_h.do_GET()
+        self.assertEqual(adm_ba_h.response_code, 200)
+        adm_ba_res = adm_ba_h.get_response_json()
+        self.assertTrue(adm_ba_res['success'])
+        self.assertIn('active_kasi_pb3r', adm_ba_res)
+
+        # 6. Test admin POST /api/admin/deliveries/<ticket_code>/ba
+        save_payload = {
+            'ba_date': '2026-10-21',
+            'officer_name': 'I Komang Arimbawa, S.H.',
+            'officer_nip': '19940315 201701 1 022',
+            'officer_rank': 'Ajun Jaksa / III-b',
+            'officer_position': 'Jaksa Penuntut Umum',
+            'defendant_name': 'I Wayan Semara',
+            'violation_clause': 'Pasal 372 KUHP (Penggelapan)',
+            'sprint_number': 'PRINT-512/N.1.12/Eoh.3/10/2026',
+            'sprint_date': '21 Oktober 2026',
+            'court_verdict_number': '45/Pid.B/2026/PN Srp',
+            'court_verdict_date': '15 Oktober 2026',
+            'item_description': '1 Unit Sepeda Motor Yamaha NMAX DK-5566-KLK & STNK Asli',
+            'owner_name': 'Ni Wayan Sari',
+            'owner_job': 'Pedagang',
+            'delivery_address': 'Jl. Diponegoro No. 8, Semarapura Kangin',
+            'kasi_name': kasi['name'],
+            'kasi_nip': kasi['nip'],
+            'kasi_rank': kasi['rank'],
+            'witness_1': 'I Wayan Gede Sunarta, A.Md.',
+            'witness_2': 'I Made Sujana, S.Kom.',
+            'status': 'SELESAI',
+            'ba_notes': 'Telah diserahkan langsung kepada pemilik sah.'
+        }
+        save_body = json.dumps(save_payload).encode('utf-8')
+        save_h = MockHandler('POST', f'/api/admin/deliveries/{ticket_code}/ba', {
+            'Content-Length': str(len(save_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, save_body)
+        save_h.do_POST()
+        self.assertEqual(save_h.response_code, 200)
+        save_res = save_h.get_response_json()
+        self.assertTrue(save_res['success'])
+
+        # 7. Verify updated delivery record in database
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM bb_deliveries WHERE ticket_code = ?", (ticket_code,))
+        row = dict(cursor.fetchone())
+        conn.close()
+
+        self.assertEqual(row['status'], 'SELESAI')
+        self.assertEqual(row['owner_job'], 'Pedagang')
+        self.assertEqual(row['violation_clause'], 'Pasal 372 KUHP (Penggelapan)')
+        self.assertEqual(row['ba_day'], 'Rabu')
+        self.assertEqual(row['ba_date_spelled'], 'Dua Puluh Satu bulan Oktober tahun Dua Ribu Dua Puluh Enam')
+        self.assertEqual(row['officer_name'], 'I Komang Arimbawa, S.H.')
+
+        # Clean up test delivery
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM bb_deliveries WHERE ticket_code = ?", (ticket_code,))
+        conn.commit()
+        conn.close()
+
 
 if __name__ == '__main__':
     unittest.main()

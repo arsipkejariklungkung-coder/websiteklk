@@ -179,6 +179,36 @@ def init_db_schema():
         cursor.execute("ALTER TABLE posts ADD COLUMN youtube_url TEXT")
         conn.commit()
 
+    # Ensure bb_deliveries table has all BA-20 (Berita Acara Pengembalian Barang Bukti) fields
+    cursor.execute("PRAGMA table_info(bb_deliveries)")
+    bb_cols = [c[1] for c in cursor.fetchall()]
+    new_bb_fields = [
+        ('owner_job', "TEXT DEFAULT 'Wiraswasta'"),
+        ('defendant_name', "TEXT"),
+        ('violation_clause', "TEXT"),
+        ('sprint_number', "TEXT"),
+        ('sprint_date', "TEXT"),
+        ('court_verdict_number', "TEXT"),
+        ('court_verdict_date', "TEXT"),
+        ('officer_name', "TEXT"),
+        ('officer_nip', "TEXT"),
+        ('officer_rank', "TEXT"),
+        ('officer_position', "TEXT"),
+        ('kasi_name', "TEXT"),
+        ('kasi_nip', "TEXT"),
+        ('kasi_rank', "TEXT"),
+        ('witness_1', "TEXT"),
+        ('witness_2', "TEXT"),
+        ('ba_date', "TEXT"),
+        ('ba_day', "TEXT"),
+        ('ba_date_spelled', "TEXT"),
+        ('ba_notes', "TEXT")
+    ]
+    for col_name, col_def in new_bb_fields:
+        if bb_cols and col_name not in bb_cols:
+            cursor.execute(f"ALTER TABLE bb_deliveries ADD COLUMN {col_name} {col_def}")
+            conn.commit()
+
     # Ensure every user has a valid RFC 6238 Base32 secret for Google / Microsoft Authenticator
     try:
         cursor.execute("SELECT id, username, email, mfa_secret, mfa_provider FROM users")
@@ -624,6 +654,90 @@ def get_current_user(handler):
             return verified['user']
     return None
 
+def number_to_words_id(n):
+    """Converts an integer to Indonesian spoken words (terbilang)."""
+    units = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas']
+    try:
+        n = int(n)
+    except (ValueError, TypeError):
+        return ''
+    if n < 0:
+        return 'Minus ' + number_to_words_id(abs(n))
+    if n == 0:
+        return 'Nol'
+    if n < 12:
+        return units[n]
+    if n < 20:
+        return units[n - 10] + ' Belas'
+    if n < 100:
+        rem = n % 10
+        return units[n // 10] + ' Puluh' + ('' if rem == 0 else ' ' + units[rem])
+    if n < 200:
+        rem = n % 100
+        return 'Seratus' + ('' if rem == 0 else ' ' + number_to_words_id(rem))
+    if n < 1000:
+        rem = n % 100
+        return units[n // 100] + ' Ratus' + ('' if rem == 0 else ' ' + number_to_words_id(rem))
+    if n < 2000:
+        rem = n % 1000
+        return 'Seribu' + ('' if rem == 0 else ' ' + number_to_words_id(rem))
+    if n < 1000000:
+        rem = n % 1000
+        return number_to_words_id(n // 1000) + ' Ribu' + ('' if rem == 0 else ' ' + number_to_words_id(rem))
+    return str(n)
+
+def format_ba_date_indonesian(date_str):
+    """
+    Converts 'YYYY-MM-DD' into (day_name, date_spelled)
+    e.g. '2026-10-21' -> ('Rabu', 'Dua Puluh Satu bulan Oktober tahun Dua Ribu Dua Puluh Enam')
+    """
+    if not date_str:
+        return '', ''
+    import datetime
+    try:
+        clean_date = str(date_str).strip().split(' ')[0]
+        dt = datetime.datetime.strptime(clean_date, '%Y-%m-%d')
+    except Exception:
+        return '', str(date_str)
+
+    days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu']
+    months = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+              'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+
+    day_name = days[dt.weekday()]
+    day_spelled = number_to_words_id(dt.day)
+    month_name = months[dt.month]
+    year_spelled = number_to_words_id(dt.year)
+
+    date_spelled = f"{day_spelled} bulan {month_name} tahun {year_spelled}"
+    return day_name, date_spelled
+
+def get_active_kasi_pb3r(conn):
+    """
+    Dynamically fetches the currently serving Kepala Seksi Pemulihan Aset
+    dan Pengelolaan Barang Bukti (PB3R) from organization_members table
+    to ensure synchronization with CMS organizational structure.
+    """
+    cursor = conn.cursor()
+    cursor.execute("""
+    SELECT id, name, position, nip, rank
+    FROM organization_members
+    WHERE (position LIKE '%PB3R%' OR position LIKE '%Barang Bukti%' OR position LIKE '%Pemulihan Aset%')
+      AND is_active = 1
+    ORDER BY level ASC, order_num ASC, id ASC
+    LIMIT 1
+    """)
+    row = cursor.fetchone()
+    if row:
+        return dict(row)
+    return {
+        'id': 0,
+        'name': 'I Dewa Gede Raka, S.H.',
+        'position': 'Kepala Seksi PB3R (Barang Bukti & Rampasan)',
+        'nip': '19811105 200501 1 007',
+        'rank': 'Jaksa Muda / III-d'
+    }
+
 class KertagosaHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         if 'directory' not in kwargs:
@@ -733,6 +847,10 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             ticket_code = path[len('/api/public/ticket/'):]
             self.handle_get_ticket(ticket_code)
             return
+        elif path.startswith('/api/public/deliveries/') and path.endswith('/ba'):
+            ticket_code = path[len('/api/public/deliveries/'):-3]
+            self.handle_get_delivery_ba(ticket_code, is_admin=False)
+            return
         elif path == '/api/public/profile-data':
             self.handle_get_profile_data()
             return
@@ -758,6 +876,14 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 self.send_json({'error': 'Unauthorized'}, 401)
                 return
             self.handle_get_submissions()
+            return
+        elif path.startswith('/api/admin/deliveries/') and path.endswith('/ba'):
+            user = get_current_user(self)
+            if not user:
+                self.send_json({'error': 'Unauthorized'}, 401)
+                return
+            ticket_code = path[len('/api/admin/deliveries/'):-3]
+            self.handle_get_delivery_ba(ticket_code, is_admin=True)
             return
         elif path == '/api/admin/submissions/export':
             user = get_current_user(self)
@@ -926,6 +1052,10 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         elif path == '/api/admin/announcements':
             self.handle_create_announcement()
             return
+        elif path.startswith('/api/admin/deliveries/') and path.endswith('/ba'):
+            ticket_code = path[len('/api/admin/deliveries/'):-3]
+            self.handle_save_delivery_ba(ticket_code)
+            return
         else:
             self.send_json({'error': 'Endpoint not found'}, 404)
 
@@ -965,6 +1095,10 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 sub_id = parts[5]
                 self.handle_update_submission(sub_type, sub_id)
                 return
+        elif path.startswith('/api/admin/deliveries/') and path.endswith('/ba'):
+            ticket_code = path[len('/api/admin/deliveries/'):-3]
+            self.handle_save_delivery_ba(ticket_code)
+            return
         elif path.startswith('/api/admin/organization/members/'):
             member_id = path[len('/api/admin/organization/members/'):]
             self.handle_update_organization_member(member_id)
@@ -1423,6 +1557,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         data = self.read_json_body()
         case_number = data.get('case_number', '').strip()
         owner_name = data.get('owner_name', '').strip()
+        owner_job = data.get('owner_job', '').strip() or 'Wiraswasta'
+        defendant_name = data.get('defendant_name', '').strip() or owner_name
         id_card_number = data.get('id_card_number', '').strip()
         item_description = data.get('item_description', '').strip()
         delivery_address = data.get('delivery_address', '').strip()
@@ -1438,10 +1574,20 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
         conn = get_db()
         cursor = conn.cursor()
+        kasi = get_active_kasi_pb3r(conn)
         cursor.execute("""
-        INSERT INTO bb_deliveries (ticket_code, case_number, owner_name, id_card_number, item_description, delivery_address, district, phone_number, preferred_date, status, admin_notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'TERKIRIM', 'Permohonan pengantaran barang bukti gratis (SEMARA BAKTI) telah diterima.')
-        """, (ticket_code, case_number, owner_name, id_card_number, item_description, delivery_address, district, phone_number, preferred_date))
+        INSERT INTO bb_deliveries (
+            ticket_code, case_number, owner_name, owner_job, defendant_name,
+            id_card_number, item_description, delivery_address, district, phone_number,
+            preferred_date, status, admin_notes,
+            kasi_name, kasi_nip, kasi_rank
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'TERKIRIM', 'Permohonan pengantaran barang bukti gratis (SEMARA BAKTI) telah diterima.', ?, ?, ?)
+        """, (
+            ticket_code, case_number, owner_name, owner_job, defendant_name,
+            id_card_number, item_description, delivery_address, district, phone_number,
+            preferred_date, kasi.get('name'), kasi.get('nip'), kasi.get('rank')
+        ))
         conn.commit()
         conn.close()
 
@@ -2197,6 +2343,175 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
         conn.close()
         self.send_json({'success': True, 'message': f'Status tiket {sub_id} berhasil diperbarui!'})
+
+    def handle_get_delivery_ba(self, ticket_code, is_admin=False):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM bb_deliveries WHERE ticket_code = ?", (ticket_code,))
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            self.send_json({'error': f'Permohonan barang bukti "{ticket_code}" tidak ditemukan.'}, 404)
+            return
+
+        delivery = dict(row)
+        active_kasi = get_active_kasi_pb3r(conn)
+        conn.close()
+
+        # Dynamic synchronization with organization structure:
+        # Default kasi_name, nip, and rank to current active Kasi PB3R if not explicitly locked
+        if not delivery.get('kasi_name'):
+            delivery['kasi_name'] = active_kasi.get('name') or 'I Dewa Gede Raka, S.H.'
+        if not delivery.get('kasi_nip'):
+            delivery['kasi_nip'] = active_kasi.get('nip') or '19811105 200501 1 007'
+        if not delivery.get('kasi_rank'):
+            delivery['kasi_rank'] = active_kasi.get('rank') or 'Jaksa Muda / III-d'
+
+        import datetime
+        today_str = datetime.date.today().strftime('%Y-%m-%d')
+        ba_date = delivery.get('ba_date') or delivery.get('preferred_date') or today_str
+        delivery['ba_date'] = ba_date
+
+        day_name, date_spelled = format_ba_date_indonesian(ba_date)
+        if not delivery.get('ba_day'):
+            delivery['ba_day'] = day_name
+        if not delivery.get('ba_date_spelled'):
+            delivery['ba_date_spelled'] = date_spelled
+
+        # Jaksa Yang Mengembalikan defaults
+        if not delivery.get('officer_name'):
+            delivery['officer_name'] = 'I Komang Arimbawa, S.H.'
+        if not delivery.get('officer_nip'):
+            delivery['officer_nip'] = '19940315 201701 1 022'
+        if not delivery.get('officer_rank'):
+            delivery['officer_rank'] = 'Ajun Jaksa / III-b'
+        if not delivery.get('officer_position'):
+            delivery['officer_position'] = 'Jaksa Penuntut Umum / Petugas Pengembalian BB'
+
+        # Legal Grounds (Dasar Hukum) defaults
+        if not delivery.get('defendant_name'):
+            delivery['defendant_name'] = delivery.get('owner_name') or 'Terdakwa'
+        if not delivery.get('violation_clause'):
+            delivery['violation_clause'] = 'Pasal 378 KUHP'
+        if not delivery.get('sprint_number'):
+            delivery['sprint_number'] = f"PRINT-{delivery.get('id', 101)}/N.1.12/Eoh.3/{datetime.date.today().strftime('%m/%Y')}"
+        if not delivery.get('sprint_date'):
+            delivery['sprint_date'] = ba_date
+        if not delivery.get('court_verdict_number'):
+            delivery['court_verdict_number'] = delivery.get('case_number') or '45/Pid.B/2026/PN Srp'
+        if not delivery.get('court_verdict_date'):
+            delivery['court_verdict_date'] = ba_date
+
+        # Recipient job defaults
+        if not delivery.get('owner_job'):
+            delivery['owner_job'] = 'Wiraswasta'
+
+        # Witnesses defaults
+        if not delivery.get('witness_1'):
+            delivery['witness_1'] = 'I Wayan Gede Sunarta, A.Md.'
+        if not delivery.get('witness_2'):
+            delivery['witness_2'] = 'I Made Sujana, S.Kom.'
+
+        self.send_json({
+            'success': True,
+            'delivery': delivery,
+            'active_kasi_pb3r': active_kasi
+        })
+
+    def handle_save_delivery_ba(self, ticket_code):
+        data = self.read_json_body()
+
+        ba_date = data.get('ba_date', '').strip()
+        if ba_date:
+            ba_day, ba_date_spelled = format_ba_date_indonesian(ba_date)
+        else:
+            ba_day = data.get('ba_day', '').strip()
+            ba_date_spelled = data.get('ba_date_spelled', '').strip()
+
+        officer_name = data.get('officer_name', '').strip()
+        officer_nip = data.get('officer_nip', '').strip()
+        officer_rank = data.get('officer_rank', '').strip()
+        officer_position = data.get('officer_position', '').strip()
+
+        defendant_name = data.get('defendant_name', '').strip()
+        violation_clause = data.get('violation_clause', '').strip()
+        sprint_number = data.get('sprint_number', '').strip()
+        sprint_date = data.get('sprint_date', '').strip()
+        court_verdict_number = data.get('court_verdict_number', '').strip()
+        court_verdict_date = data.get('court_verdict_date', '').strip()
+
+        item_description = data.get('item_description', '').strip()
+        owner_name = data.get('owner_name', '').strip()
+        owner_job = data.get('owner_job', '').strip() or 'Wiraswasta'
+        delivery_address = data.get('delivery_address', '').strip()
+
+        kasi_name = data.get('kasi_name', '').strip()
+        kasi_nip = data.get('kasi_nip', '').strip()
+        kasi_rank = data.get('kasi_rank', '').strip()
+
+        witness_1 = data.get('witness_1', '').strip()
+        witness_2 = data.get('witness_2', '').strip()
+        ba_notes = data.get('ba_notes', '').strip()
+        status = data.get('status', '').strip()
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # If sync requested or empty, synchronize from organization_members table
+        if not kasi_name or data.get('sync_kasi_with_org'):
+            active_kasi = get_active_kasi_pb3r(conn)
+            kasi_name = active_kasi.get('name')
+            kasi_nip = active_kasi.get('nip')
+            kasi_rank = active_kasi.get('rank')
+
+        cursor.execute("""
+        UPDATE bb_deliveries
+        SET ba_date = ?,
+            ba_day = ?,
+            ba_date_spelled = ?,
+            officer_name = ?,
+            officer_nip = ?,
+            officer_rank = ?,
+            officer_position = ?,
+            defendant_name = ?,
+            violation_clause = ?,
+            sprint_number = ?,
+            sprint_date = ?,
+            court_verdict_number = ?,
+            court_verdict_date = ?,
+            item_description = CASE WHEN ? != '' THEN ? ELSE item_description END,
+            owner_name = CASE WHEN ? != '' THEN ? ELSE owner_name END,
+            owner_job = ?,
+            delivery_address = CASE WHEN ? != '' THEN ? ELSE delivery_address END,
+            kasi_name = ?,
+            kasi_nip = ?,
+            kasi_rank = ?,
+            witness_1 = ?,
+            witness_2 = ?,
+            ba_notes = ?,
+            status = CASE WHEN ? != '' THEN ? ELSE status END
+        WHERE ticket_code = ?
+        """, (
+            ba_date, ba_day, ba_date_spelled,
+            officer_name, officer_nip, officer_rank, officer_position,
+            defendant_name, violation_clause, sprint_number, sprint_date,
+            court_verdict_number, court_verdict_date,
+            item_description, item_description,
+            owner_name, owner_name,
+            owner_job,
+            delivery_address, delivery_address,
+            kasi_name, kasi_nip, kasi_rank,
+            witness_1, witness_2, ba_notes,
+            status, status,
+            ticket_code
+        ))
+        conn.commit()
+        conn.close()
+
+        self.send_json({
+            'success': True,
+            'message': f'Data Berita Acara BA-20 ({ticket_code}) berhasil disimpan dan disinkronkan!'
+        })
 
     def handle_export_submissions(self, query):
         sub_type = (query.get('type', ['all'])[0] or 'all').lower()

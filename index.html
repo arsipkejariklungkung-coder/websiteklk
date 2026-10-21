@@ -1398,8 +1398,19 @@
             <input type="text" name="case_number" required placeholder="Contoh: 124/Pid.B/2026/PN Kp" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
           </div>
           <div>
+            <label class="block font-semibold text-slate-700 mb-1">Perkara a.n. Terdakwa</label>
+            <input type="text" name="defendant_name" placeholder="Nama terdakwa dalam perkara" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
             <label class="block font-semibold text-slate-700 mb-1">Nama Pemilik Barang (KTP) *</label>
             <input type="text" name="owner_name" required placeholder="Nama lengkap sesuai KTP" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Pekerjaan Pemilik *</label>
+            <input type="text" name="owner_job" required placeholder="Contoh: Wiraswasta / Karyawan" value="Wiraswasta" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
           </div>
         </div>
 
@@ -2047,5 +2058,195 @@
       </button>
     </div>
   </nav>
+
+  <!-- =========================================================================
+       MODAL: PUBLIK BERITA ACARA PENGEMBALIAN BARANG BUKTI (BA-20)
+       Layanan SEMARA BAKTI - Kejaksaan Negeri Klungkung
+       ========================================================================= -->
+  <div id="modal-public-ba20" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-2 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden my-4 max-h-[92vh] flex flex-col">
+      <div class="p-4 border-b border-slate-200 bg-slate-900 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shadow font-bold text-sm">
+            <i data-lucide="file-check-2" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-black text-sm sm:text-base text-white tracking-wide">
+              Berita Acara Pengembalian Barang Bukti (BA-20)
+            </h3>
+            <p class="text-[11px] text-slate-300">
+              Layanan SEMARA BAKTI &bull; Kejaksaan Negeri Klungkung
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="window.print()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow transition-all">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>Cetak / Simpan PDF</span>
+          </button>
+          <button type="button" onclick="closeModal('modal-public-ba20')" class="text-slate-400 hover:text-white p-1 rounded-lg">
+            <i data-lucide="x" class="w-6 h-6"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-100 flex justify-center">
+        <!-- The Printable Document Sheet -->
+        <div id="public-ba20-print-sheet" class="bg-white p-8 sm:p-12 shadow-lg rounded-xl border border-slate-200 max-w-3xl w-full text-black leading-relaxed font-serif" style="font-family: 'Bookman Old Style', 'Times New Roman', Georgia, serif; font-size: 10.5pt; line-height: 1.55; color: #111;">
+          
+          <!-- Kop Surat Resmi Kejaksaan RI -->
+          <div class="flex items-start justify-between border-b-2 border-black pb-2 mb-0.5">
+            <div class="flex items-start gap-3">
+              <img src="/static/images/logo-kejaksaan.png" alt="Logo Kejaksaan RI" class="w-14 h-14 object-contain shrink-0" onerror="this.src='/static/images/logo-kejari.png'">
+              <div>
+                <div class="font-bold text-[10pt] tracking-wider uppercase">KEJAKSAAN REPUBLIK INDONESIA</div>
+                <div class="font-bold text-[12pt] tracking-wider uppercase text-emerald-950">KEJAKSAAN NEGERI KLUNGKUNG</div>
+                <div class="text-[9pt] text-slate-700">Jl. Gajah Mada No. 56 , Klungkung</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="border border-black px-2.5 py-0.5 font-bold text-[10pt] uppercase inline-block">BA-20</div>
+            </div>
+          </div>
+          <div class="border-b border-black mb-4"></div>
+
+          <!-- Doktrin & Judul Berita Acara -->
+          <div class="text-center mb-5">
+            <div class="italic text-[9.5pt] font-semibold mb-2">"Demi Keadilan dan Kebenaran<br>Berdasarkan Ketuhanan Yang Maha Esa"</div>
+            <div class="font-bold text-[10pt] uppercase tracking-widest text-slate-600">BA-20</div>
+            <div class="font-bold text-[12pt] uppercase tracking-wider underline">BERITA ACARA PENGEMBALIAN BARANG BUKTI</div>
+          </div>
+
+          <!-- Pembuka Berita Acara -->
+          <p class="text-justify indent-8 mb-3">
+            Pada hari ini <span id="pub-pv-ba-day" class="font-bold underline">Rabu</span> tanggal <span id="pub-pv-ba-date-spelled" class="font-bold underline">Dua Puluh Satu bulan Oktober tahun Dua Ribu Dua Puluh Enam</span> bertempat di Kantor Kejaksaan Negeri Klungkung, kami :
+          </p>
+
+          <!-- Pihak Jaksa Yang Mengembalikan -->
+          <table class="w-full mb-3 ml-4" style="border-collapse: collapse;">
+            <tr>
+              <td class="w-28 align-top py-0.5">Nama</td>
+              <td class="w-3 align-top py-0.5">:</td>
+              <td class="align-top py-0.5 font-bold" id="pub-pv-officer-name">-</td>
+            </tr>
+            <tr>
+              <td class="align-top py-0.5">Pangkat/NIP</td>
+              <td class="align-top py-0.5">:</td>
+              <td class="align-top py-0.5" id="pub-pv-officer-rank-nip">-</td>
+            </tr>
+            <tr>
+              <td class="align-top py-0.5">Jabatan</td>
+              <td class="align-top py-0.5">:</td>
+              <td class="align-top py-0.5" id="pub-pv-officer-position">-</td>
+            </tr>
+          </table>
+
+          <!-- Dasar Pengembalian -->
+          <p class="mb-1.5 font-medium">berdasarkan :</p>
+          <ol class="list-decimal list-outside ml-6 space-y-2 mb-3 text-justify">
+            <li>
+              Surat Perintah Pelaksanaan Putusan Pengadilan Kepala Kejaksaan Negeri Klungkung Nomor Print: <span id="pub-pv-sprint-number" class="font-bold">-</span> tanggal <span id="pub-pv-sprint-date" class="font-bold">-</span> dalam perkara a.n. Terdakwa <span id="pub-pv-defendant-name" class="font-bold">-</span> melanggar <span id="pub-pv-violation-clause" class="font-bold">-</span>.
+            </li>
+            <li>
+              Bahwa, barang bukti tersebut tidak diperlukan lagi untuk kepentingan penuntutan karena perkaranya dihentikan penuntutannya untuk kepentingan umum/untuk pelaksanaan putusan PN Semarapura Nomor: <span id="pub-pv-court-num" class="font-bold">-</span> Tanggal <span id="pub-pv-court-date" class="font-bold">-</span> telah mengembalikan barang bukti berupa :
+              <div id="pub-pv-item-description" class="mt-1.5 p-2 bg-slate-50 border border-slate-300 rounded font-semibold whitespace-pre-line text-justify text-[10pt]">
+                -
+              </div>
+            </li>
+          </ol>
+
+          <!-- Pihak Penerima -->
+          <p class="mb-1.5 font-bold">Kepada :</p>
+          <table class="w-full mb-4 ml-4" style="border-collapse: collapse;">
+            <tr>
+              <td class="w-28 align-top py-0.5">N a m a</td>
+              <td class="w-3 align-top py-0.5">:</td>
+              <td class="align-top py-0.5 font-bold" id="pub-pv-owner-name">-</td>
+            </tr>
+            <tr>
+              <td class="align-top py-0.5">Pekerjaan</td>
+              <td class="align-top py-0.5">:</td>
+              <td class="align-top py-0.5" id="pub-pv-owner-job">-</td>
+            </tr>
+            <tr>
+              <td class="align-top py-0.5">Alamat</td>
+              <td class="align-top py-0.5">:</td>
+              <td class="align-top py-0.5 text-justify" id="pub-pv-delivery-address">-</td>
+            </tr>
+          </table>
+
+          <!-- Penutup Berita Acara -->
+          <p class="text-justify indent-8 mb-5">
+            Demikian Berita Acara ini dibuat dengan sebenarnya atas kekuatan sumpah jabatan, kemudian ditutup dan tanda tangani pada hari dan tanggal tersebut diatas.
+          </p>
+
+          <!-- Tanda Tangan 3 Pihak + Saksi -->
+          <div class="grid grid-cols-2 gap-6 mb-5 text-center text-[10pt]">
+            <div>
+              <div>Yang menerima,</div>
+              <div class="h-16 flex items-center justify-center text-slate-300 italic text-[8.5pt]">(Tanda Tangan)</div>
+              <div class="font-bold underline" id="pub-pv-sig-owner">-</div>
+            </div>
+            <div>
+              <div>Yang mengembalikan</div>
+              <div class="font-semibold">Jaksa</div>
+              <div class="h-14 flex items-center justify-center text-slate-300 italic text-[8.5pt]">(Tanda Tangan)</div>
+              <div class="font-bold underline" id="pub-pv-sig-officer">-</div>
+              <div class="text-[8.5pt]" id="pub-pv-sig-officer-nip">-</div>
+            </div>
+          </div>
+
+          <!-- Mengetahui Kasi PB3R (Sinkron dengan Struktur Organisasi) -->
+          <div class="text-center max-w-sm mx-auto mb-5 text-[10pt]">
+            <div>Mengetahui,</div>
+            <div class="font-semibold">Kepala Seksi Pemulihan Aset dan Pengelolaan Barang Bukti</div>
+            <div class="h-14 flex items-center justify-center text-slate-300 italic text-[8.5pt]">(Tanda Tangan &amp; Cap Dinas)</div>
+            <div class="font-bold underline" id="pub-pv-sig-kasi">I Dewa Gede Raka, S.H.</div>
+            <div class="text-[8.5pt]" id="pub-pv-sig-kasi-nip">Jaksa Muda / III-d / NIP. 19811105 200501 1 007</div>
+          </div>
+
+          <!-- Saksi-Saksi -->
+          <div class="pt-2 border-t border-slate-300 text-[9.5pt]">
+            <div class="font-semibold mb-1.5">Saksi-saksi :</div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="flex items-center justify-between border-b border-dotted border-slate-400 pb-0.5">
+                <span>1. <span id="pub-pv-witness-1" class="font-semibold">-</span></span>
+                <span class="text-slate-400 text-[9pt]">( ................................ )</span>
+              </div>
+              <div class="flex items-center justify-between border-b border-dotted border-slate-400 pb-0.5">
+                <span>2. <span id="pub-pv-witness-2" class="font-semibold">-</span></span>
+                <span class="text-slate-400 text-[9pt]">( ................................ )</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <style>
+  @media print {
+    body * {
+      visibility: hidden !important;
+    }
+    #public-ba20-print-sheet, #public-ba20-print-sheet * {
+      visibility: visible !important;
+    }
+    #public-ba20-print-sheet {
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 15mm 20mm !important;
+      background: white !important;
+      color: black !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+  }
+  </style>
 </body>
 </html>
