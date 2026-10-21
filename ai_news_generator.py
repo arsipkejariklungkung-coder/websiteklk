@@ -329,7 +329,11 @@ def auto_generate_news_from_url(url: str) -> dict:
     context = scrape_url_context(url)
 
     # 2. Check for Gemini API key
-    gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    try:
+        import ai_assistant
+        gemini_key, _ = ai_assistant.get_gemini_api_key()
+    except Exception:
+        gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
 
     if gemini_key:
         try:

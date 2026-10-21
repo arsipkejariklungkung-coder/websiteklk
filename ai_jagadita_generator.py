@@ -406,7 +406,11 @@ def auto_generate_jagadita_schedules(
         target_date = datetime.date.today().isoformat()
 
     target_url = (url or DEFAULT_SIPP_URL).strip()
-    active_key = (api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
+    try:
+        import ai_assistant
+        active_key, _ = ai_assistant.get_gemini_api_key(api_key)
+    except Exception:
+        active_key = (api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
 
     content = ""
     fetch_error = None

@@ -24,6 +24,7 @@ import totp_mfa
 import excel_io
 import ai_news_generator
 import ai_jagadita_generator
+import ai_assistant
 import datetime
 try:
     import vercel_blob
@@ -1166,6 +1167,13 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 return
             self.handle_blob_status()
             return
+        elif path == '/api/admin/ai/status':
+            user = get_current_user(self)
+            if not user:
+                self.send_json({'error': 'Unauthorized'}, 401)
+                return
+            self.handle_ai_status()
+            return
 
         # 4. Serve uploaded files from UPLOADS_DIR (/tmp/uploads on Vercel or static/uploads locally)
         if path.startswith('/static/uploads/'):
@@ -1277,6 +1285,18 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             return
         elif path == '/api/admin/blob/sync-all':
             self.handle_blob_sync_all()
+            return
+        elif path == '/api/admin/ai/status':
+            self.handle_ai_status()
+            return
+        elif path == '/api/admin/ai/test':
+            self.handle_ai_test()
+            return
+        elif path == '/api/admin/ai/save-key':
+            self.handle_ai_save_key()
+            return
+        elif path == '/api/admin/ai/assist':
+            self.handle_ai_assist()
             return
         elif path == '/api/admin/upload-media':
             self.handle_upload_media()
@@ -2186,6 +2206,76 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             return
         res = vercel_blob.sync_all_media_to_blob(UPLOADS_DIR, get_db, token=token)
         self.send_json(res)
+
+    def handle_ai_status(self):
+        """Return status of Google Gemini AI configuration."""
+        status = ai_assistant.get_ai_status()
+        self.send_json(status)
+
+    def handle_ai_test(self):
+        """Test connection to Gemini AI."""
+        data = self.read_json_body() if (self.headers.get('Content-Length') and int(self.headers.get('Content-Length', 0)) > 0) else {}
+        api_key = data.get('api_key')
+        res = ai_assistant.test_gemini_connection(api_key=api_key)
+        self.send_json(res)
+
+    def handle_ai_save_key(self):
+        """Save Gemini API Key to database."""
+        data = self.read_json_body()
+        api_key = (data.get('api_key') or '').strip()
+        success = ai_assistant.save_gemini_api_key(api_key)
+        if success:
+            self.send_json({
+                'success': True,
+                'message': 'Kunci API Google Gemini berhasil disimpan di pengaturan sistem!',
+                'status': ai_assistant.get_ai_status()
+            })
+        else:
+            self.send_json({'error': 'Gagal menyimpan kunci API ke database.'}, 500)
+
+    def handle_ai_assist(self):
+        """Dispatch AI input assistance actions across CMS."""
+        data = self.read_json_body()
+        action = data.get('action') or data.get('task')
+        api_key = data.get('api_key')
+
+        try:
+            if action == 'draft_news':
+                topic = data.get('topic', '')
+                notes = data.get('notes', '')
+                category = data.get('category', '')
+                res = ai_assistant.assist_draft_news(topic=topic, notes=notes, category=category, api_key=api_key)
+                self.send_json(res)
+            elif action == 'draft_announcement':
+                topic = data.get('topic', '')
+                notes = data.get('notes', '')
+                category = data.get('category', 'UMUM')
+                res = ai_assistant.assist_draft_announcement(topic=topic, notes=notes, category=category, api_key=api_key)
+                self.send_json(res)
+            elif action == 'draft_complaint_response':
+                complaint_data = data.get('complaint') or data.get('complaint_data') or {}
+                status = data.get('status', 'DALAM_PROSES')
+                tone = data.get('tone', 'formal')
+                res = ai_assistant.assist_complaint_response(complaint_data=complaint_data, status=status, tone=tone, api_key=api_key)
+                self.send_json(res)
+            elif action == 'refine_text':
+                raw_text = data.get('text') or data.get('raw_text', '')
+                mode = data.get('mode', 'formal_adhyaksa')
+                res = ai_assistant.assist_refine_text(raw_text=raw_text, mode=mode, api_key=api_key)
+                self.send_json(res)
+            elif action == 'copilot':
+                prompt = data.get('prompt', '')
+                context = data.get('context')
+                res = ai_assistant.assist_copilot(prompt=prompt, context=context, api_key=api_key)
+                self.send_json(res)
+            elif action == 'format_schedule':
+                raw_text = data.get('text') or data.get('raw_text', '')
+                res = ai_assistant.assist_format_court_schedule(raw_text=raw_text, api_key=api_key)
+                self.send_json(res)
+            else:
+                self.send_json({'error': f'Action AI "{action}" tidak dikenali.'}, 400)
+        except Exception as e:
+            self.send_json({'error': f'Gagal memproses bantuan AI: {str(e)}'}, 500)
 
     def handle_create_news(self):
         data = self.read_json_body()

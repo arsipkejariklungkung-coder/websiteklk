@@ -166,7 +166,25 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-4 text-xs shrink-0">
+      <div class="flex items-center gap-2 sm:gap-3 text-xs shrink-0">
+        <!-- Gemini AI Status Indicator Pill -->
+        <button type="button"
+                onclick="openModal('modal-gemini-settings')"
+                id="admin-ai-badge-header"
+                class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-all cursor-pointer shadow-xs"
+                title="Status & Pengaturan Koneksi Google Gemini AI">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500 animate-pulse"></i>
+          <span id="admin-ai-header-status-text">Gemini AI</span>
+        </button>
+
+        <!-- Gemini Copilot Quick Action -->
+        <button type="button"
+                onclick="openGeminiCopilot()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#0B3B24] to-emerald-800 hover:from-[#072A19] hover:to-emerald-900 text-white font-bold text-xs shadow-sm hover:shadow transition-all cursor-pointer border border-emerald-700/50">
+          <i data-lucide="bot" class="w-4 h-4 text-amber-300"></i>
+          <span class="hidden md:inline">Gemini Copilot</span>
+        </button>
+
         <span class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold text-[10px] sm:text-xs">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span class="hidden sm:inline">Superadmin Mode</span>
@@ -346,6 +364,52 @@
                   <button type="button" onclick="document.getElementById('blob-feedback-box').classList.add('hidden')" class="text-slate-400 hover:text-white">&times;</button>
                 </div>
                 <div id="blob-feedback-message" class="text-slate-200 text-[11px] break-all"></div>
+              </div>
+            </div>
+
+            <!-- Integrasi Google Gemini AI (Kecerdasan Buatan & Asisten Input) -->
+            <div class="p-5 bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white rounded-2xl mb-6 shadow-md border border-emerald-500/50 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-800/80 pb-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-200 text-slate-950 flex items-center justify-center shrink-0 shadow font-black">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-heading font-extrabold text-sm text-white flex items-center gap-2">
+                      <span>Integrasi Google Gemini AI (Asisten Input CMS &amp; Copilot)</span>
+                      <span id="gemini-card-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">Memeriksa...</span>
+                    </h4>
+                    <p class="text-[11px] text-emerald-200/90 mt-0.5">Membantu penginputan berita 5W+1H, draf pengumuman dinas, saran tanggapan aduan warga, dan perapian jadwal sidang.</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                  <button type="button" onclick="openGeminiCopilot()" class="px-3.5 py-1.5 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs rounded-xl shadow-xs border border-emerald-500 flex items-center gap-1.5 transition-colors cursor-pointer">
+                    <i data-lucide="bot" class="w-3.5 h-3.5 text-amber-300"></i>
+                    <span>Buka Copilot</span>
+                  </button>
+                  <button type="button" onclick="openModal('modal-gemini-settings')" class="px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow flex items-center gap-1.5 transition-transform active:scale-95 cursor-pointer">
+                    <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+                    <span>Kelola Kunci AI</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div class="p-3 bg-white/5 rounded-xl border border-white/10 space-y-1">
+                  <div class="text-emerald-300 text-[11px] font-medium">Model AI Aktif</div>
+                  <div class="font-bold text-amber-300 text-xs font-mono">gemini-1.5-flash</div>
+                  <div class="text-[10px] text-slate-400">Latensi cepat &amp; kuota gratis Google AI Studio</div>
+                </div>
+                <div class="p-3 bg-white/5 rounded-xl border border-white/10 space-y-1">
+                  <div class="text-emerald-300 text-[11px] font-medium">Fitur Penginputan AI</div>
+                  <div class="font-bold text-white text-xs">Berita, Pengumuman, Tanggapan Aduan, Sidang</div>
+                  <div class="text-[10px] text-slate-400">Tersedia tombol "✨ AI" di setiap modal input</div>
+                </div>
+                <div class="p-3 bg-white/5 rounded-xl border border-white/10 space-y-1">
+                  <div class="text-emerald-300 text-[11px] font-medium">Jaminan Keandalan</div>
+                  <div class="font-bold text-emerald-400 text-xs">Dual-Mode + Heuristic Fallback</div>
+                  <div class="text-[10px] text-slate-400">Zero error: tetap berfungsi walau tanpa internet</div>
+                </div>
               </div>
             </div>
 
@@ -1926,7 +1990,7 @@
         <input type="hidden" id="news-form-thumbnail" value="/static/images/news-featured.jpg">
 
         <!-- Seksi: Generate via AI (Gemini) -->
-        <div class="p-4 bg-gradient-to-br from-emerald-50 via-teal-50/60 to-amber-50/70 border border-emerald-300/80 rounded-xl space-y-2.5 shadow-sm">
+        <div class="p-4 bg-gradient-to-br from-emerald-50 via-teal-50/60 to-amber-50/70 border border-emerald-300/80 rounded-xl space-y-3 shadow-sm">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <span class="w-7 h-7 rounded-lg bg-[#0B3B24] text-amber-300 flex items-center justify-center shadow-sm">
@@ -1934,32 +1998,74 @@
               </span>
               <div>
                 <h4 class="font-heading font-extrabold text-xs text-emerald-950 flex items-center gap-1.5">
-                  <span>Generate via AI (Gemini)</span>
-                  <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-400 text-slate-950 shadow-xs">URL SCRAPER</span>
+                  <span>Asisten Penulisan AI (Google Gemini)</span>
+                  <span id="news-ai-mode-badge" class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-400 text-slate-950 shadow-xs">PENGINPUT CERDAS</span>
                 </h4>
-                <p class="text-[11px] text-slate-600">Ekstrak konteks &amp; caption link sosial media lalu susun naskah berita otomatis.</p>
+                <p class="text-[11px] text-slate-600">Ekstrak dari link sosmed atau susun otomatis dari topik kegiatan / catatan rapat.</p>
               </div>
+            </div>
+            <!-- Sub-tab switchers -->
+            <div class="flex items-center bg-white/80 p-0.5 rounded-lg border border-emerald-200">
+              <button type="button"
+                      id="tab-news-ai-mode-draft"
+                      onclick="switchNewsAiMode('draft')"
+                      class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#0B3B24] text-white shadow-xs transition-all">
+                ✨ Tulis Topik
+              </button>
+              <button type="button"
+                      id="tab-news-ai-mode-url"
+                      onclick="switchNewsAiMode('url')"
+                      class="px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-all">
+                🔗 Link Sosmed
+              </button>
             </div>
           </div>
 
-          <div class="flex flex-col sm:flex-row gap-2">
-            <div class="relative flex-1">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <i data-lucide="link-2" class="w-3.5 h-3.5"></i>
-              </div>
-              <input type="url"
-                     id="admin-news-ai-url"
-                     placeholder="Masukkan Link Instagram / YouTube"
-                     class="w-full pl-9 pr-3 py-2 border border-slate-300 focus:border-emerald-600 rounded-lg text-xs bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600">
+          <!-- Mode 1: Tulis dari Topik & Catatan (New!) -->
+          <div id="news-ai-panel-draft" class="space-y-2">
+            <div>
+              <input type="text"
+                     id="admin-news-ai-topic"
+                     placeholder="Topik Berita (Contoh: Penyuluhan Hukum JMS di SMA 1 Semarapura / Pemusnahan BB)"
+                     class="w-full px-3 py-2 border border-slate-300 focus:border-emerald-600 rounded-lg text-xs bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600">
             </div>
-            <button type="button"
-                    id="btn-admin-news-ai-generate"
-                    onclick="handleGenerateNewsWithAI()"
-                    class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs rounded-lg shadow-sm flex items-center justify-center gap-1.5 shrink-0 transition-all">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
-              <span>Generate Berita</span>
-            </button>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input type="text"
+                     id="admin-news-ai-notes"
+                     placeholder="Poin-poin kegiatan / catatan ringkas (opsional)"
+                     class="flex-1 px-3 py-2 border border-slate-300 focus:border-emerald-600 rounded-lg text-xs bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600">
+              <button type="button"
+                      id="btn-admin-news-ai-draft"
+                      onclick="handleDraftNewsWithAI()"
+                      class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs rounded-lg shadow-sm flex items-center justify-center gap-1.5 shrink-0 transition-all cursor-pointer">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                <span>Susun Berita AI</span>
+              </button>
+            </div>
           </div>
+
+          <!-- Mode 2: Ekstrak dari Link Sosmed (Original) -->
+          <div id="news-ai-panel-url" class="hidden space-y-2">
+            <div class="flex flex-col sm:flex-row gap-2">
+              <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <i data-lucide="link-2" class="w-3.5 h-3.5"></i>
+                </div>
+                <input type="url"
+                       id="admin-news-ai-url"
+                       placeholder="Masukkan Link Instagram / YouTube"
+                       class="w-full pl-9 pr-3 py-2 border border-slate-300 focus:border-emerald-600 rounded-lg text-xs bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600">
+              </div>
+              <button type="button"
+                      id="btn-admin-news-ai-generate"
+                      onclick="handleGenerateNewsWithAI()"
+                      class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs rounded-lg shadow-sm flex items-center justify-center gap-1.5 shrink-0 transition-all cursor-pointer">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                <span>Ekstrak Link</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Loading Spinner & Status Alert -->
           <div id="admin-news-ai-status" class="hidden text-[11px] font-medium p-2.5 rounded-lg items-center gap-2"></div>
         </div>
@@ -2100,6 +2206,30 @@
       </div>
       <form id="admin-jagadita-form" onsubmit="handleSaveJagadita(event)" class="p-6 space-y-4 text-xs">
         <input type="hidden" id="jagadita-form-id">
+
+        <!-- Quick AI Sidang Helper -->
+        <div class="p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-emerald-950 flex items-center gap-1.5 text-[11px]">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+              Bantu Input Jadwal Sidang (Gemini AI)
+            </span>
+            <span class="text-[10px] text-slate-500">Ketik / tempel catatan mentah</span>
+          </div>
+          <div class="flex gap-1.5">
+            <input type="text"
+                   id="admin-jagadita-ai-raw"
+                   placeholder="Contoh: Perkara 12/Pid.B/2026/PN Smp terdakwa I Made Agus agenda tuntutan jpu agus r. cakra 09:30"
+                   class="flex-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600">
+            <button type="button"
+                    onclick="handleFormatJagaditaWithAI()"
+                    id="btn-admin-jagadita-ai-fill"
+                    class="px-3 py-1.5 bg-[#0B3B24] text-white font-bold rounded-lg hover:bg-[#072A19] text-[11px] shrink-0 flex items-center gap-1 shadow-xs cursor-pointer">
+              <i data-lucide="sparkles" class="w-3 h-3 text-amber-300"></i>
+              <span>Isi Otomatis</span>
+            </button>
+          </div>
+        </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Jam Sidang *</label>
@@ -2156,14 +2286,20 @@
 
   <!-- Submission Status Modal -->
   <div id="modal-submission-update" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-6 border border-slate-200">
-      <h3 class="font-heading font-bold text-sm text-slate-900 mb-3">Perbarui Status Tiket</h3>
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl p-6 border border-slate-200">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+        <h3 class="font-heading font-bold text-sm text-slate-900 flex items-center gap-2">
+          <i data-lucide="check-circle" class="w-4 h-4 text-emerald-800"></i>
+          <span>Perbarui Status &amp; Tanggapan Tiket</span>
+        </h3>
+        <button onclick="closeModal('modal-submission-update')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
       <input type="hidden" id="submission-update-type">
       <input type="hidden" id="submission-update-id">
       <div class="space-y-3 text-xs mb-4">
         <div>
-          <label class="block font-semibold text-slate-700 mb-1">Status Penanganan</label>
-          <select id="submission-update-status" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold">
+          <label class="block font-semibold text-slate-700 mb-1">Status Penanganan *</label>
+          <select id="submission-update-status" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-bold bg-slate-50 focus:bg-white">
             <option value="TERKIRIM">TERKIRIM</option>
             <option value="DIVERIFIKASI">DIVERIFIKASI</option>
             <option value="DALAM_PROSES">DALAM_PROSES</option>
@@ -2173,13 +2309,24 @@
           </select>
         </div>
         <div>
-          <label class="block font-semibold text-slate-700 mb-1">Catatan Tindak Lanjut Petugas</label>
-          <textarea id="submission-update-notes" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></textarea>
+          <div class="flex items-center justify-between mb-1">
+            <label class="block font-semibold text-slate-700">Catatan Tindak Lanjut Petugas</label>
+            <button type="button"
+                    onclick="generateAiComplaintResponse()"
+                    id="btn-ai-complaint-draft"
+                    class="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 hover:underline cursor-pointer"
+                    title="Gunakan Google Gemini untuk menyusun tanggapan resmi yang santun & berdasar hukum">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+              <span>Saran Tanggapan AI</span>
+            </button>
+          </div>
+          <textarea id="submission-update-notes" rows="4" placeholder="Tanggapan resmi atau catatan tindak lanjut..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-600"></textarea>
+          <p class="text-[10px] text-slate-500 mt-1">Catatan ini akan tersimpan dalam riwayat tiket dan dapat dibaca oleh pemohon/masyarakat.</p>
         </div>
       </div>
-      <div class="flex items-center justify-end gap-2">
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
         <button type="button" onclick="closeModal('modal-submission-update')" class="px-3.5 py-1.5 text-slate-600 font-semibold hover:bg-slate-100 rounded-lg">Batal</button>
-        <button onclick="saveSubmissionStatus()" class="px-4 py-2 bg-[#0B3B24] text-white font-bold rounded-lg shadow">Simpan Status</button>
+        <button onclick="saveSubmissionStatus()" class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-lg shadow">Simpan Status</button>
       </div>
     </div>
   </div>
@@ -3132,6 +3279,36 @@
       </div>
       <form onsubmit="saveAdminAnnouncement(event)" class="p-6 space-y-4 text-xs">
         <input type="hidden" id="admin-ann-id">
+
+        <!-- Gemini AI Announcement Assistant -->
+        <div class="p-3.5 bg-gradient-to-r from-emerald-50 via-teal-50 to-amber-50/60 border border-emerald-300 rounded-xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-emerald-950 flex items-center gap-1.5 text-xs">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+              Bantu Draf Pengumuman Resmi (Gemini AI)
+            </span>
+            <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">AUTO-FILL</span>
+          </div>
+          <div class="space-y-1.5">
+            <input type="text"
+                   id="admin-ann-ai-topic"
+                   placeholder="Topik Pengumuman (Contoh: Pelaksanaan Lelang Eksekusi Barang Rampasan Motor dan Mobil)"
+                   class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600">
+            <div class="flex gap-2">
+              <input type="text"
+                     id="admin-ann-ai-notes"
+                     placeholder="Catatan tambahan / tenggat waktu (opsional)"
+                     class="flex-1 px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-1 focus:ring-emerald-600">
+              <button type="button"
+                      id="btn-admin-ann-ai-draft"
+                      onclick="handleDraftAnnouncementWithAI()"
+                      class="px-3.5 py-1.5 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-lg text-xs flex items-center gap-1.5 shrink-0 shadow-xs cursor-pointer">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                <span>Susun Draf</span>
+              </button>
+            </div>
+          </div>
+        </div>
         
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -3605,6 +3782,262 @@
 
     </div>
   </div>
+
+  <!-- =========================================================================
+       MODAL GEMINI AI COPILOT (ASISTEN PENULISAN & FORMAT DINAS)
+       ========================================================================= -->
+  <div id="modal-gemini-copilot" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden my-6 max-h-[92vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="p-4 sm:p-5 border-b border-slate-100 bg-gradient-to-r from-[#0B3B24] via-emerald-900 to-teal-950 text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shadow font-bold">
+            <i data-lucide="bot" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-heading font-black text-sm sm:text-base text-white tracking-wide">
+                Gemini Copilot Kejaksaan
+              </h3>
+              <span id="gemini-copilot-model-badge" class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-700/80 text-amber-200 border border-emerald-500/40">
+                gemini-1.5-flash
+              </span>
+            </div>
+            <p class="text-[11px] text-emerald-200/90">Asisten cerdas perumusan naskah dinas, draf publikasi, dan standarisasi bahasa Adhyaksa.</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-gemini-copilot')" class="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="flex border-b border-slate-200 bg-slate-50 px-4 pt-2 gap-2 shrink-0">
+        <button type="button"
+                id="btn-tab-copilot-prompt"
+                onclick="switchCopilotTab('prompt')"
+                class="px-4 py-2 border-b-2 border-[#0B3B24] font-bold text-xs text-[#0B3B24] flex items-center gap-1.5 transition-all">
+          <i data-lucide="message-square-plus" class="w-3.5 h-3.5 text-amber-600"></i>
+          <span>Tanya &amp; Draf Bebas</span>
+        </button>
+        <button type="button"
+                id="btn-tab-copilot-refine"
+                onclick="switchCopilotTab('refine')"
+                class="px-4 py-2 border-b-2 border-transparent font-semibold text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-all">
+          <i data-lucide="spell-check" class="w-3.5 h-3.5 text-teal-600"></i>
+          <span>Poles &amp; Nada Adhyaksa</span>
+        </button>
+      </div>
+
+      <!-- Tab 1: Tanya & Draf Bebas -->
+      <div id="copilot-panel-prompt" class="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1.5">Rekomendasi Cepat (Klik untuk memilih):</label>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" onclick="setCopilotPrompt('Buatkan naskah sambutan resmi Kepala Kejaksaan Negeri Klungkung untuk apel pagi peringatan Hari Bhakti Adhyaksa')" class="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-slate-200 rounded-lg text-[11px] font-medium transition-colors">
+              🎤 Sambutan Apel Pagi Kajari
+            </button>
+            <button type="button" onclick="setCopilotPrompt('Susun siaran pers resmi perihal penyelesaian perkara pencurian dengan Restorative Justice oleh Kejari Klungkung')" class="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-slate-200 rounded-lg text-[11px] font-medium transition-colors">
+              ⚖️ Siaran Pers Restorative Justice
+            </button>
+            <button type="button" onclick="setCopilotPrompt('Buatkan caption informatif Instagram dan YouTube untuk kegiatan sosialisasi Jaksa Masuk Sekolah (JMS) bahaya narkoba')" class="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-slate-200 rounded-lg text-[11px] font-medium transition-colors">
+              📱 Caption Medsos JMS
+            </button>
+            <button type="button" onclick="setCopilotPrompt('Rangkum pokok penting layanan pengantaran barang bukti gratis SEMARA BAKTI untuk panduan masyarakat')" class="px-2.5 py-1 bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-900 border border-slate-200 rounded-lg text-[11px] font-medium transition-colors">
+              📦 FAQ Layanan SEMARA BAKTI
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Perintah / Topik Permintaan Anda *</label>
+          <textarea id="copilot-input-prompt" rows="3" placeholder="Ketik apa yang ingin Anda draf atau tanyakan kepada Gemini AI..." class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex justify-end">
+          <button type="button"
+                  id="btn-copilot-run-prompt"
+                  onclick="runCopilotPrompt()"
+                  class="px-5 py-2.5 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
+            <span>Generate dengan Gemini</span>
+          </button>
+        </div>
+
+        <!-- Output Box -->
+        <div id="copilot-output-container" class="hidden space-y-2 pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+              Hasil Jawaban / Draf AI:
+            </span>
+            <button type="button" onclick="copyCopilotResult()" id="btn-copy-copilot" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[11px] flex items-center gap-1 transition-colors cursor-pointer">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span id="btn-copy-copilot-text">Salin Teks</span>
+            </button>
+          </div>
+          <div id="copilot-output-text" class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-sans text-slate-800 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Poles & Nada Adhyaksa -->
+      <div id="copilot-panel-refine" class="hidden p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1.5">Pilih Standar Gaya Bahasa (Tone):</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <label class="p-2 border border-emerald-300 bg-emerald-50/70 rounded-xl cursor-pointer flex flex-col items-center text-center">
+              <input type="radio" name="copilot-refine-mode" value="formal_adhyaksa" checked class="accent-emerald-700 mb-1">
+              <span class="font-bold text-emerald-950 text-[11px]">Resmi Adhyaksa</span>
+              <span class="text-[9px] text-slate-500">Baku &amp; Berwibawa</span>
+            </label>
+            <label class="p-2 border border-slate-200 hover:border-emerald-300 rounded-xl cursor-pointer flex flex-col items-center text-center">
+              <input type="radio" name="copilot-refine-mode" value="press_release" class="accent-emerald-700 mb-1">
+              <span class="font-bold text-slate-800 text-[11px]">Siaran Pers</span>
+              <span class="text-[9px] text-slate-500">Format Resmi Humas</span>
+            </label>
+            <label class="p-2 border border-slate-200 hover:border-emerald-300 rounded-xl cursor-pointer flex flex-col items-center text-center">
+              <input type="radio" name="copilot-refine-mode" value="ringkas" class="accent-emerald-700 mb-1">
+              <span class="font-bold text-slate-800 text-[11px]">Ringkas Intisari</span>
+              <span class="text-[9px] text-slate-500">Padat 1-2 Paragraf</span>
+            </label>
+            <label class="p-2 border border-slate-200 hover:border-emerald-300 rounded-xl cursor-pointer flex flex-col items-center text-center">
+              <input type="radio" name="copilot-refine-mode" value="perbaiki_ejaan" class="accent-emerald-700 mb-1">
+              <span class="font-bold text-slate-800 text-[11px]">Ejaan &amp; Saltik</span>
+              <span class="text-[9px] text-slate-500">PUEBI / Typo Fix</span>
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Teks Mentah / Konsep Awal *</label>
+          <textarea id="copilot-input-raw-text" rows="4" placeholder="Tempelkan draf kasar, catatan rapat, atau tulisan yang ingin disempurnakan..." class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-emerald-600 focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex justify-end">
+          <button type="button"
+                  id="btn-copilot-run-refine"
+                  onclick="runCopilotRefine()"
+                  class="px-5 py-2.5 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer">
+            <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
+            <span>Poles Teks dengan AI</span>
+          </button>
+        </div>
+
+        <!-- Output Refine Box -->
+        <div id="copilot-refine-output-container" class="hidden space-y-2 pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+              Hasil Teks Sempurna:
+            </span>
+            <button type="button" onclick="copyCopilotRefineResult()" id="btn-copy-refine" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[11px] flex items-center gap-1 transition-colors cursor-pointer">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              <span id="btn-copy-refine-text">Salin Teks</span>
+            </button>
+          </div>
+          <div id="copilot-refine-output-text" class="p-4 bg-emerald-50/50 border border-emerald-200 rounded-xl text-xs font-sans text-slate-900 whitespace-pre-wrap leading-relaxed max-h-60 overflow-y-auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL PENGATURAN KONEKSI GOOGLE GEMINI AI
+       ========================================================================= -->
+  <div id="modal-gemini-settings" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden my-6">
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-[#0B3B24] text-amber-300 flex items-center justify-center shadow-xs">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-heading font-bold text-sm text-slate-900">Pengaturan Google Gemini AI</h3>
+            <p class="text-[11px] text-slate-500">Koneksi API &amp; Model Kecerdasan Buatan</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modal-gemini-settings')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <!-- Status Box -->
+        <div id="gemini-status-card" class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-700">Status Integrasi:</span>
+            <span id="gemini-status-badge" class="px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-slate-200 text-slate-700">Memeriksa...</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-600 pt-1 border-t border-slate-200">
+            <div>Model: <strong id="gemini-status-model" class="text-slate-800">gemini-1.5-flash</strong></div>
+            <div>Sumber: <strong id="gemini-status-source" class="text-slate-800">-</strong></div>
+          </div>
+        </div>
+
+        <!-- API Key Input -->
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Kunci API Gemini (GEMINI_API_KEY) *</label>
+          <div class="relative">
+            <input type="password"
+                   id="gemini-api-key-input"
+                   placeholder="AIzaSy..."
+                   class="w-full pl-3 pr-10 py-2 border border-slate-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+            <button type="button"
+                    onclick="toggleGeminiKeyVisibility()"
+                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+              <i data-lucide="eye" id="icon-toggle-gemini-key" class="w-4 h-4"></i>
+            </button>
+          </div>
+          <p class="text-[10px] text-slate-500 mt-1">
+            Kunci ini tersimpan aman di database CMS (tabel <code class="bg-slate-100 px-1 py-0.5 rounded">page_contents</code>) dan dapat dioverride melalui environment variable.
+          </p>
+        </div>
+
+        <!-- Connection Test Result Alert -->
+        <div id="gemini-test-alert" class="hidden p-3 rounded-xl text-xs font-medium"></div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+          <button type="button"
+                  id="btn-test-gemini-api"
+                  onclick="testGeminiApiKeyConnection()"
+                  class="px-4 py-2 border border-emerald-700 text-emerald-800 hover:bg-emerald-50 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer">
+            <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-700"></i>
+            <span>Tes Sambungan AI</span>
+          </button>
+          <button type="button"
+                  id="btn-save-gemini-api"
+                  onclick="saveGeminiApiKeySettings()"
+                  class="px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow transition-colors cursor-pointer">
+            <i data-lucide="check" class="w-4 h-4 text-amber-400"></i>
+            <span>Simpan Kunci API</span>
+          </button>
+        </div>
+
+        <!-- Guide Box -->
+        <div class="p-3.5 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5 text-[11px] text-amber-950">
+          <div class="font-bold flex items-center gap-1.5">
+            <i data-lucide="help-circle" class="w-4 h-4 text-amber-600"></i>
+            <span>Cara Mendapatkan Kunci Gemini API Gratis:</span>
+          </div>
+          <ol class="list-decimal list-inside space-y-1 text-slate-700 pl-1">
+            <li>Kunjungi <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" class="text-emerald-800 underline font-semibold">Google AI Studio (aistudio.google.com)</a>.</li>
+            <li>Login dengan akun Google dan klik tombol <strong>"Get API key"</strong>.</li>
+            <li>Pilih <strong>"Create API key in new project"</strong> lalu salin kunci API Anda ke formulir di atas.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FLOATING QUICK GEMINI COPILOT BUTTON -->
+  <button type="button"
+          onclick="openGeminiCopilot()"
+          id="btn-floating-gemini-copilot"
+          class="fixed bottom-6 right-6 z-40 bg-[#0B3B24] hover:bg-[#072A19] text-white p-3.5 sm:px-4 sm:py-3 rounded-full shadow-2xl flex items-center gap-2 border-2 border-amber-400/90 transition-all transform hover:scale-105 cursor-pointer"
+          title="Buka Asisten Gemini AI Copilot">
+    <i data-lucide="sparkles" class="w-5 h-5 text-amber-300 animate-pulse"></i>
+    <span class="hidden sm:inline font-bold text-xs tracking-wide">Gemini Copilot</span>
+  </button>
 
   <style>
   @media print {

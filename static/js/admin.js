@@ -354,6 +354,9 @@ async function loadAllDashboardData() {
     // 5. Load Vercel Blob Cloud Storage Status
     await loadVercelBlobStatus();
 
+    // 6. Load Google Gemini AI Status
+    await loadGeminiAiStatus();
+
   } catch (err) {
     console.error('Error loading dashboard data:', err);
   }
@@ -760,6 +763,577 @@ async function syncAllMediaToVercelBlob() {
     }
   } catch (err) {
     alert('Gagal sinkronisasi media: Kesalahan jaringan.');
+  }
+}
+
+// =====================================================================
+// GOOGLE GEMINI AI ASSISTANT & COPILOT SUITE
+// =====================================================================
+
+async function loadGeminiAiStatus() {
+  const headerPill = document.getElementById('admin-ai-badge-header');
+  const headerText = document.getElementById('admin-ai-header-status-text');
+  const modalBadge = document.getElementById('gemini-status-badge');
+  const cardBadge = document.getElementById('gemini-card-status-badge');
+  const modelEl = document.getElementById('gemini-status-model');
+  const sourceEl = document.getElementById('gemini-status-source');
+  const inputEl = document.getElementById('gemini-api-key-input');
+
+  try {
+    const res = await fetch('/api/admin/ai/status');
+    const data = await res.json();
+    
+    if (data.configured) {
+      if (headerPill) headerPill.className = 'hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-950 border border-emerald-300 hover:bg-emerald-200 transition-all cursor-pointer shadow-xs';
+      if (headerText) headerText.textContent = 'Gemini AI: Aktif';
+      if (modalBadge) {
+        modalBadge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300';
+        modalBadge.textContent = '🟢 Aktif & Terhubung';
+      }
+      if (cardBadge) {
+        cardBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+        cardBadge.textContent = 'Aktif & Terhubung (gemini-1.5-flash)';
+      }
+    } else {
+      if (headerPill) headerPill.className = 'hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition-all cursor-pointer shadow-xs';
+      if (headerText) headerText.textContent = 'Gemini AI: Pasang Kunci';
+      if (modalBadge) {
+        modalBadge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-amber-100 text-amber-900 border border-amber-300';
+        modalBadge.textContent = '🟡 Mode Heuristic Standar (Masukkan Kunci)';
+      }
+      if (cardBadge) {
+        cardBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30';
+        cardBadge.textContent = 'Standby (Klik Kelola Kunci AI)';
+      }
+    }
+
+    if (modelEl) modelEl.textContent = data.model || 'gemini-1.5-flash';
+    if (sourceEl) {
+      if (data.source === 'env') sourceEl.textContent = 'Environment Variable (.env)';
+      else if (data.source === 'db') sourceEl.textContent = 'Database CMS (page_contents)';
+      else sourceEl.textContent = 'Standar Sistem (Tanpa Kunci API)';
+    }
+
+    if (inputEl && !inputEl.value && data.masked_key) {
+      inputEl.placeholder = data.masked_key;
+    }
+  } catch (err) {
+    console.error('Failed to load Gemini AI status:', err);
+  }
+}
+
+function toggleGeminiKeyVisibility() {
+  const input = document.getElementById('gemini-api-key-input');
+  const icon = document.getElementById('icon-toggle-gemini-key');
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) icon.setAttribute('data-lucide', 'eye-off');
+  } else {
+    input.type = 'password';
+    if (icon) icon.setAttribute('data-lucide', 'eye');
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+async function testGeminiApiKeyConnection() {
+  const input = document.getElementById('gemini-api-key-input');
+  const alertEl = document.getElementById('gemini-test-alert');
+  const btn = document.getElementById('btn-test-gemini-api');
+
+  const apiKey = input ? input.value.trim() : '';
+
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span><span>Menguji...</span>`;
+  }
+
+  try {
+    const res = await fetch('/api/admin/ai/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey })
+    });
+    const result = await res.json();
+
+    if (alertEl) {
+      alertEl.classList.remove('hidden');
+      if (result.success) {
+        alertEl.className = 'p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-900 border border-emerald-300';
+        alertEl.innerHTML = `🟢 <strong>Koneksi Berhasil!</strong> Model: <code>${result.model}</code> | Latensi: <strong>${result.latency_ms} ms</strong><br><span class="text-[11px] font-normal text-emerald-800">Respons: "${result.message}"</span>`;
+      } else {
+        alertEl.className = 'p-3 rounded-xl text-xs font-semibold bg-red-50 text-red-900 border border-red-300';
+        alertEl.innerHTML = `🔴 <strong>Tes Koneksi Gagal:</strong> ${result.error || 'Pastikan Kunci API valid dan terhubung internet.'}`;
+      }
+    }
+  } catch (err) {
+    if (alertEl) {
+      alertEl.classList.remove('hidden');
+      alertEl.className = 'p-3 rounded-xl text-xs font-semibold bg-red-50 text-red-900 border border-red-300';
+      alertEl.textContent = '🔴 Gagal menguji koneksi: Gangguan jaringan.';
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+async function saveGeminiApiKeySettings() {
+  const input = document.getElementById('gemini-api-key-input');
+  const apiKey = input ? input.value.trim() : '';
+  const btn = document.getElementById('btn-save-gemini-api');
+
+  if (!apiKey) {
+    alert('Harap masukkan kunci API Google Gemini terlebih dahulu.');
+    if (input) input.focus();
+    return;
+  }
+
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span><span>Menyimpan...</span>`;
+  }
+
+  try {
+    const res = await fetch('/api/admin/ai/save-key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: apiKey })
+    });
+    const result = await res.json();
+    if (result.success) {
+      showAdminToast(result.message || 'Kunci API Gemini berhasil disimpan!');
+      if (input) input.value = '';
+      await loadGeminiAiStatus();
+      closeModal('modal-gemini-settings');
+    } else {
+      alert('Gagal menyimpan kunci API: ' + (result.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menyimpan kunci API: Gangguan jaringan.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+function openGeminiCopilot() {
+  openModal('modal-gemini-copilot');
+  if (window.lucide) lucide.createIcons();
+}
+
+function switchCopilotTab(tab) {
+  const btnPrompt = document.getElementById('btn-tab-copilot-prompt');
+  const btnRefine = document.getElementById('btn-tab-copilot-refine');
+  const panelPrompt = document.getElementById('copilot-panel-prompt');
+  const panelRefine = document.getElementById('copilot-panel-refine');
+
+  if (tab === 'prompt') {
+    if (btnPrompt) btnPrompt.className = 'px-4 py-2 border-b-2 border-[#0B3B24] font-bold text-xs text-[#0B3B24] flex items-center gap-1.5 transition-all';
+    if (btnRefine) btnRefine.className = 'px-4 py-2 border-b-2 border-transparent font-semibold text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-all';
+    if (panelPrompt) panelPrompt.classList.remove('hidden');
+    if (panelRefine) panelRefine.classList.add('hidden');
+  } else {
+    if (btnRefine) btnRefine.className = 'px-4 py-2 border-b-2 border-[#0B3B24] font-bold text-xs text-[#0B3B24] flex items-center gap-1.5 transition-all';
+    if (btnPrompt) btnPrompt.className = 'px-4 py-2 border-b-2 border-transparent font-semibold text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-all';
+    if (panelRefine) panelRefine.classList.remove('hidden');
+    if (panelPrompt) panelPrompt.classList.add('hidden');
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+function setCopilotPrompt(text) {
+  const input = document.getElementById('copilot-input-prompt');
+  if (input) {
+    input.value = text;
+    input.focus();
+  }
+}
+
+async function runCopilotPrompt() {
+  const input = document.getElementById('copilot-input-prompt');
+  const outBox = document.getElementById('copilot-output-container');
+  const outText = document.getElementById('copilot-output-text');
+  const btn = document.getElementById('btn-copilot-run-prompt');
+
+  const prompt = (input ? input.value : '').trim();
+  if (!prompt) {
+    alert('Harap ketik perintah atau pertanyaan Anda terlebih dahulu.');
+    if (input) input.focus();
+    return;
+  }
+
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span><span>Menyusun Jawaban...</span>`;
+  }
+
+  try {
+    const res = await fetch('/api/admin/ai/assist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'copilot', prompt })
+    });
+    const result = await res.json();
+    if (result.success) {
+      if (outText) outText.textContent = result.reply || '';
+      if (outBox) outBox.classList.remove('hidden');
+      showAdminToast('Jawaban Gemini Copilot selesai disusun!');
+    } else {
+      alert('Gagal menyusun jawaban: ' + (result.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menghubungi Gemini Copilot: Gangguan jaringan.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+function copyCopilotResult() {
+  const outText = document.getElementById('copilot-output-text');
+  const btnText = document.getElementById('btn-copy-copilot-text');
+  if (!outText) return;
+  navigator.clipboard.writeText(outText.textContent || '').then(() => {
+    if (btnText) {
+      const orig = btnText.textContent;
+      btnText.textContent = 'Tersalin!';
+      setTimeout(() => { btnText.textContent = orig; }, 2000);
+    }
+  });
+}
+
+async function runCopilotRefine() {
+  const input = document.getElementById('copilot-input-raw-text');
+  const outBox = document.getElementById('copilot-refine-output-container');
+  const outText = document.getElementById('copilot-refine-output-text');
+  const btn = document.getElementById('btn-copilot-run-refine');
+
+  const rawText = (input ? input.value : '').trim();
+  if (!rawText) {
+    alert('Harap masukkan teks yang ingin disempurnakan.');
+    if (input) input.focus();
+    return;
+  }
+
+  const modeRadio = document.querySelector('input[name="copilot-refine-mode"]:checked');
+  const mode = modeRadio ? modeRadio.value : 'formal_adhyaksa';
+
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span><span>Memoles Teks...</span>`;
+  }
+
+  try {
+    const res = await fetch('/api/admin/ai/assist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'refine_text', text: rawText, mode })
+    });
+    const result = await res.json();
+    if (result.success && result.data) {
+      if (outText) outText.textContent = result.data.refined_text || '';
+      if (outBox) outBox.classList.remove('hidden');
+      showAdminToast('Teks berhasil disempurnakan!');
+    } else {
+      alert('Gagal menyempurnakan teks: ' + (result.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menyempurnakan teks: Gangguan jaringan.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+function copyCopilotRefineResult() {
+  const outText = document.getElementById('copilot-refine-output-text');
+  const btnText = document.getElementById('btn-copy-refine-text');
+  if (!outText) return;
+  navigator.clipboard.writeText(outText.textContent || '').then(() => {
+    if (btnText) {
+      const orig = btnText.textContent;
+      btnText.textContent = 'Tersalin!';
+      setTimeout(() => { btnText.textContent = orig; }, 2000);
+    }
+  });
+}
+
+function switchNewsAiMode(mode) {
+  const panelDraft = document.getElementById('news-ai-panel-draft');
+  const panelUrl = document.getElementById('news-ai-panel-url');
+  const tabDraft = document.getElementById('tab-news-ai-mode-draft');
+  const tabUrl = document.getElementById('tab-news-ai-mode-url');
+  const badge = document.getElementById('news-ai-mode-badge');
+
+  if (mode === 'draft') {
+    if (panelDraft) panelDraft.classList.remove('hidden');
+    if (panelUrl) panelUrl.classList.add('hidden');
+    if (tabDraft) {
+      tabDraft.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#0B3B24] text-white shadow-xs transition-all';
+    }
+    if (tabUrl) {
+      tabUrl.className = 'px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-all';
+    }
+    if (badge) badge.textContent = 'PENGINPUT CERDAS';
+  } else {
+    if (panelDraft) panelDraft.classList.add('hidden');
+    if (panelUrl) panelUrl.classList.remove('hidden');
+    if (tabUrl) {
+      tabUrl.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#0B3B24] text-white shadow-xs transition-all';
+    }
+    if (tabDraft) {
+      tabDraft.className = 'px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-all';
+    }
+    if (badge) badge.textContent = 'URL SCRAPER';
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+async function handleDraftNewsWithAI() {
+  const topicInput = document.getElementById('admin-news-ai-topic');
+  const notesInput = document.getElementById('admin-news-ai-notes');
+  const statusEl = document.getElementById('admin-news-ai-status');
+  const btn = document.getElementById('btn-admin-news-ai-draft');
+
+  const topic = (topicInput ? topicInput.value : '').trim();
+  const notes = (notesInput ? notesInput.value : '').trim();
+  const category = document.getElementById('news-form-category')?.value || 'Kegiatan Kejari';
+
+  if (!topic && !notes) {
+    if (statusEl) {
+      statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-red-50 text-red-700 border border-red-200 items-center gap-2';
+      statusEl.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i><span>Harap masukkan topik berita atau poin kegiatan terlebih dahulu.</span>';
+      if (window.lucide) lucide.createIcons();
+    }
+    if (topicInput) topicInput.focus();
+    return;
+  }
+
+  const origBtnHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span><span>Menyusun Berita...</span>`;
+  }
+  if (statusEl) {
+    statusEl.className = 'flex text-[11px] font-medium p-2.5 rounded-lg bg-emerald-100 text-emerald-950 border border-emerald-300 items-center gap-2';
+    statusEl.innerHTML = `<span>Menyusun naskah berita 5W+1H, judul, dan kutipan resmi Adhyaksa...</span>`;
+  }
+
+  try {
+    const res = await fetch('/api/admin/ai/assist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'draft_news',
+        topic: topic,
+        notes: notes,
+        category: category
+      })
+    });
+    const result = await res.json();
+    if (result.success && result.data) {
+      const d = result.data;
+      if (d.title && document.getElementById('news-form-title-input')) document.getElementById('news-form-title-input').value = d.title;
+      if (d.category && document.getElementById('news-form-category')) document.getElementById('news-form-category').value = d.category;
+      if (d.badge_label && document.getElementById('news-form-badge')) document.getElementById('news-form-badge').value = d.badge_label;
+      if (d.layout_type && document.getElementById('news-form-layout')) document.getElementById('news-form-layout').value = d.layout_type;
+      if (d.author && document.getElementById('news-form-author')) document.getElementById('news-form-author').value = d.author;
+      if (d.excerpt && document.getElementById('news-form-excerpt')) document.getElementById('news-form-excerpt').value = d.excerpt;
+      if (d.highlight_quote && document.getElementById('news-form-quote')) document.getElementById('news-form-quote').value = d.highlight_quote;
+      if (d.content && document.getElementById('news-form-content')) document.getElementById('news-form-content').value = d.content;
+
+      if (statusEl) {
+        statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-300 items-center gap-2';
+        statusEl.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i><span>${result.message || 'Berita berhasil disusun dan diterapkan ke formulir!'}</span>`;
+        if (window.lucide) lucide.createIcons();
+      }
+      showAdminToast('Artikel berita berhasil disusun!');
+    } else {
+      alert('Gagal menyusun berita: ' + (result.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menyusun berita: Terjadi kesalahan jaringan.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origBtnHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+async function handleDraftAnnouncementWithAI() {
+  const topicInput = document.getElementById('admin-ann-ai-topic');
+  const notesInput = document.getElementById('admin-ann-ai-notes');
+  const btn = document.getElementById('btn-admin-ann-ai-draft');
+
+  const topic = (topicInput ? topicInput.value : '').trim();
+  const notes = (notesInput ? notesInput.value : '').trim();
+  const category = document.getElementById('admin-ann-category')?.value || 'UMUM';
+
+  if (!topic && !notes) {
+    alert('Harap masukkan topik pengumuman terlebih dahulu.');
+    if (topicInput) topicInput.focus();
+    return;
+  }
+
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span><span>Menyusun...</span>`;
+  }
+
+  try {
+    const res = await fetch('/api/admin/ai/assist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'draft_announcement',
+        topic,
+        notes,
+        category
+      })
+    });
+    const result = await res.json();
+    if (result.success && result.data) {
+      const d = result.data;
+      if (d.number && document.getElementById('admin-ann-number')) document.getElementById('admin-ann-number').value = d.number;
+      if (d.category && document.getElementById('admin-ann-category')) document.getElementById('admin-ann-category').value = d.category;
+      if (d.title && document.getElementById('admin-ann-title')) document.getElementById('admin-ann-title').value = d.title;
+      if (d.badge && document.getElementById('admin-ann-badge')) document.getElementById('admin-ann-badge').value = d.badge;
+      if (d.deadline && document.getElementById('admin-ann-deadline')) document.getElementById('admin-ann-deadline').value = d.deadline;
+      if (d.excerpt && document.getElementById('admin-ann-excerpt')) document.getElementById('admin-ann-excerpt').value = d.excerpt;
+      if (d.content && document.getElementById('admin-ann-content')) document.getElementById('admin-ann-content').value = d.content;
+
+      showAdminToast(result.message || 'Draf pengumuman resmi berhasil dibuat!');
+    } else {
+      alert('Gagal menyusun pengumuman: ' + (result.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menyusun pengumuman: Gangguan jaringan.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+async function handleFormatJagaditaWithAI() {
+  const rawInput = document.getElementById('admin-jagadita-ai-raw');
+  const btn = document.getElementById('btn-admin-jagadita-ai-fill');
+  const text = (rawInput ? rawInput.value : '').trim();
+
+  if (!text) {
+    alert('Harap masukkan catatan sidang mentah terlebih dahulu.');
+    if (rawInput) rawInput.focus();
+    return;
+  }
+
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span><span>Memproses...</span>`;
+  }
+
+  try {
+    const res = await fetch('/api/admin/ai/assist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'format_schedule', text })
+    });
+    const result = await res.json();
+    if (result.success && result.data) {
+      const d = result.data;
+      if (d.case_number && document.getElementById('jagadita-form-case')) document.getElementById('jagadita-form-case').value = d.case_number;
+      if (d.defendant_name && document.getElementById('jagadita-form-defendant')) document.getElementById('jagadita-form-defendant').value = d.defendant_name;
+      if (d.agenda && document.getElementById('jagadita-form-agenda')) document.getElementById('jagadita-form-agenda').value = d.agenda;
+      if (d.prosecutor && document.getElementById('jagadita-form-prosecutor')) document.getElementById('jagadita-form-prosecutor').value = d.prosecutor;
+      if (d.session_time && document.getElementById('jagadita-form-time')) document.getElementById('jagadita-form-time').value = d.session_time;
+      if (d.court_room && document.getElementById('jagadita-form-room')) document.getElementById('jagadita-form-room').value = d.court_room;
+      if (d.case_type && document.getElementById('jagadita-form-type')) document.getElementById('jagadita-form-type').value = d.case_type;
+
+      showAdminToast(result.message || 'Formulir sidang berhasil diisi otomatis!');
+    } else {
+      alert('Gagal merapikan jadwal: ' + (result.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal merapikan jadwal: Gangguan jaringan.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+let currentSubmissionModalData = null;
+
+async function generateAiComplaintResponse() {
+  const btn = document.getElementById('btn-ai-complaint-draft');
+  const notesEl = document.getElementById('submission-update-notes');
+  const statusEl = document.getElementById('submission-update-status');
+  const status = statusEl ? statusEl.value : 'DALAM_PROSES';
+
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span><span>Menyusun...</span>`;
+  }
+
+  try {
+    const payload = {
+      action: 'draft_complaint_response',
+      complaint: currentSubmissionModalData || {
+        ticket_code: document.getElementById('submission-update-id')?.value || 'TIKET-ADUAN',
+        category: document.getElementById('submission-update-type')?.value || 'MASADU',
+        title: 'Pengaduan Pelayanan Publik Masyarakat',
+        description: notesEl ? notesEl.value : ''
+      },
+      status: status
+    };
+
+    const res = await fetch('/api/admin/ai/assist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (result.success && result.data) {
+      if (notesEl) {
+        notesEl.value = result.data.admin_notes || '';
+      }
+      showAdminToast(result.message || 'Saran tanggapan resmi berhasil dibuat!');
+    } else {
+      alert('Gagal menyusun saran tanggapan: ' + (result.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menyusun saran tanggapan AI: Gangguan jaringan.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+      if (window.lucide) lucide.createIcons();
+    }
   }
 }
 
@@ -2380,7 +2954,17 @@ function openSubmissionStatusModal(type, ticketCode, currentStatus, currentNotes
   document.getElementById('submission-update-id').value = ticketCode;
   document.getElementById('submission-update-status').value = currentStatus;
   document.getElementById('submission-update-notes').value = currentNotes;
+
+  const list = (type === 'complaint') ? (adminData.complaints || []) : (adminData.deliveries || []);
+  currentSubmissionModalData = list.find(item => item.ticket_code === ticketCode) || {
+    ticket_code: ticketCode,
+    category: type === 'complaint' ? 'MASADU' : 'SEMARA BAKTI',
+    title: `Tiket Layanan ${ticketCode}`,
+    description: currentNotes || ''
+  };
+
   openModal('modal-submission-update');
+  if (window.lucide) lucide.createIcons();
 }
 
 async function saveSubmissionStatus() {
