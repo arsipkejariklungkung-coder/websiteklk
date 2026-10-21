@@ -4949,8 +4949,36 @@ async function openPublicBa20Modal(ticketCode) {
     setTxt('pub-pv-sig-kasi', d.kasi_name || 'I Dewa Gede Raka, S.H.');
     setTxt('pub-pv-sig-kasi-nip', `${d.kasi_rank || 'Jaksa Muda / III-d'} / NIP. ${d.kasi_nip || '19811105 200501 1 007'}`);
 
-    setTxt('pub-pv-witness-1', d.witness_1 || 'I Wayan Gede Sunarta, A.Md.');
-    setTxt('pub-pv-witness-2', d.witness_2 || 'I Made Sujana, S.Kom.');
+    // Render dynamic witnesses
+    const witContainer = document.getElementById('pub-pv-witnesses-container');
+    const witnesses = (d.witnesses && Array.isArray(d.witnesses) && d.witnesses.length > 0)
+      ? d.witnesses
+      : [d.witness_1 || 'I Wayan Gede Sunarta, A.Md.', d.witness_2 || 'I Made Sujana, S.Kom.'];
+    if (witContainer) {
+      witContainer.innerHTML = witnesses.map((w, idx) => `
+        <div class="flex items-center justify-between border-b border-dotted border-slate-400 pb-0.5">
+          <span>${idx + 1}. <span class="font-semibold">${(w || '').trim() || '-'}</span></span>
+          <span class="text-slate-400 text-[9pt]">( ................................ )</span>
+        </div>
+      `).join('');
+    }
+
+    // Render documentation photo (13 cm x 9.75 cm)
+    const docImg = document.getElementById('pub-pv-documentation-img');
+    const docPlh = document.getElementById('pub-pv-documentation-placeholder');
+    if (d.documentation_photo) {
+      if (docImg) {
+        docImg.src = d.documentation_photo;
+        docImg.classList.remove('hidden');
+      }
+      if (docPlh) docPlh.classList.add('hidden');
+    } else {
+      if (docImg) {
+        docImg.src = '';
+        docImg.classList.add('hidden');
+      }
+      if (docPlh) docPlh.classList.remove('hidden');
+    }
 
     openModal('modal-public-ba20');
     if (window.lucide) lucide.createIcons();

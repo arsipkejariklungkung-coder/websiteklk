@@ -208,6 +208,8 @@ def init_db_schema():
         ('kasi_rank', "TEXT"),
         ('witness_1', "TEXT"),
         ('witness_2', "TEXT"),
+        ('witnesses_json', "TEXT"),
+        ('documentation_photo', "TEXT"),
         ('ba_date', "TEXT"),
         ('ba_day', "TEXT"),
         ('ba_date_spelled', "TEXT"),
@@ -3010,11 +3012,23 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         if not delivery.get('owner_job'):
             delivery['owner_job'] = 'Wiraswasta'
 
-        # Witnesses defaults
-        if not delivery.get('witness_1'):
-            delivery['witness_1'] = 'I Wayan Gede Sunarta, A.Md.'
-        if not delivery.get('witness_2'):
-            delivery['witness_2'] = 'I Made Sujana, S.Kom.'
+        # Witnesses defaults & list
+        raw_witnesses = []
+        if delivery.get('witnesses_json'):
+            try:
+                parsed_w = json.loads(delivery['witnesses_json'])
+                if isinstance(parsed_w, list):
+                    raw_witnesses = [str(w).strip() for w in parsed_w if str(w).strip()]
+            except Exception:
+                pass
+        if not raw_witnesses:
+            w1 = delivery.get('witness_1') or 'I Wayan Gede Sunarta, A.Md.'
+            w2 = delivery.get('witness_2') or 'I Made Sujana, S.Kom.'
+            raw_witnesses = [w1, w2]
+            delivery['witness_1'] = w1
+            delivery['witness_2'] = w2
+        delivery['witnesses'] = raw_witnesses
+        delivery['documentation_photo'] = delivery.get('documentation_photo') or ''
 
         self.send_json({
             'success': True,
@@ -3053,8 +3067,33 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         kasi_nip = data.get('kasi_nip', '').strip()
         kasi_rank = data.get('kasi_rank', '').strip()
 
-        witness_1 = data.get('witness_1', '').strip()
-        witness_2 = data.get('witness_2', '').strip()
+        # Handle witnesses (dynamic list + legacy w1 & w2)
+        raw_w = data.get('witnesses')
+        witness_list = []
+        if isinstance(raw_w, list):
+            witness_list = [str(w).strip() for w in raw_w if str(w).strip()]
+        elif isinstance(raw_w, str) and raw_w.strip().startswith('['):
+            try:
+                parsed_w = json.loads(raw_w)
+                if isinstance(parsed_w, list):
+                    witness_list = [str(w).strip() for w in parsed_w if str(w).strip()]
+            except Exception:
+                pass
+        
+        if not witness_list:
+            w1 = data.get('witness_1', '').strip()
+            w2 = data.get('witness_2', '').strip()
+            if w1: witness_list.append(w1)
+            if w2: witness_list.append(w2)
+        
+        witness_1 = witness_list[0] if len(witness_list) > 0 else data.get('witness_1', '').strip()
+        witness_2 = witness_list[1] if len(witness_list) > 1 else data.get('witness_2', '').strip()
+        witnesses_json = json.dumps(witness_list, ensure_ascii=False)
+
+        documentation_photo = data.get('documentation_photo', '')
+        if documentation_photo is None:
+            documentation_photo = ''
+
         ba_notes = data.get('ba_notes', '').strip()
         status = data.get('status', '').strip()
 
@@ -3092,6 +3131,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             kasi_rank = ?,
             witness_1 = ?,
             witness_2 = ?,
+            witnesses_json = ?,
+            documentation_photo = CASE WHEN ? != '' THEN ? ELSE documentation_photo END,
             ba_notes = ?,
             status = CASE WHEN ? != '' THEN ? ELSE status END
         WHERE ticket_code = ?
@@ -3105,7 +3146,10 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             owner_job,
             delivery_address, delivery_address,
             kasi_name, kasi_nip, kasi_rank,
-            witness_1, witness_2, ba_notes,
+            witness_1, witness_2,
+            witnesses_json,
+            documentation_photo, documentation_photo,
+            ba_notes,
             status, status,
             ticket_code
         ))

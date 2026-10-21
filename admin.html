@@ -3608,20 +3608,44 @@
                   <input type="text" id="ba20-kasi-nip" oninput="updateBaPreview()" placeholder="19811105 200501 1 007" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800 font-mono">
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-2 pt-1 border-t border-emerald-200">
-                <div>
-                  <label class="block font-semibold text-slate-700 mb-0.5">Saksi 1 *</label>
-                  <input type="text" id="ba20-witness-1" required oninput="updateBaPreview()" placeholder="I Wayan Gede Sunarta, A.Md." class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+              <!-- Dynamic Witnesses List -->
+              <div class="pt-2 border-t border-emerald-200 space-y-2">
+                <div class="flex items-center justify-between">
+                  <label class="block font-semibold text-slate-700">Saksi-Saksi *</label>
+                  <button type="button" onclick="addBaWitness()" class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 rounded-lg font-bold text-[11px] transition-all shadow-sm">
+                    <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-emerald-700"></i>
+                    <span>+ Tambah Saksi</span>
+                  </button>
                 </div>
-                <div>
-                  <label class="block font-semibold text-slate-700 mb-0.5">Saksi 2 *</label>
-                  <input type="text" id="ba20-witness-2" required oninput="updateBaPreview()" placeholder="I Made Sujana, S.Kom." class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800">
+                <div id="ba20-witnesses-container" class="space-y-1.5">
+                  <!-- Rendered dynamically via JavaScript -->
                 </div>
+                <p class="text-[10px] text-slate-500">Admin dapat mengisi dan menambah saksi pelaksanaan serah terima.</p>
               </div>
             </div>
 
-            <!-- Seksi 6: Status & Catatan Penanganan -->
+            <!-- Seksi 6: Dokumentasi Pengembalian Barang Bukti (13 cm x 9,75 cm) -->
+            <div class="bg-indigo-50/50 p-3 rounded-xl border border-indigo-200 space-y-2">
+              <div class="font-bold text-indigo-950 flex items-center justify-between">
+                <span>6. Dokumentasi Pengembalian Barang Bukti</span>
+                <span class="text-[10px] bg-indigo-200 text-indigo-900 px-1.5 py-0.5 rounded font-mono">13 cm &times; 9,75 cm</span>
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Unggah Foto Dokumentasi (Serah Terima BB)</label>
+                <input type="file" id="ba20-photo-file" accept="image/*" onchange="handleBaPhotoSelect(event)" class="w-full text-xs text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-700 file:text-white hover:file:bg-indigo-800 cursor-pointer">
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="text" id="ba20-photo-url" oninput="handleBaPhotoUrlInput(this.value)" placeholder="Atau tautan URL foto dokumentasi..." class="flex-1 px-2.5 py-1 border border-slate-300 rounded-lg text-slate-800 text-xs">
+                <button type="button" id="btn-clear-ba-photo" onclick="clearBaPhoto()" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-lg font-bold text-[11px] whitespace-nowrap hidden">
+                  Hapus Foto
+                </button>
+              </div>
+              <p class="text-[10px] text-slate-500">Foto akan diposisikan di tengah Berita Acara dengan ukuran presisi cetak 13 cm &times; 9,75 cm.</p>
+            </div>
+
+            <!-- Seksi 7: Status & Catatan Penanganan -->
             <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+              <div class="font-bold text-slate-900">7. Status &amp; Catatan</div>
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block font-semibold text-slate-700 mb-0.5">Status Pengantaran Tiket</label>
@@ -3778,17 +3802,27 @@
                 <div class="text-[8.5pt]" id="pv-sig-kasi-nip">Jaksa Muda / III-d / NIP. 19811105 200501 1 007</div>
               </div>
 
-              <!-- Saksi-Saksi -->
-              <div class="pt-2 border-t border-slate-300 text-[9.5pt]">
-                <div class="font-semibold mb-1.5">Saksi-saksi :</div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="flex items-center justify-between border-b border-dotted border-slate-400 pb-0.5">
-                    <span>1. <span id="pv-witness-1" class="font-semibold">I Wayan Gede Sunarta, A.Md.</span></span>
-                    <span class="text-slate-400 text-[9pt]">( ................................ )</span>
-                  </div>
-                  <div class="flex items-center justify-between border-b border-dotted border-slate-400 pb-0.5">
-                    <span>2. <span id="pv-witness-2" class="font-semibold">I Made Sujana, S.Kom.</span></span>
-                    <span class="text-slate-400 text-[9pt]">( ................................ )</span>
+              <!-- Saksi-Saksi (Dapat Ditambah Dinamis) -->
+              <div class="pt-3 border-t border-slate-300 text-[9.5pt]">
+                <div class="font-semibold mb-2">Saksi-saksi :</div>
+                <div id="pv-witnesses-container" class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+                  <!-- Rendered dynamically via JavaScript -->
+                </div>
+              </div>
+
+              <!-- Dokumentasi Pengembalian Barang Bukti (Ditengah, Presisi 13 cm x 9,75 cm) -->
+              <div class="mt-6 pt-4 border-t-2 border-slate-300 text-center">
+                <div class="font-bold text-[10.5pt] uppercase tracking-wider mb-3">
+                  Dokumentasi Pengembalian Barang Bukti
+                </div>
+                <div class="flex justify-center items-center">
+                  <div id="pv-documentation-container" style="width: 13cm; height: 9.75cm; max-width: 100%; border: 1px dashed #94a3b8; background-color: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto; box-sizing: border-box;">
+                    <img id="pv-documentation-img" src="" alt="Dokumentasi Penyerahan Barang Bukti" class="hidden" style="width: 13cm; height: 9.75cm; object-fit: cover; display: block; margin: 0 auto;">
+                    <div id="pv-documentation-placeholder" class="text-center p-4 text-slate-400">
+                      <i data-lucide="camera" class="w-8 h-8 mx-auto mb-1 text-slate-400"></i>
+                      <div class="font-sans font-medium text-xs text-slate-600">Foto Dokumentasi Serah Terima Barang Bukti</div>
+                      <div class="font-sans text-[10px] text-slate-400 mt-0.5">Posisi Ditengah &bull; Ukuran Standar: Lebar 13 cm &times; Tinggi 9,75 cm</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4135,6 +4169,23 @@
       color: black !important;
       box-shadow: none !important;
       border: none !important;
+    }
+    #pv-documentation-container {
+      width: 13cm !important;
+      height: 9.75cm !important;
+      margin: 0 auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: 1px solid #999 !important;
+      page-break-inside: avoid !important;
+    }
+    #pv-documentation-img {
+      width: 13cm !important;
+      height: 9.75cm !important;
+      object-fit: cover !important;
+      display: block !important;
+      margin: 0 auto !important;
     }
   }
   </style>

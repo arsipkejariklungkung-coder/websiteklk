@@ -6046,6 +6046,108 @@ function handleBaDateChange(dateVal) {
 
 let activeBaTicketCode = null;
 let activeKasiPb3rData = null;
+let currentBaWitnesses = [];
+let currentBaPhotoData = '';
+
+function renderBaWitnessInputs() {
+  const container = document.getElementById('ba20-witnesses-container');
+  if (!container) return;
+  if (!currentBaWitnesses || currentBaWitnesses.length === 0) {
+    currentBaWitnesses = ['I Wayan Gede Sunarta, A.Md.', 'I Made Sujana, S.Kom.'];
+  }
+
+  container.innerHTML = currentBaWitnesses.map((w, idx) => `
+    <div class="flex items-center gap-2">
+      <span class="w-14 text-[11px] font-semibold text-slate-500 shrink-0">Saksi ${idx + 1}</span>
+      <input type="text"
+             class="ba20-dyn-witness flex-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-slate-800 text-xs font-medium focus:ring-1 focus:ring-emerald-600 focus:outline-none"
+             value="${(w || '').replace(/"/g, '&quot;')}"
+             placeholder="Nama Lengkap Saksi & Gelar..."
+             oninput="handleBaWitnessInput(${idx}, this.value)">
+      ${currentBaWitnesses.length > 1 ? `
+        <button type="button" onclick="removeBaWitness(${idx})" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors shrink-0" title="Hapus Saksi">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+      ` : ''}
+    </div>
+  `).join('');
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function addBaWitness(name = '') {
+  currentBaWitnesses.push(name);
+  renderBaWitnessInputs();
+  updateBaPreview();
+}
+
+function removeBaWitness(idx) {
+  if (currentBaWitnesses.length <= 1) return;
+  currentBaWitnesses.splice(idx, 1);
+  renderBaWitnessInputs();
+  updateBaPreview();
+}
+
+function handleBaWitnessInput(idx, val) {
+  currentBaWitnesses[idx] = val;
+  updateBaPreview();
+}
+
+function handleBaPhotoSelect(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  
+  if (file.size > 8 * 1024 * 1024) {
+    alert('Ukuran file foto maksimal 8 MB.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    currentBaPhotoData = evt.target.result;
+    const urlInput = document.getElementById('ba20-photo-url');
+    if (urlInput) urlInput.value = '';
+    updateBaPhotoPreview();
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleBaPhotoUrlInput(val) {
+  currentBaPhotoData = (val || '').trim();
+  updateBaPhotoPreview();
+}
+
+function clearBaPhoto() {
+  currentBaPhotoData = '';
+  const fileInput = document.getElementById('ba20-photo-file');
+  if (fileInput) fileInput.value = '';
+  const urlInput = document.getElementById('ba20-photo-url');
+  if (urlInput) urlInput.value = '';
+  updateBaPhotoPreview();
+}
+
+function updateBaPhotoPreview() {
+  const imgEl = document.getElementById('pv-documentation-img');
+  const plhEl = document.getElementById('pv-documentation-placeholder');
+  const clearBtn = document.getElementById('btn-clear-ba-photo');
+
+  if (currentBaPhotoData) {
+    if (imgEl) {
+      imgEl.src = currentBaPhotoData;
+      imgEl.classList.remove('hidden');
+    }
+    if (plhEl) plhEl.classList.add('hidden');
+    if (clearBtn) clearBtn.classList.remove('hidden');
+  } else {
+    if (imgEl) {
+      imgEl.src = '';
+      imgEl.classList.add('hidden');
+    }
+    if (plhEl) plhEl.classList.remove('hidden');
+    if (clearBtn) clearBtn.classList.add('hidden');
+  }
+  if (window.lucide) lucide.createIcons();
+}
 
 async function openBa20Modal(ticketCode) {
   activeBaTicketCode = ticketCode;
@@ -6090,8 +6192,21 @@ async function openBa20Modal(ticketCode) {
     document.getElementById('ba20-kasi-rank').value = d.kasi_rank || (activeKasiPb3rData ? activeKasiPb3rData.rank : '');
     document.getElementById('ba20-kasi-nip').value = d.kasi_nip || (activeKasiPb3rData ? activeKasiPb3rData.nip : '');
 
-    document.getElementById('ba20-witness-1').value = d.witness_1 || 'I Wayan Gede Sunarta, A.Md.';
-    document.getElementById('ba20-witness-2').value = d.witness_2 || 'I Made Sujana, S.Kom.';
+    // Setup witnesses (dynamic array)
+    if (d.witnesses && Array.isArray(d.witnesses) && d.witnesses.length > 0) {
+      currentBaWitnesses = [...d.witnesses];
+    } else {
+      currentBaWitnesses = [d.witness_1 || 'I Wayan Gede Sunarta, A.Md.', d.witness_2 || 'I Made Sujana, S.Kom.'];
+    }
+    renderBaWitnessInputs();
+
+    // Setup documentation photo
+    currentBaPhotoData = d.documentation_photo || '';
+    const photoUrlInput = document.getElementById('ba20-photo-url');
+    if (photoUrlInput) photoUrlInput.value = currentBaPhotoData.startsWith('data:') ? '' : currentBaPhotoData;
+    const photoFileInput = document.getElementById('ba20-photo-file');
+    if (photoFileInput) photoFileInput.value = '';
+    updateBaPhotoPreview();
 
     document.getElementById('ba20-status').value = d.status || 'SELESAI';
     document.getElementById('ba20-notes').value = d.ba_notes || d.admin_notes || '';
@@ -6162,8 +6277,20 @@ function updateBaPreview() {
   setTxt('pv-sig-kasi', kasiName);
   setTxt('pv-sig-kasi-nip', `${kasiRank} / NIP. ${kasiNip}`);
 
-  setTxt('pv-witness-1', getVal('ba20-witness-1'));
-  setTxt('pv-witness-2', getVal('ba20-witness-2'));
+  // Render dynamic witnesses in preview sheet
+  const witContainer = document.getElementById('pv-witnesses-container');
+  if (witContainer) {
+    const list = currentBaWitnesses.length > 0 ? currentBaWitnesses : ['I Wayan Gede Sunarta, A.Md.', 'I Made Sujana, S.Kom.'];
+    witContainer.innerHTML = list.map((w, idx) => `
+      <div class="flex items-center justify-between border-b border-dotted border-slate-400 pb-0.5">
+        <span>${idx + 1}. <span class="font-semibold">${(w || '').trim() || '................................'}</span></span>
+        <span class="text-slate-400 text-[9pt]">( ................................ )</span>
+      </div>
+    `).join('');
+  }
+
+  // Update documentation photo preview
+  updateBaPhotoPreview();
 }
 
 async function resyncKasiFromOrg() {
@@ -6204,6 +6331,11 @@ async function handleSaveBa20(e) {
     btn.innerHTML = `<span class="animate-spin inline-block mr-2">&#9696;</span>Menyimpan...`;
   }
 
+  const cleanWitnesses = currentBaWitnesses.map(w => (w || '').trim()).filter(w => w !== '');
+  if (cleanWitnesses.length === 0) {
+    cleanWitnesses.push('I Wayan Gede Sunarta, A.Md.', 'I Made Sujana, S.Kom.');
+  }
+
   const payload = {
     ba_date: document.getElementById('ba20-date').value.trim(),
     ba_day: document.getElementById('ba20-day').value.trim(),
@@ -6225,8 +6357,10 @@ async function handleSaveBa20(e) {
     kasi_name: document.getElementById('ba20-kasi-name').value.trim(),
     kasi_rank: document.getElementById('ba20-kasi-rank').value.trim(),
     kasi_nip: document.getElementById('ba20-kasi-nip').value.trim(),
-    witness_1: document.getElementById('ba20-witness-1').value.trim(),
-    witness_2: document.getElementById('ba20-witness-2').value.trim(),
+    witnesses: cleanWitnesses,
+    witness_1: cleanWitnesses[0] || '',
+    witness_2: cleanWitnesses[1] || '',
+    documentation_photo: currentBaPhotoData || '',
     status: document.getElementById('ba20-status').value.trim(),
     ba_notes: document.getElementById('ba20-notes').value.trim()
   };

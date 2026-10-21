@@ -2347,17 +2347,27 @@
             <div class="text-[8.5pt]" id="pub-pv-sig-kasi-nip">Jaksa Muda / III-d / NIP. 19811105 200501 1 007</div>
           </div>
 
-          <!-- Saksi-Saksi -->
-          <div class="pt-2 border-t border-slate-300 text-[9.5pt]">
-            <div class="font-semibold mb-1.5">Saksi-saksi :</div>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="flex items-center justify-between border-b border-dotted border-slate-400 pb-0.5">
-                <span>1. <span id="pub-pv-witness-1" class="font-semibold">-</span></span>
-                <span class="text-slate-400 text-[9pt]">( ................................ )</span>
-              </div>
-              <div class="flex items-center justify-between border-b border-dotted border-slate-400 pb-0.5">
-                <span>2. <span id="pub-pv-witness-2" class="font-semibold">-</span></span>
-                <span class="text-slate-400 text-[9pt]">( ................................ )</span>
+          <!-- Saksi-Saksi (Dapat Ditambah Dinamis) -->
+          <div class="pt-3 border-t border-slate-300 text-[9.5pt]">
+            <div class="font-semibold mb-2">Saksi-saksi :</div>
+            <div id="pub-pv-witnesses-container" class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Dokumentasi Pengembalian Barang Bukti (Ditengah, Presisi 13 cm x 9,75 cm) -->
+          <div class="mt-6 pt-4 border-t-2 border-slate-300 text-center">
+            <div class="font-bold text-[10.5pt] uppercase tracking-wider mb-3">
+              Dokumentasi Pengembalian Barang Bukti
+            </div>
+            <div class="flex justify-center items-center">
+              <div id="pub-pv-documentation-container" style="width: 13cm; height: 9.75cm; max-width: 100%; border: 1px dashed #94a3b8; background-color: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 auto; box-sizing: border-box;">
+                <img id="pub-pv-documentation-img" src="" alt="Dokumentasi Penyerahan Barang Bukti" class="hidden" style="width: 13cm; height: 9.75cm; object-fit: cover; display: block; margin: 0 auto;">
+                <div id="pub-pv-documentation-placeholder" class="text-center p-4 text-slate-400">
+                  <i data-lucide="camera" class="w-8 h-8 mx-auto mb-1 text-slate-400"></i>
+                  <div class="font-sans font-medium text-xs text-slate-600">Foto Dokumentasi Serah Terima Barang Bukti</div>
+                  <div class="font-sans text-[10px] text-slate-400 mt-0.5">Posisi Ditengah &bull; Ukuran Standar: Lebar 13 cm &times; Tinggi 9,75 cm</div>
+                </div>
               </div>
             </div>
           </div>
@@ -2387,6 +2397,23 @@
       color: black !important;
       box-shadow: none !important;
       border: none !important;
+    }
+    #pub-pv-documentation-container {
+      width: 13cm !important;
+      height: 9.75cm !important;
+      margin: 0 auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: 1px solid #999 !important;
+      page-break-inside: avoid !important;
+    }
+    #pub-pv-documentation-img {
+      width: 13cm !important;
+      height: 9.75cm !important;
+      object-fit: cover !important;
+      display: block !important;
+      margin: 0 auto !important;
     }
   }
   </style>

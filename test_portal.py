@@ -1448,6 +1448,8 @@ class TestKertagosaPortal(unittest.TestCase):
             'kasi_rank': kasi['rank'],
             'witness_1': 'I Wayan Gede Sunarta, A.Md.',
             'witness_2': 'I Made Sujana, S.Kom.',
+            'witnesses': ['I Wayan Gede Sunarta, A.Md.', 'I Made Sujana, S.Kom.', 'Ni Ketut Suartini, S.H.'],
+            'documentation_photo': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
             'status': 'SELESAI',
             'ba_notes': 'Telah diserahkan langsung kepada pemilik sah.'
         }
@@ -1474,6 +1476,19 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertEqual(row['ba_day'], 'Rabu')
         self.assertEqual(row['ba_date_spelled'], 'Dua Puluh Satu bulan Oktober tahun Dua Ribu Dua Puluh Enam')
         self.assertEqual(row['officer_name'], 'I Komang Arimbawa, S.H.')
+        self.assertEqual(row['witness_1'], 'I Wayan Gede Sunarta, A.Md.')
+        self.assertEqual(row['witness_2'], 'I Made Sujana, S.Kom.')
+        self.assertIn('Ni Ketut Suartini', row['witnesses_json'])
+        self.assertTrue(row['documentation_photo'].startswith('data:image/png'))
+
+        # 8. Verify GET returns updated dynamic witnesses and documentation photo
+        get_h = MockHandler('GET', f'/api/admin/deliveries/{ticket_code}/ba', {'Authorization': f'Bearer {self.token}'})
+        get_h.do_GET()
+        self.assertEqual(get_h.response_code, 200)
+        get_res = get_h.get_response_json()
+        self.assertEqual(len(get_res['delivery']['witnesses']), 3)
+        self.assertEqual(get_res['delivery']['witnesses'][2], 'Ni Ketut Suartini, S.H.')
+        self.assertTrue(get_res['delivery']['documentation_photo'].startswith('data:image/png'))
 
         # Clean up test delivery
         conn = get_db()

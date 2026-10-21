@@ -10,3 +10,5 @@ Thumbs.db
 .env.*.local
 *.db-shm
 *.db-wal
+static/uploads/1792*
+
