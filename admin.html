@@ -465,8 +465,31 @@
             </div>
 
             <!-- Kajari Profile -->
-            <div class="p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-3">
-              <div class="font-bold text-amber-950">Profil Kepala Kejaksaan Negeri Klungkung</div>
+            <div class="p-4 bg-amber-50 rounded-xl border border-amber-200 space-y-4">
+              <div class="font-bold text-amber-950 flex items-center justify-between">
+                <span>Profil Kepala Kejaksaan Negeri Klungkung (Hero &amp; Sambutan)</span>
+                <span class="text-[10px] bg-amber-200/80 text-amber-950 font-bold px-2 py-0.5 rounded-full">Tampil di Beranda</span>
+              </div>
+
+              <!-- Foto Resmi Kajari Hero -->
+              <div class="flex items-center gap-4 p-3 bg-white rounded-xl border border-amber-300/80 shadow-xs">
+                <div class="w-16 h-20 rounded-xl bg-slate-100 border-2 border-amber-400 p-0.5 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+                  <img id="preview-hero-kajari-photo" src="/static/images/kajari-portrait.jpg" alt="Preview Foto Kajari" class="w-full h-full object-cover rounded-lg" onerror="this.onerror=null; this.src='/static/images/kajari-portrait.jpg';">
+                </div>
+                <div class="flex-1 space-y-1.5">
+                  <label class="block font-bold text-slate-800 text-xs">Foto Resmi Kajari (Hero Portrait)</label>
+                  <input type="text" id="hero-kajari-photo-url-input" data-key="kajari_photo_url" oninput="document.getElementById('preview-hero-kajari-photo').src = this.value || '/static/images/kajari-portrait.jpg'" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono" placeholder="/static/images/kajari-portrait.jpg">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <label class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0B3B24] hover:bg-[#072A19] text-white rounded-lg cursor-pointer font-bold text-[11px] shadow-sm transition-colors">
+                      <i data-lucide="upload" class="w-3.5 h-3.5 text-amber-400"></i>
+                      <span>Upload Foto Baru</span>
+                      <input type="file" id="input-hero-kajari-file" accept="image/*" class="hidden" onchange="uploadHeroKajariPhoto(event)">
+                    </label>
+                    <button type="button" onclick="setPresetHeroKajariPhoto('/static/images/kajari-portrait.jpg')" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-[10px] font-semibold">Reset Foto Default</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="grid grid-cols-2 gap-4">
                 <div>
                   <label class="block font-semibold text-slate-700 mb-1">Nama Lengkap &amp; Gelar</label>
@@ -511,7 +534,7 @@
 
         <!-- News Table CRUD -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <h3 class="font-heading font-bold text-base text-slate-900">Daftar Publikasi Berita (Bento Grid)</h3>
               <p class="text-xs text-slate-500">Kelola artikel berita, kutipan highlight, dan tata letak tampilan.</p>
@@ -526,6 +549,23 @@
                 <span>Tambah Berita Baru</span>
               </button>
             </div>
+          </div>
+
+          <!-- Search & Filter Bar -->
+          <div class="flex flex-col sm:flex-row items-center gap-3 mb-4 pb-3 border-b border-slate-100 text-xs">
+            <div class="relative flex-1 w-full">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
+              <input type="text" id="admin-news-search" oninput="filterAdminNewsTable()" placeholder="Cari judul berita, penulis, atau isi..." class="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-700">
+            </div>
+            <select id="admin-news-category-filter" onchange="filterAdminNewsTable()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-slate-50 text-slate-700 font-semibold">
+              <option value="ALL">Semua Kategori</option>
+              <option value="PIDUM">Tindak Pidana Umum</option>
+              <option value="PIDSUS">Tindak Pidana Khusus</option>
+              <option value="INTELIJEN">Intelijen</option>
+              <option value="DATUN">Perdata &amp; TUN</option>
+              <option value="PB3R">Barang Bukti &amp; Rampasan</option>
+              <option value="PEMBINAAN">Pembinaan &amp; Umum</option>
+            </select>
           </div>
 
           <div class="overflow-x-auto">
@@ -589,6 +629,19 @@
                 <i data-lucide="plus" class="w-4 h-4"></i> Tambah Sidang
               </button>
             </div>
+          </div>
+
+          <!-- Search & Filter Bar for JAGADITA -->
+          <div class="flex flex-col sm:flex-row items-center gap-3 mb-4 pb-3 border-b border-slate-100 text-xs">
+            <div class="relative flex-1 w-full">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5"></i>
+              <input type="text" id="admin-jagadita-search" oninput="filterAdminJagaditaTable()" placeholder="Cari nomor perkara, nama terdakwa, atau jaksa (JPU)..." class="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-700">
+            </div>
+            <select id="admin-jagadita-type-filter" onchange="filterAdminJagaditaTable()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs bg-slate-50 text-slate-700 font-semibold">
+              <option value="ALL">Semua Jenis Perkara</option>
+              <option value="PIDUM">Tindak Pidana Umum (PIDUM)</option>
+              <option value="PIDSUS">Tindak Pidana Khusus (PIDSUS)</option>
+            </select>
           </div>
 
           <div class="overflow-x-auto">
@@ -836,10 +889,10 @@
             <div class="flex flex-wrap items-center gap-2 mb-4 pb-3 border-b border-slate-100 text-xs">
               <span class="font-bold text-slate-500 mr-1">Filter Level:</span>
               <button onclick="filterOrgLevel('all')" id="btn-org-filter-all" class="org-filter-btn px-3 py-1.5 rounded-lg font-bold bg-[#0B3B24] text-white">Semua (<span id="count-level-all">24</span>)</button>
-              <button onclick="filterOrgLevel(1)" id="btn-org-filter-1" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 1: Pimpinan (1)</button>
-              <button onclick="filterOrgLevel(2)" id="btn-org-filter-2" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 2: Kasi/Kabag (6)</button>
-              <button onclick="filterOrgLevel(3)" id="btn-org-filter-3" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 3: Sub-bagian (12)</button>
-              <button onclick="filterOrgLevel(4)" id="btn-org-filter-4" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 4: Fungsional (5)</button>
+              <button onclick="filterOrgLevel(1)" id="btn-org-filter-1" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 1: Pimpinan (<span id="count-level-1">1</span>)</button>
+              <button onclick="filterOrgLevel(2)" id="btn-org-filter-2" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 2: Kasi/Kabag (<span id="count-level-2">6</span>)</button>
+              <button onclick="filterOrgLevel(3)" id="btn-org-filter-3" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 3: Sub-bagian (<span id="count-level-3">12</span>)</button>
+              <button onclick="filterOrgLevel(4)" id="btn-org-filter-4" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 4: Fungsional (<span id="count-level-4">5</span>)</button>
               <button onclick="filterOrgLevel(5)" id="btn-org-filter-5" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 5: Pelaksana (<span id="count-level-5">0</span>)</button>
             </div>
 

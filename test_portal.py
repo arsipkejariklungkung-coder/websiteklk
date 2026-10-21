@@ -1893,6 +1893,85 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('onerror="this.onerror=null; this.src=\'/static/images/avatar-officer-male.svg\';"', adm_js)
         self.assertIn('resizeImageIfLarge', adm_js)
 
+    def test_30_admin_functions_enhanced(self):
+        """Verify enhanced admin dashboard functions: Hero Kajari photo upload & preset,
+        table live search & filters for News & Jagadita, dynamic organization level count spans,
+        and submission status update with toast feedback."""
+        # 1. Update kajari_photo_url via batch page-contents API
+        new_kajari_photo = '/static/images/kajari-portrait-updated.jpg'
+        batch_payload = json.dumps({
+            'items': {
+                'kajari_photo_url': new_kajari_photo
+            }
+        }).encode('utf-8')
+        h_batch = MockHandler('POST', '/api/admin/page-contents/batch', headers={
+            'Content-Type': 'application/json',
+            'Content-Length': str(len(batch_payload)),
+            'Authorization': f'Bearer {self.token}'
+        }, body=batch_payload)
+        h_batch.do_POST()
+        self.assertEqual(h_batch.response_code, 200)
+        res_batch = h_batch.get_response_json()
+        self.assertTrue(res_batch.get('success'))
+
+        # Verify through public homepage-data API
+        h_home = MockHandler('GET', '/api/public/homepage-data')
+        h_home.do_GET()
+        self.assertEqual(h_home.response_code, 200)
+        home_data = h_home.get_response_json()
+        self.assertTrue(home_data.get('success'))
+        self.assertEqual(home_data.get('contents', {}).get('kajari_photo_url', {}).get('value'), new_kajari_photo)
+
+        # 2. Reset kajari_photo_url back to default
+        default_kajari_photo = '/static/images/kajari-portrait.jpg'
+        batch_reset_payload = json.dumps({
+            'items': {
+                'kajari_photo_url': default_kajari_photo
+            }
+        }).encode('utf-8')
+        h_reset = MockHandler('POST', '/api/admin/page-contents/batch', headers={
+            'Content-Type': 'application/json',
+            'Content-Length': str(len(batch_reset_payload)),
+            'Authorization': f'Bearer {self.token}'
+        }, body=batch_reset_payload)
+        h_reset.do_POST()
+        self.assertEqual(h_reset.response_code, 200)
+
+        # 3. Check admin.html for new elements
+        with open(os.path.join(BASE_DIR, 'admin.html'), 'r', encoding='utf-8') as f:
+            admin_html = f.read()
+
+        # Hero Kajari photo upload & preview elements
+        self.assertIn('id="preview-hero-kajari-photo"', admin_html)
+        self.assertIn('id="hero-kajari-photo-url-input"', admin_html)
+        self.assertIn('id="input-hero-kajari-file"', admin_html)
+        self.assertIn('uploadHeroKajariPhoto(event)', admin_html)
+        self.assertIn('setPresetHeroKajariPhoto', admin_html)
+
+        # News & Jagadita search and filters
+        self.assertIn('id="admin-news-search"', admin_html)
+        self.assertIn('id="admin-news-category-filter"', admin_html)
+        self.assertIn('id="admin-jagadita-search"', admin_html)
+        self.assertIn('id="admin-jagadita-type-filter"', admin_html)
+
+        # Dynamic organization count badge spans
+        self.assertIn('id="count-level-1"', admin_html)
+        self.assertIn('id="count-level-2"', admin_html)
+        self.assertIn('id="count-level-3"', admin_html)
+        self.assertIn('id="count-level-4"', admin_html)
+        self.assertIn('id="count-level-5"', admin_html)
+
+        # 4. Check static/js/admin.js for helper functions and enhancements
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'admin.js'), 'r', encoding='utf-8') as f:
+            admin_js = f.read()
+
+        self.assertIn('uploadHeroKajariPhoto', admin_js)
+        self.assertIn('setPresetHeroKajariPhoto', admin_js)
+        self.assertIn('filterAdminNewsTable', admin_js)
+        self.assertIn('filterAdminJagaditaTable', admin_js)
+        self.assertIn('updateOverviewStats()', admin_js)
+        self.assertIn('showAdminToast', admin_js)
+
 
 if __name__ == '__main__':
     unittest.main()

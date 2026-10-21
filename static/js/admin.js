@@ -63,6 +63,7 @@ async function loadAllDashboardData() {
       adminData.complaints = subData.complaints;
       adminData.deliveries = subData.deliveries;
       renderAdminSubmissions();
+      updateOverviewStats();
     }
 
     // 3. Load Admin Users
@@ -144,6 +145,12 @@ function switchTab(tabId) {
     loadAdminProfileCms();
   } else if (tabId === 'tab-announcements') {
     loadAnnouncementsAdminData();
+  } else if (tabId === 'tab-news') {
+    renderAdminNewsTable();
+  } else if (tabId === 'tab-jagadita') {
+    renderAdminJagaditaTable();
+  } else if (tabId === 'tab-inbox') {
+    renderAdminSubmissions();
   }
   lucide.createIcons();
 }
@@ -301,6 +308,64 @@ function populateHeroContentsForm() {
     const k = input.getAttribute('data-key');
     if (c[k]) input.value = c[k].value;
   });
+
+  const kajariPhoto = (c.kajari_photo_url && c.kajari_photo_url.value) ? c.kajari_photo_url.value : '/static/images/kajari-portrait.jpg';
+  const previewKajari = document.getElementById('preview-hero-kajari-photo');
+  if (previewKajari) {
+    previewKajari.onerror = function() {
+      this.onerror = null;
+      this.src = '/static/images/kajari-portrait.jpg';
+    };
+    previewKajari.src = kajariPhoto;
+  }
+  const kajariInput = document.getElementById('hero-kajari-photo-url-input');
+  if (kajariInput) kajariInput.value = kajariPhoto;
+}
+
+async function uploadHeroKajariPhoto(e) {
+  const file = e.target.files ? e.target.files[0] : null;
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async function(evt) {
+    let base64 = evt.target.result;
+    try {
+      showAdminToast('Mengoptimasi & mengunggah foto Kajari...');
+      if (typeof resizeImageIfLarge === 'function') {
+        base64 = await resizeImageIfLarge(base64, 1200, 1600);
+      }
+      const res = await fetch('/api/admin/upload-media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name || 'kajari_portrait.jpg',
+          data: base64
+        })
+      });
+      const data = await res.json();
+      if (data && data.success && data.url) {
+        const input = document.getElementById('hero-kajari-photo-url-input');
+        if (input) input.value = data.url;
+        const prev = document.getElementById('preview-hero-kajari-photo');
+        if (prev) prev.src = data.url;
+        showAdminToast('Foto Kajari berhasil diunggah! Klik "Simpan Perubahan Hero" untuk menyimpan.');
+      } else {
+        alert('Gagal mengunggah foto: ' + ((data && data.error) || 'Terjadi kesalahan'));
+      }
+    } catch (err) {
+      alert('Gagal mengunggah foto Kajari: Kesalahan jaringan.');
+    }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function setPresetHeroKajariPhoto(url) {
+  const input = document.getElementById('hero-kajari-photo-url-input');
+  if (input) input.value = url;
+  const prev = document.getElementById('preview-hero-kajari-photo');
+  if (prev) prev.src = url;
+  showAdminToast('Foto Kajari direset! Klik "Simpan Perubahan Hero" untuk menyimpan.');
 }
 
 async function saveBatchContents(formId) {
@@ -352,19 +417,52 @@ async function saveTickerContent() {
   loadAllDashboardData();
 }
 
-function renderAdminNewsTable() {
+function filterAdminNewsTable() {
+  const searchEl = document.getElementById('admin-news-search');
+  const catEl = document.getElementById('admin-news-category-filter');
+  const query = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  const category = catEl ? catEl.value : 'ALL';
+
+  let filtered = adminData.news || [];
+  if (category && category !== 'ALL') {
+    filtered = filtered.filter(item => (item.category || '').toUpperCase().includes(category));
+  }
+  if (query) {
+    filtered = filtered.filter(item => 
+      (item.title || '').toLowerCase().includes(query) ||
+      (item.author || '').toLowerCase().includes(query) ||
+      (item.excerpt || '').toLowerCase().includes(query) ||
+      (item.content || '').toLowerCase().includes(query)
+    );
+  }
+  renderAdminNewsTable(filtered);
+}
+
+function renderAdminNewsTable(items = null) {
   const tbody = document.getElementById('admin-news-table-body');
   if (!tbody) return;
 
-  tbody.innerHTML = adminData.news.map(item => `
+  const list = items !== null ? items : (adminData.news || []);
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" class="py-8 text-center text-slate-400">
+          Tidak ada artikel berita yang cocok dengan kriteria pencarian atau filter.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = list.map(item => `
     <tr class="hover:bg-slate-50 transition-colors">
       <td class="py-3 px-3">
-        <img src="${item.thumbnail_url}" class="w-12 h-8 rounded object-cover border border-slate-200">
+        <img src="${item.thumbnail_url || '/static/images/news-featured.jpg'}" class="w-12 h-8 rounded object-cover border border-slate-200" onerror="this.onerror=null; this.src='/static/images/news-featured.jpg';">
       </td>
-      <td class="py-3 px-3 font-bold text-slate-900 max-w-xs truncate">${item.title}</td>
-      <td class="py-3 px-3 font-semibold text-emerald-800">${item.category}</td>
-      <td class="py-3 px-3 font-mono text-[11px] text-slate-500">${item.layout_type}</td>
-      <td class="py-3 px-3 text-slate-500">${item.published_at}</td>
+      <td class="py-3 px-3 font-bold text-slate-900 max-w-xs truncate">${escapeAdminHtml(item.title)}</td>
+      <td class="py-3 px-3 font-semibold text-emerald-800">${escapeAdminHtml(item.category)}</td>
+      <td class="py-3 px-3 font-mono text-[11px] text-slate-500">${escapeAdminHtml(item.layout_type)}</td>
+      <td class="py-3 px-3 text-slate-500">${escapeAdminHtml(item.published_at || '-')}</td>
       <td class="py-3 px-3 text-right space-x-2">
         <button onclick="openNewsEditModal(${item.id})" class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded font-semibold text-[11px]">Edit</button>
         <button onclick="deleteNewsItem(${item.id})" class="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded font-semibold text-[11px]">Hapus</button>
@@ -994,41 +1092,53 @@ async function handleSaveNews(e) {
   const youtubeVal = (document.getElementById('news-form-youtube')?.value || '').trim();
 
   const payload = {
-    title: document.getElementById('news-form-title-input').value,
-    category: document.getElementById('news-form-category').value,
-    badge_label: document.getElementById('news-form-badge').value,
+    title: document.getElementById('news-form-title-input').value.trim(),
+    category: document.getElementById('news-form-category').value.trim(),
+    badge_label: document.getElementById('news-form-badge').value.trim(),
     layout_type: document.getElementById('news-form-layout').value,
-    author: document.getElementById('news-form-author').value,
-    excerpt: document.getElementById('news-form-excerpt').value,
-    highlight_quote: document.getElementById('news-form-quote').value,
+    author: document.getElementById('news-form-author').value.trim(),
+    excerpt: document.getElementById('news-form-excerpt').value.trim(),
+    highlight_quote: document.getElementById('news-form-quote').value.trim(),
     thumbnail_url: thumbnailVal,
     youtube_url: youtubeVal || null,
-    content: document.getElementById('news-form-content').value,
+    content: document.getElementById('news-form-content').value.trim(),
   };
 
-  const url = id ? `/api/admin/news/${id}` : '/api/admin/news';
-  const method = id ? 'PUT' : 'POST';
+  try {
+    const url = id ? `/api/admin/news/${id}` : '/api/admin/news';
+    const method = id ? 'PUT' : 'POST';
 
-  const res = await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const data = await res.json();
-  if (data.success) {
-    closeModal('modal-admin-news-form');
-    alert(data.message);
-    loadAllDashboardData();
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('modal-admin-news-form');
+      showAdminToast(data.message || 'Artikel berita berhasil disimpan!');
+      await loadAllDashboardData();
+    } else {
+      alert('Gagal menyimpan berita: ' + (data.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menyimpan berita: Terjadi kesalahan jaringan.');
   }
 }
 
 async function deleteNewsItem(id) {
   if (!confirm('Apakah Anda yakin ingin menghapus artikel berita ini?')) return;
-  const res = await fetch(`/api/admin/news/${id}`, { method: 'DELETE' });
-  const data = await res.json();
-  if (data.success) {
-    alert(data.message);
-    loadAllDashboardData();
+  try {
+    const res = await fetch(`/api/admin/news/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      showAdminToast(data.message || 'Artikel berita berhasil dihapus!');
+      await loadAllDashboardData();
+    } else {
+      alert('Gagal menghapus berita: ' + (data.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menghapus berita: Terjadi kesalahan jaringan.');
   }
 }
 
@@ -1078,45 +1188,85 @@ function renderAdminServices() {
 
 async function saveServiceCard(id) {
   const payload = {
-    title: document.getElementById(`svc-title-${id}`).value,
-    badge_text: document.getElementById(`svc-badge-${id}`).value,
+    title: document.getElementById(`svc-title-${id}`).value.trim(),
+    badge_text: document.getElementById(`svc-badge-${id}`).value.trim(),
     theme_color: document.getElementById(`svc-color-${id}`).value,
-    description: document.getElementById(`svc-desc-${id}`).value,
-    info_box_text: document.getElementById(`svc-info-${id}`).value,
+    description: document.getElementById(`svc-desc-${id}`).value.trim(),
+    info_box_text: document.getElementById(`svc-info-${id}`).value.trim(),
   };
 
-  const res = await fetch(`/api/admin/services/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const data = await res.json();
-  if (data.success) {
-    alert(data.message);
-    loadAllDashboardData();
+  try {
+    const res = await fetch(`/api/admin/services/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showAdminToast(data.message || 'Kartu layanan berhasil diperbarui!');
+      await loadAllDashboardData();
+    } else {
+      alert('Gagal menyimpan kartu layanan: ' + (data.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menyimpan kartu layanan: Kesalahan jaringan.');
   }
 }
 
 // 6. JAGADITA Tab
-function renderAdminJagaditaTable() {
+function filterAdminJagaditaTable() {
+  const searchEl = document.getElementById('admin-jagadita-search');
+  const typeEl = document.getElementById('admin-jagadita-type-filter');
+  const query = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  const caseType = typeEl ? typeEl.value : 'ALL';
+
+  let filtered = adminData.schedules || [];
+  if (caseType && caseType !== 'ALL') {
+    filtered = filtered.filter(item => (item.case_type || '').toUpperCase() === caseType);
+  }
+  if (query) {
+    filtered = filtered.filter(item => 
+      (item.case_number || '').toLowerCase().includes(query) ||
+      (item.defendant_name || '').toLowerCase().includes(query) ||
+      (item.prosecutor || '').toLowerCase().includes(query) ||
+      (item.agenda || '').toLowerCase().includes(query) ||
+      (item.court_room || '').toLowerCase().includes(query)
+    );
+  }
+  renderAdminJagaditaTable(filtered);
+}
+
+function renderAdminJagaditaTable(schedules = null) {
   const tbody = document.getElementById('admin-jagadita-table-body');
   if (!tbody) return;
 
-  tbody.innerHTML = adminData.schedules.map(row => `
+  const list = schedules !== null ? schedules : (adminData.schedules || []);
+  if (list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="py-8 text-center text-slate-400">
+          Tidak ada jadwal sidang yang sesuai dengan pencarian atau filter.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = list.map(row => `
     <tr class="hover:bg-slate-50 transition-colors">
       <td class="py-3 px-3 font-semibold text-slate-800">
-        <div>${row.session_time}</div>
-        <div class="text-[10px] text-slate-400">${row.court_room}</div>
+        <div>${escapeAdminHtml(row.session_time)}</div>
+        <div class="text-[10px] text-slate-400">${escapeAdminHtml(row.court_room)}</div>
       </td>
       <td class="py-3 px-3">
-        <div class="font-bold text-slate-900">${row.case_number}</div>
-        <div class="text-slate-600">${row.defendant_name}</div>
+        <div class="font-bold text-slate-900">${escapeAdminHtml(row.case_number)}</div>
+        <div class="text-slate-600">${escapeAdminHtml(row.defendant_name)}</div>
       </td>
-      <td class="py-3 px-3 font-extrabold text-[11px] ${row.case_type === 'PIDUM' ? 'text-blue-700' : 'text-red-700'}">${row.case_type}</td>
-      <td class="py-3 px-3 text-slate-600 max-w-xs truncate">${row.agenda}</td>
-      <td class="py-3 px-3 text-slate-700 font-medium">${row.prosecutor}</td>
+      <td class="py-3 px-3 font-extrabold text-[11px] ${row.case_type === 'PIDUM' ? 'text-blue-700' : 'text-red-700'}">${escapeAdminHtml(row.case_type)}</td>
+      <td class="py-3 px-3 text-slate-600 max-w-xs truncate">${escapeAdminHtml(row.agenda)}</td>
+      <td class="py-3 px-3 text-slate-700 font-medium">${escapeAdminHtml(row.prosecutor)}</td>
       <td class="py-3 px-3">
-        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${getScheduleBadgeClass(row.status)}">${row.status}</span>
+        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${getScheduleBadgeClass(row.status)}">${escapeAdminHtml(row.status)}</span>
       </td>
       <td class="py-3 px-3 text-right space-x-2">
         <button onclick="openJagaditaEditModal(${row.id})" class="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded font-semibold text-[10px]">Edit</button>
@@ -1162,39 +1312,51 @@ async function handleSaveJagadita(e) {
   e.preventDefault();
   const id = document.getElementById('jagadita-form-id').value;
   const payload = {
-    session_time: document.getElementById('jagadita-form-time').value,
-    court_room: document.getElementById('jagadita-form-room').value,
-    case_number: document.getElementById('jagadita-form-case').value,
+    session_time: document.getElementById('jagadita-form-time').value.trim(),
+    court_room: document.getElementById('jagadita-form-room').value.trim(),
+    case_number: document.getElementById('jagadita-form-case').value.trim(),
     case_type: document.getElementById('jagadita-form-type').value,
-    defendant_name: document.getElementById('jagadita-form-defendant').value,
-    agenda: document.getElementById('jagadita-form-agenda').value,
-    prosecutor: document.getElementById('jagadita-form-prosecutor').value,
+    defendant_name: document.getElementById('jagadita-form-defendant').value.trim(),
+    agenda: document.getElementById('jagadita-form-agenda').value.trim(),
+    prosecutor: document.getElementById('jagadita-form-prosecutor').value.trim(),
     status: document.getElementById('jagadita-form-status').value,
   };
 
-  const url = id ? `/api/admin/jagadita/${id}` : '/api/admin/jagadita';
-  const method = id ? 'PUT' : 'POST';
+  try {
+    const url = id ? `/api/admin/jagadita/${id}` : '/api/admin/jagadita';
+    const method = id ? 'PUT' : 'POST';
 
-  const res = await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const data = await res.json();
-  if (data.success) {
-    closeModal('modal-admin-jagadita-form');
-    alert(data.message);
-    loadAllDashboardData();
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('modal-admin-jagadita-form');
+      showAdminToast(data.message || 'Jadwal sidang berhasil disimpan!');
+      await loadAllDashboardData();
+    } else {
+      alert('Gagal menyimpan sidang: ' + (data.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menyimpan jadwal sidang: Terjadi kesalahan jaringan.');
   }
 }
 
 async function deleteJagaditaItem(id) {
   if (!confirm('Hapus jadwal sidang ini dari JAGADITA?')) return;
-  const res = await fetch(`/api/admin/jagadita/${id}`, { method: 'DELETE' });
-  const data = await res.json();
-  if (data.success) {
-    alert(data.message);
-    loadAllDashboardData();
+  try {
+    const res = await fetch(`/api/admin/jagadita/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      showAdminToast(data.message || 'Jadwal sidang berhasil dihapus!');
+      await loadAllDashboardData();
+    } else {
+      alert('Gagal menghapus jadwal sidang: ' + (data.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menghapus jadwal sidang: Terjadi kesalahan jaringan.');
   }
 }
 
@@ -1300,15 +1462,21 @@ async function saveSkmSettings() {
     ]
   };
 
-  const res = await fetch('/api/admin/skm', {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  const data = await res.json();
-  if (data.success) {
-    alert(data.message);
-    loadAllDashboardData();
+  try {
+    const res = await fetch('/api/admin/skm', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showAdminToast(data.message || 'Pengaturan skor SKM berhasil disimpan!');
+      await loadAllDashboardData();
+    } else {
+      alert('Gagal menyimpan SKM: ' + (data.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menyimpan SKM: Terjadi kesalahan jaringan.');
   }
 }
 
@@ -1473,18 +1641,24 @@ async function saveSubmissionStatus() {
   const type = document.getElementById('submission-update-type').value;
   const id = document.getElementById('submission-update-id').value;
   const status = document.getElementById('submission-update-status').value;
-  const admin_notes = document.getElementById('submission-update-notes').value;
+  const admin_notes = document.getElementById('submission-update-notes').value.trim();
 
-  const res = await fetch(`/api/admin/submissions/${type}/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status, admin_notes })
-  });
-  const data = await res.json();
-  if (data.success) {
-    closeModal('modal-submission-update');
-    alert(data.message);
-    loadAllDashboardData();
+  try {
+    const res = await fetch(`/api/admin/submissions/${type}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, admin_notes })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('modal-submission-update');
+      showAdminToast(data.message || 'Status tindak lanjut tiket berhasil diperbarui!');
+      await loadAllDashboardData();
+    } else {
+      alert('Gagal memperbarui status tiket: ' + (data.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal memperbarui status tiket: Terjadi kesalahan jaringan.');
   }
 }
 
