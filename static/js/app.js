@@ -4980,6 +4980,15 @@ async function openPublicBa20Modal(ticketCode) {
       if (docPlh) docPlh.classList.remove('hidden');
     }
 
+    // Populate Halaman 2 : Lembar Dokumentasi Pengembalian Barang Bukti
+    setTxt('pub-pv-doc-ticket', ticketCode || d.ticket_code);
+    setTxt('pub-pv-doc-day-date', `${d.ba_day || 'Rabu'}, ${d.ba_date || d.sprint_date || ''}`);
+    setTxt('pub-pv-doc-item', d.item_description);
+    setTxt('pub-pv-doc-owner', d.owner_name);
+    setTxt('pub-pv-doc-officer', d.officer_name);
+    setTxt('pub-pv-doc-sig-owner', d.owner_name);
+    setTxt('pub-pv-doc-sig-officer', d.officer_name);
+
     openModal('modal-public-ba20');
     if (window.lucide) lucide.createIcons();
 

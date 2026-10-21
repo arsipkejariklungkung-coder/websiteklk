@@ -6289,6 +6289,16 @@ function updateBaPreview() {
     `).join('');
   }
 
+  // Update Halaman 2: Dokumentasi Pengembalian Barang Bukti
+  const ticketCode = activeBaTicketCode || getVal('ba20-ticket-code') || 'TRK-BB-0000';
+  setTxt('pv-doc-ticket', ticketCode);
+  setTxt('pv-doc-day-date', `${day}, ${getVal('ba20-date') || getVal('ba20-sprint-date') || ''}`);
+  setTxt('pv-doc-item', getVal('ba20-item-description'));
+  setTxt('pv-doc-owner', ownName);
+  setTxt('pv-doc-officer', offName);
+  setTxt('pv-doc-sig-owner', ownName);
+  setTxt('pv-doc-sig-officer', offName);
+
   // Update documentation photo preview
   updateBaPhotoPreview();
 }
