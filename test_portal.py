@@ -2331,6 +2331,108 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('qrPanel.classList.add(\'hidden\')', app_js)
         self.assertIn('localStorage.setItem(\'mfa_enrolled_\'', app_js)
 
+    def test_36_admin_login_modal_conditional_rendering(self):
+        """Verify modal-admin-login renders login input form if unauthenticated, and user profile + Big Log Out button if authenticated."""
+        with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
+            index_html = f.read()
+
+        # 1. HTML structure contains both unauthenticated forms and authenticated panel with big logout button
+        self.assertIn('id="admin-logged-in-panel"', index_html)
+        self.assertIn('id="admin-logged-fullname"', index_html)
+        self.assertIn('id="admin-logged-label-role"', index_html)
+        self.assertIn('id="btn-modal-logout"', index_html)
+        self.assertIn('handleAdminLogoutFromModal()', index_html)
+        self.assertIn('Anda saat ini sudah login sebagai', index_html)
+        self.assertIn('Log Out (Keluar dari Akun)', index_html)
+
+        # 2. app.js contains conditional rendering logic and hooks
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'app.js'), 'r', encoding='utf-8') as f:
+            app_js = f.read()
+
+        self.assertIn('function renderAdminLoginModalState', app_js)
+        self.assertIn('function handleAdminLogoutFromModal', app_js)
+        self.assertIn('window.renderAdminLoginModalState = renderAdminLoginModalState', app_js)
+        self.assertIn('window.handleAdminLogoutFromModal = handleAdminLogoutFromModal', app_js)
+
+        # Verify openModal checks modal-admin-login and triggers renderAdminLoginModalState
+        self.assertIn("modalId === 'modal-admin-login'", app_js)
+        self.assertIn("renderAdminLoginModalState()", app_js)
+
+        # 3. Simulate conditional state logic via JavaScriptCore (jsc)
+        jsc_bin = '/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc'
+        if os.path.exists(jsc_bin):
+            test_script = f"""
+            var elements = {{}};
+            function createMockEl(id) {{
+              var classes = [];
+              return {{
+                id: id,
+                classList: {{
+                  add: function(c) {{ if (classes.indexOf(c) === -1) classes.push(c); }},
+                  remove: function(c) {{ var idx = classes.indexOf(c); if (idx !== -1) classes.splice(idx, 1); }},
+                  contains: function(c) {{ return classes.indexOf(c) !== -1; }}
+                }},
+                textContent: '',
+                innerHTML: '',
+                disabled: false
+              }};
+            }}
+            ['form-login-step-credentials', 'form-login-step-mfa', 'admin-logged-in-panel',
+             'admin-logged-fullname', 'admin-logged-label-role', 'admin-logged-user-sub',
+             'admin-logged-role-badge', 'admin-logged-avatar-initials', 'admin-login-modal-title',
+             'admin-login-modal-subtitle', 'btn-modal-logout'].forEach(function(id) {{
+              elements[id] = createMockEl(id);
+            }});
+
+            var document = {{
+              getElementById: function(id) {{ return elements[id] || null; }},
+              querySelectorAll: function() {{ return []; }},
+              addEventListener: function() {{}},
+              createElement: function() {{ return createMockEl('dynamic'); }},
+              head: {{ appendChild: function() {{}} }},
+              body: {{ addEventListener: function() {{}}, classList: {{ add: function() {{}}, remove: function() {{}} }}, appendChild: function() {{}} }}
+            }};
+            var window = {{ addEventListener: function() {{}}, location: {{ pathname: '/', search: '', protocol: 'http:' }} }};
+            var localStorage = {{ getItem: function() {{ return null; }}, setItem: function() {{}}, removeItem: function() {{}} }};
+
+            load('{os.path.join(BASE_DIR, "static", "js", "app.js")}');
+
+            // Test A: Unauthenticated state
+            state.currentUser = null;
+            renderAdminLoginModalState();
+            if (elements['form-login-step-credentials'].classList.contains('hidden')) {{
+              throw new Error('Expected credentials form to be visible when unauthenticated');
+            }}
+            if (!elements['admin-logged-in-panel'].classList.contains('hidden')) {{
+              throw new Error('Expected logged-in panel to be hidden when unauthenticated');
+            }}
+
+            // Test B: Authenticated state
+            state.currentUser = {{
+              id: 1,
+              username: 'admin',
+              email: 'admin@kejariklungkung.go.id',
+              full_name: 'R. Indra Senjaya, S.H., M.H.',
+              role: 'ADMIN'
+            }};
+            renderAdminLoginModalState();
+            if (!elements['form-login-step-credentials'].classList.contains('hidden')) {{
+              throw new Error('Expected credentials form to be hidden when authenticated');
+            }}
+            if (elements['admin-logged-in-panel'].classList.contains('hidden')) {{
+              throw new Error('Expected logged-in panel to be visible when authenticated');
+            }}
+            if (elements['admin-logged-fullname'].textContent !== 'R. Indra Senjaya, S.H., M.H.') {{
+              throw new Error('Expected admin full name to match: ' + elements['admin-logged-fullname'].textContent);
+            }}
+            if (elements['admin-logged-label-role'].textContent.indexOf('R. Indra Senjaya') === -1) {{
+              throw new Error('Expected admin role label to contain admin name');
+            }}
+            """
+            res = subprocess.run([jsc_bin, '-e', test_script], capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0, f"JSC conditional rendering test failed: {res.stderr}")
+
+
 
 if __name__ == '__main__':
     unittest.main()

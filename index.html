@@ -1654,14 +1654,58 @@
             <i data-lucide="shield-check" class="w-5 h-5"></i>
           </div>
           <div>
-            <h3 class="font-heading font-extrabold text-sm text-white">Login Master Admin</h3>
-            <span class="text-[10px] text-amber-300 font-semibold flex items-center gap-1">
+            <h3 id="admin-login-modal-title" class="font-heading font-extrabold text-sm text-white">Login Master Admin</h3>
+            <span id="admin-login-modal-subtitle" class="text-[10px] text-amber-300 font-semibold flex items-center gap-1">
               <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Google &amp; Microsoft Authenticator (2FA)
             </span>
           </div>
         </div>
         <button onclick="closeModal('modal-admin-login')" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
           <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- AUTHENTICATED STATE: JIKA ADMIN SUDAH LOGIN -->
+      <div id="admin-logged-in-panel" class="hidden p-6 space-y-5 text-xs animate-in fade-in">
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-teal-50 border border-emerald-200/80 flex items-start gap-3.5 shadow-xs">
+          <div class="w-12 h-12 rounded-2xl bg-[#0B3B24] text-white flex items-center justify-center font-black text-base shadow-md shrink-0">
+            <span id="admin-logged-avatar-initials">AD</span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-800 text-amber-300 font-extrabold text-[10px] mb-1 tracking-wide uppercase">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+              <span id="admin-logged-role-badge">Sesi Aktif • Administrator</span>
+            </div>
+            <h4 class="font-heading font-black text-sm text-slate-900 truncate" id="admin-logged-fullname">R. Indra Senjaya, S.H., M.H.</h4>
+            <p class="text-[11px] text-slate-600 truncate mt-0.5" id="admin-logged-user-sub">admin@kejariklungkung.go.id</p>
+          </div>
+        </div>
+
+        <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 space-y-2">
+          <div class="flex items-center gap-2 text-emerald-950 font-bold text-xs">
+            <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-700"></i>
+            <span>Anda saat ini sudah login sebagai <strong id="admin-logged-label-role" class="text-[#0B3B24]">Administrator</strong></span>
+          </div>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Anda memiliki hak akses penuh untuk mengelola berita, jadwal sidang, struktur organisasi, dan konten publik melalui Dashboard CMS.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <a href="/admin" class="py-2.5 px-3 rounded-xl bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-center flex items-center justify-center gap-1.5 shadow-sm transition-all">
+            <i data-lucide="layout-dashboard" class="w-4 h-4 text-amber-400"></i>
+            <span>Dashboard CMS</span>
+          </a>
+          <button type="button" onclick="toggleLiveVisualEditor(); closeModal('modal-admin-login');" class="py-2.5 px-3 rounded-xl border border-emerald-700 bg-white hover:bg-emerald-50 text-emerald-900 font-bold flex items-center justify-center gap-1.5 transition-all">
+            <i data-lucide="edit-3" class="w-4 h-4 text-emerald-700"></i>
+            <span>Mode Edit Live</span>
+          </button>
+        </div>
+
+        <!-- SATU TOMBOL BESAR UNTUK LOG OUT -->
+        <button type="button" id="btn-modal-logout" onclick="handleAdminLogoutFromModal()" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-700 hover:to-red-800 text-white font-heading font-extrabold text-xs sm:text-sm shadow-lg shadow-rose-900/20 flex items-center justify-center gap-2.5 transition-all cursor-pointer">
+          <i data-lucide="log-out" class="w-4 h-4 text-white"></i>
+          <span>Log Out (Keluar dari Akun)</span>
         </button>
       </div>
 

@@ -998,6 +998,9 @@ function renderFooter() {
 // ============================================================================
 
 function openModal(modalId) {
+  if (modalId === 'modal-admin-login') {
+    renderAdminLoginModalState();
+  }
   const m = document.getElementById(modalId);
   if (m) {
     m.classList.remove('hidden');
@@ -1012,6 +1015,71 @@ function closeModal(modalId) {
     m.classList.add('hidden');
     m.classList.remove('flex');
     document.body.style.overflow = '';
+  }
+}
+
+function renderAdminLoginModalState() {
+  const user = state.currentUser;
+  const credForm = document.getElementById('form-login-step-credentials') || document.getElementById('admin-login-step1-form');
+  const mfaForm = document.getElementById('form-login-step-mfa') || document.getElementById('admin-login-step2-mfa');
+  const loggedPanel = document.getElementById('admin-logged-in-panel');
+  const titleEl = document.getElementById('admin-login-modal-title');
+  const subEl = document.getElementById('admin-login-modal-subtitle');
+
+  if (user && user.role === 'ADMIN') {
+    // SUDAH LOGIN: Sembunyikan form input, tampilkan panel info sesi aktif & satu tombol besar Log Out
+    if (credForm) credForm.classList.add('hidden');
+    if (mfaForm) mfaForm.classList.add('hidden');
+    if (loggedPanel) {
+      loggedPanel.classList.remove('hidden');
+
+      const nameEl = document.getElementById('admin-logged-fullname');
+      const roleEl = document.getElementById('admin-logged-label-role');
+      const subText = document.getElementById('admin-logged-user-sub');
+      const roleBadge = document.getElementById('admin-logged-role-badge');
+      const initialsEl = document.getElementById('admin-logged-avatar-initials');
+
+      const fullName = user.full_name || user.username || 'Administrator';
+      const roleName = user.role === 'ADMIN' ? 'Master Administrator' : (user.role || 'Petugas Admin');
+      const emailOrUser = user.email || user.username || 'admin@kejariklungkung.go.id';
+
+      if (nameEl) nameEl.textContent = fullName;
+      if (roleEl) roleEl.textContent = `${fullName} (${roleName})`;
+      if (subText) subText.textContent = emailOrUser;
+      if (roleBadge) roleBadge.textContent = `Sesi Aktif • ${roleName}`;
+      if (initialsEl) {
+        const parts = fullName.split(' ').filter(Boolean);
+        const initials = parts.length >= 2 ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase() : fullName.substring(0, 2).toUpperCase();
+        initialsEl.textContent = initials;
+      }
+    }
+    if (titleEl) titleEl.textContent = 'Status Akun Petugas & Admin';
+    if (subEl) subEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Sesi Login Aktif Terverifikasi';
+  } else {
+    // BELUM LOGIN: Tampilkan form input login seperti biasa
+    if (loggedPanel) loggedPanel.classList.add('hidden');
+    if (credForm) credForm.classList.remove('hidden');
+    if (mfaForm) mfaForm.classList.add('hidden');
+    if (titleEl) titleEl.textContent = 'Login Master Admin';
+    if (subEl) subEl.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Google &amp; Microsoft Authenticator (2FA)';
+  }
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
+  }
+}
+
+async function handleAdminLogoutFromModal() {
+  const btn = document.getElementById('btn-modal-logout');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin">⏳</span> Memproses Log Out...';
+  }
+  await handleAdminLogout();
+  renderAdminLoginModalState();
+  closeModal('modal-admin-login');
+  showToast('Anda telah berhasil keluar dari akun admin.', 'info');
+  if (window.lucide && typeof window.lucide.createIcons === 'function') {
+    window.lucide.createIcons();
   }
 }
 
@@ -1306,6 +1374,7 @@ async function checkAuthSession() {
   } catch (err) {
     state.currentUser = null;
   }
+  renderAdminLoginModalState();
 }
 
 async function handleAdminLogin(e) {
@@ -1394,6 +1463,7 @@ async function handleAdminLogin(e) {
       showToast(isEnrolled ? 'Buka Google / Microsoft Authenticator & masukkan 6-digit kode TOTP.' : 'Pindai QR Code di aplikasi Authenticator untuk mengaktifkan 2FA.', 'info');
     } else if (data.success) {
       state.currentUser = data.user;
+      renderAdminLoginModalState();
       closeModal('modal-admin-login');
       showToast(data.message, 'success');
       renderAdminFloatingBar();
@@ -1539,6 +1609,7 @@ async function handleMfaVerify(e) {
         if (data.user.email) localStorage.setItem('mfa_enrolled_' + data.user.email, '1');
       }
       state.currentUser = data.user;
+      renderAdminLoginModalState();
       closeModal('modal-admin-login');
       showToast(data.message, 'success');
       renderAdminFloatingBar();
@@ -1578,6 +1649,7 @@ function resetLoginModal() {
   state.pendingTotpSecret = null;
   state.pendingUsername = null;
   state.isMfaEnrolled = false;
+  renderAdminLoginModalState();
   lucide.createIcons();
 }
 
@@ -1588,6 +1660,7 @@ async function handleAdminLogout() {
   document.body.classList.remove('live-edit-active');
   const bar = document.getElementById('admin-floating-bar');
   if (bar) bar.remove();
+  renderAdminLoginModalState();
   showToast('Admin berhasil logout', 'info');
   loadHomepageData();
   await initProfilePageCms();
@@ -2047,14 +2120,58 @@ function ensureCommonModals() {
               <i data-lucide="shield-check" class="w-5 h-5"></i>
             </div>
             <div>
-              <h3 class="font-heading font-extrabold text-sm text-white">Login Master Admin</h3>
-              <span class="text-[10px] text-amber-300 font-semibold flex items-center gap-1">
+              <h3 id="admin-login-modal-title" class="font-heading font-extrabold text-sm text-white">Login Master Admin</h3>
+              <span id="admin-login-modal-subtitle" class="text-[10px] text-amber-300 font-semibold flex items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Google &amp; Microsoft Authenticator (2FA)
               </span>
             </div>
           </div>
           <button type="button" onclick="closeModal('modal-admin-login')" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
             <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- AUTHENTICATED STATE: JIKA ADMIN SUDAH LOGIN -->
+        <div id="admin-logged-in-panel" class="hidden p-6 space-y-5 text-xs animate-in fade-in">
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-teal-50 border border-emerald-200/80 flex items-start gap-3.5 shadow-xs">
+            <div class="w-12 h-12 rounded-2xl bg-[#0B3B24] text-white flex items-center justify-center font-black text-base shadow-md shrink-0">
+              <span id="admin-logged-avatar-initials">AD</span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-800 text-amber-300 font-extrabold text-[10px] mb-1 tracking-wide uppercase">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+                <span id="admin-logged-role-badge">Sesi Aktif • Administrator</span>
+              </div>
+              <h4 class="font-heading font-black text-sm text-slate-900 truncate" id="admin-logged-fullname">R. Indra Senjaya, S.H., M.H.</h4>
+              <p class="text-[11px] text-slate-600 truncate mt-0.5" id="admin-logged-user-sub">admin@kejariklungkung.go.id</p>
+            </div>
+          </div>
+
+          <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-700 space-y-2">
+            <div class="flex items-center gap-2 text-emerald-950 font-bold text-xs">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-700"></i>
+              <span>Anda saat ini sudah login sebagai <strong id="admin-logged-label-role" class="text-[#0B3B24]">Administrator</strong></span>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-relaxed">
+              Anda memiliki hak akses penuh untuk mengelola berita, jadwal sidang, struktur organisasi, dan konten publik melalui Dashboard CMS.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <a href="/admin" class="py-2.5 px-3 rounded-xl bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-center flex items-center justify-center gap-1.5 shadow-sm transition-all">
+              <i data-lucide="layout-dashboard" class="w-4 h-4 text-amber-400"></i>
+              <span>Dashboard CMS</span>
+            </a>
+            <button type="button" onclick="toggleLiveVisualEditor(); closeModal('modal-admin-login');" class="py-2.5 px-3 rounded-xl border border-emerald-700 bg-white hover:bg-emerald-50 text-emerald-900 font-bold flex items-center justify-center gap-1.5 transition-all">
+              <i data-lucide="edit-3" class="w-4 h-4 text-emerald-700"></i>
+              <span>Mode Edit Live</span>
+            </button>
+          </div>
+
+          <!-- SATU TOMBOL BESAR UNTUK LOG OUT -->
+          <button type="button" id="btn-modal-logout" onclick="handleAdminLogoutFromModal()" class="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-700 hover:to-red-800 text-white font-heading font-extrabold text-xs sm:text-sm shadow-lg shadow-rose-900/20 flex items-center justify-center gap-2.5 transition-all cursor-pointer">
+            <i data-lucide="log-out" class="w-4 h-4 text-white"></i>
+            <span>Log Out (Keluar dari Akun)</span>
           </button>
         </div>
 
@@ -5025,6 +5142,8 @@ window.switchMfaLoginSubTab = switchMfaLoginSubTab;
 window.selectMfaAppBadge = selectMfaAppBadge;
 window.copyMfaSecretKey = copyMfaSecretKey;
 window.resetLoginModal = resetLoginModal;
+window.renderAdminLoginModalState = renderAdminLoginModalState;
+window.handleAdminLogoutFromModal = handleAdminLogoutFromModal;
 
 // 11. Auto-initialize Floating Accessibility Widget (Bottom-Left)
 if (typeof window.A11Y === 'undefined' && !document.getElementById('a11y-widget-root')) {
