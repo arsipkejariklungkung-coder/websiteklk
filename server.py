@@ -18,8 +18,11 @@ import base64
 import time
 import random
 import uuid
+import io
+import csv
 import totp_mfa
 import excel_io
+import ai_news_generator
 
 PORT = 8000
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -772,6 +775,15 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             query = urllib.parse.parse_qs(parsed.query)
             self.handle_export_jagadita(query)
             return
+        elif path == '/api/admin/news/export' or path == '/api/admin/news/template':
+            user = get_current_user(self)
+            if not user:
+                self.send_json({'error': 'Unauthorized'}, 401)
+                return
+            query = urllib.parse.parse_qs(parsed.query)
+            is_tpl = (path == '/api/admin/news/template') or bool(query.get('template', [False])[0])
+            self.handle_export_news(query, is_template=is_tpl)
+            return
         elif path == '/api/admin/profile-items':
             user = get_current_user(self)
             if not user:
@@ -873,6 +885,12 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             return
         elif path == '/api/admin/news':
             self.handle_create_news()
+            return
+        elif path == '/api/admin/news/import':
+            self.handle_import_news()
+            return
+        elif path == '/api/admin/news/ai-generate':
+            self.handle_ai_generate_news()
             return
         elif path == '/api/admin/jagadita':
             self.handle_create_jagadita()
@@ -1708,6 +1726,209 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         conn.commit()
         conn.close()
         self.send_json({'success': True, 'message': 'Artikel berita berhasil dihapus!'})
+
+    def handle_export_news(self, query=None, is_template=False):
+        """Export news list or download template with exact user-specified columns."""
+        query = query or {}
+        fmt = (query.get('format', ['xlsx'])[0]).lower()
+
+        headers = [
+            "No",
+            "Judul Artikel (Wajib)",
+            "Kategori (Wajib)",
+            "Teks Badge Label",
+            "Tata Letak (Layout)",
+            "Penulis",
+            "Ringkasan Singkat (Wajib)",
+            "Kutipan Highlight",
+            "Nama File / URL Gambar",
+            "Tautan Video YouTube",
+            "Isi Berita Lengkap"
+        ]
+
+        if is_template:
+            rows = [
+                [
+                    "1",
+                    "Kejaksaan Negeri Klungkung Musnahkan Barang Bukti Narkotika dan Tindak Pidana Umum",
+                    "Tindak Pidana Umum",
+                    "EKSEKUSI PUTUSAN",
+                    "FEATURED_MAIN",
+                    "Tim Publikasi Kejari",
+                    "Kejaksaan Negeri Klungkung melaksanakan eksekusi pemusnahan barang bukti berkekuatan hukum tetap (inkracht) sebagai wujud akuntabilitas publik.",
+                    "Pemusnahan ini wujud kepatuhan terhadap putusan pengadilan yang berkekuatan hukum tetap.",
+                    "/static/images/news-bb.jpg",
+                    "",
+                    "SEMARAPURA — Bertempat di halaman kantor Kejaksaan Negeri Klungkung, seksi Pengelolaan Barang Bukti dan Barang Rampasan melaksanakan kegiatan pemusnahan barang bukti perkara tindak pidana umum yang telah memiliki kekuatan hukum tetap (inkracht).\n\nPemusnahan dipimpin langsung oleh jajaran pejabat struktural dan disaksikan oleh perwakilan Pengadilan Negeri, Kepolisian Resor Klungkung, serta Dinas Kesehatan.\n\nBarang bukti yang dimusnahkan mencakup paket narkotika golongan I jenis sabu dan obat-obatan terlarang yang dimusnahkan dengan cara dibakar dan dilarutkan, serta barang bukti tindak pidana lainnya yang dihancurkan sehingga tidak dapat dipergunakan kembali."
+                ],
+                [
+                    "2",
+                    "Penyuluhan Hukum Program Jaksa Masuk Sekolah (JMS) Tingkatkan Kesadaran Hukum Pelajar",
+                    "Intelijen & JMS",
+                    "JAKSA MASUK SEKOLAH",
+                    "FEATURED_SIDE",
+                    "Seksi Intelijen",
+                    "Seksi Intelijen Kejari Klungkung menggelar penyuluhan hukum bertema 'Kenali Hukum, Jauhi Hukuman' di hadapan ratusan siswa SMA.",
+                    "Kenali hukum sejak dini agar generasi muda Kabupaten Klungkung terhindar dari perbuatan melawan hukum.",
+                    "/static/images/news-jms.jpg",
+                    "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                    "SEMARAPURA — Kejaksaan Negeri Klungkung melalui Seksi Intelijen kembali menggelar kegiatan Jaksa Masuk Sekolah (JMS) yang menyasar ratusan pelajar di Kabupaten Klungkung.\n\nMateri yang disosialisasikan berfokus pada pencegahan kenakalan remaja, bahaya penyalahgunaan narkotika, perundungan (bullying), serta edukasi bermedia sosial secara bijak berlandaskan Undang-Undang ITE.\n\nAntusiasme para siswa terlihat tinggi dalam sesi tanya jawab interaktif bersama tim jaksa penyuluh. Program ini diharapkan dapat mencetak generasi muda Klungkung yang sadar hukum dan berintegritas tinggi."
+                ]
+            ]
+            filename = "Template-Import-Berita-Kejari-Klungkung"
+        else:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("""
+            SELECT id, title, category, badge_label, layout_type, author, excerpt, highlight_quote, thumbnail_url, youtube_url, content
+            FROM posts
+            ORDER BY id DESC
+            """)
+            db_posts = cursor.fetchall()
+            conn.close()
+
+            rows = []
+            for idx, p in enumerate(db_posts, start=1):
+                rows.append([
+                    str(idx),
+                    p['title'] or "",
+                    p['category'] or "Kegiatan Kejari",
+                    p['badge_label'] or "",
+                    p['layout_type'] or "COMPACT_BOTTOM",
+                    p['author'] or "Tim Publikasi Kejari",
+                    p['excerpt'] or "",
+                    p['highlight_quote'] or "",
+                    p['thumbnail_url'] or "",
+                    p['youtube_url'] or "",
+                    p['content'] or ""
+                ])
+            filename = f"Data-Berita-Kejari-Klungkung-{time.strftime('%Y%m%d')}"
+
+        if fmt == 'csv':
+            buf = io.StringIO()
+            writer = csv.writer(buf)
+            writer.writerow(headers)
+            for r in rows:
+                writer.writerow(r)
+            payload = buf.getvalue().encode('utf-8-sig')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/csv; charset=utf-8')
+            self.send_header('Content-Disposition', f'attachment; filename="{filename}.csv"')
+            self.send_header('Content-Length', str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+            return
+
+        # Default: Excel .xlsx
+        sheets = [{"name": "Berita KERTAGOSA", "headers": headers, "rows": rows}]
+        payload = excel_io.build_xlsx_bytes(sheets)
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        self.send_header('Content-Disposition', f'attachment; filename="{filename}.xlsx"')
+        self.send_header('Content-Length', str(len(payload)))
+        self.end_headers()
+        self.wfile.write(payload)
+
+    def handle_import_news(self):
+        """Bulk import news items from parsed JSON rows or raw Excel/CSV file."""
+        data = self.read_json_body()
+        items = data.get('items', [])
+        file_data = data.get('file_data', '')
+        filename = data.get('filename', 'berita.xlsx')
+        replace_all = bool(data.get('replace_all', False))
+
+        if file_data and not items:
+            raw_b64 = file_data.split(',', 1)[1] if ',' in file_data else file_data
+            try:
+                file_bytes = base64.b64decode(raw_b64)
+                parsed_rows = excel_io.parse_excel_or_csv_bytes(file_bytes, filename)
+            except Exception as e:
+                self.send_json({'error': f'Gagal membaca file Excel/CSV: {str(e)}'}, 400)
+                return
+
+            for r in parsed_rows:
+                title = r.get('judul_artikel_wajib') or r.get('judul_artikel') or r.get('judul') or r.get('title') or r.get('_col_1') or ''
+                category = r.get('kategori_wajib') or r.get('kategori') or r.get('category') or r.get('_col_2') or 'Kegiatan Kejari'
+                badge_label = r.get('teks_badge_label') or r.get('badge_label') or r.get('badge') or r.get('_col_3') or 'BERITA TERBARU'
+                layout_type = r.get('tata_letak_layout') or r.get('tata_letak') or r.get('layout_type') or r.get('layout') or r.get('_col_4') or 'COMPACT_BOTTOM'
+                author = r.get('penulis') or r.get('author') or r.get('_col_5') or 'Tim Publikasi Kejari'
+                excerpt = r.get('ringkasan_singkat_wajib') or r.get('ringkasan_singkat') or r.get('ringkasan') or r.get('excerpt') or r.get('_col_6') or ''
+                highlight_quote = r.get('kutipan_highlight') or r.get('kutipan') or r.get('highlight_quote') or r.get('_col_7') or None
+                thumbnail_url = r.get('nama_file_url_gambar') or r.get('url_gambar') or r.get('gambar') or r.get('thumbnail_url') or r.get('_col_8') or '/static/images/news-featured.jpg'
+                youtube_url = r.get('tautan_video_youtube') or r.get('video_youtube') or r.get('youtube_url') or r.get('_col_9') or None
+                content = r.get('isi_berita_lengkap') or r.get('isi_berita') or r.get('content') or r.get('_col_10') or ''
+
+                if title:
+                    items.append({
+                        'title': title,
+                        'category': category,
+                        'badge_label': badge_label,
+                        'layout_type': layout_type,
+                        'author': author,
+                        'excerpt': excerpt or (content[:160] + '...') if content else 'Publikasi resmi Kejaksaan Negeri Klungkung.',
+                        'highlight_quote': highlight_quote,
+                        'thumbnail_url': thumbnail_url or '/static/images/news-featured.jpg',
+                        'youtube_url': youtube_url,
+                        'content': content or excerpt
+                    })
+
+        if not items:
+            self.send_json({'error': 'File Excel/CSV tidak memiliki baris artikel berita yang valid.'}, 400)
+            return
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        if replace_all:
+            cursor.execute("DELETE FROM posts")
+
+        imported = 0
+        for it in items:
+            t = (it.get('title') or '').strip()
+            if not t:
+                continue
+            slug = f"{t.lower()[:40].replace(' ', '-')}-{random.randint(100, 999)}"
+            slug = "".join([c for c in slug if c.isalnum() or c == '-'])
+            cat = (it.get('category') or 'Kegiatan Kejari').strip()
+            badge = (it.get('badge_label') or 'BERITA TERBARU').strip()
+            layout = (it.get('layout_type') or 'COMPACT_BOTTOM').strip()
+            author = (it.get('author') or 'Tim Publikasi Kejari').strip()
+            exc = (it.get('excerpt') or '').strip()
+            if not exc:
+                exc = (it.get('content') or '')[:160]
+            hq = it.get('highlight_quote')
+            thumb = (it.get('thumbnail_url') or '/static/images/news-featured.jpg').strip()
+            yt = (it.get('youtube_url') or '').strip() or None
+            cnt = (it.get('content') or '').strip()
+
+            cursor.execute("""
+            INSERT INTO posts (title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, youtube_url, author, layout_type, published_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_DATE)
+            """, (t, slug, cat, badge, exc, cnt, hq, thumb, yt, author, layout))
+            imported += 1
+
+        conn.commit()
+        conn.close()
+
+        self.send_json({
+            'success': True,
+            'count': imported,
+            'message': f'Berhasil mengimpor {imported} artikel berita ke dalam database portal!'
+        })
+
+    def handle_ai_generate_news(self):
+        """Auto-generate news article context from Instagram/YouTube link using Gemini AI."""
+        data = self.read_json_body()
+        url = (data.get('url') or '').strip()
+        if not url:
+            self.send_json({'error': 'Tautan / Link Instagram atau YouTube wajib dimasukkan.'}, 400)
+            return
+
+        try:
+            res = ai_news_generator.auto_generate_news_from_url(url)
+            self.send_json(res)
+        except Exception as e:
+            self.send_json({'error': f'Gagal menghasilkan berita dari tautan: {str(e)}'}, 500)
 
     def handle_update_service(self, service_id):
         data = self.read_json_body()

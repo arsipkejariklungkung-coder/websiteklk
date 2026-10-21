@@ -2030,6 +2030,45 @@ function ensureCmsModals() {
         <form onsubmit="handleSaveNews(event)" class="p-6 space-y-4 text-xs overflow-y-auto flex-1">
           <input type="hidden" id="form-news-id">
           <input type="hidden" id="form-news-thumbnail" value="/static/images/news-featured.jpg">
+
+          <!-- Seksi: Generate via AI (Gemini) -->
+          <div class="p-4 bg-gradient-to-br from-emerald-50 via-teal-50/60 to-amber-50/70 border border-emerald-300/80 rounded-xl space-y-2.5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-[#0B3B24] text-amber-300 flex items-center justify-center shadow-sm">
+                  <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </span>
+                <div>
+                  <h4 class="font-heading font-extrabold text-xs text-emerald-950 flex items-center gap-1.5">
+                    <span>Generate via AI (Gemini)</span>
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-black bg-amber-400 text-slate-950 shadow-xs">URL SCRAPER</span>
+                  </h4>
+                  <p class="text-[11px] text-slate-600">Ekstrak konteks &amp; caption link sosial media lalu susun naskah berita otomatis.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2">
+              <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <i data-lucide="link-2" class="w-3.5 h-3.5"></i>
+                </div>
+                <input type="url"
+                       id="form-news-ai-url"
+                       placeholder="Masukkan Link Instagram / YouTube"
+                       class="w-full pl-9 pr-3 py-2 border border-slate-300 focus:border-emerald-600 rounded-xl text-xs bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600">
+              </div>
+              <button type="button"
+                      id="btn-form-news-ai-generate"
+                      onclick="handleFormGenerateNewsWithAI()"
+                      class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-1.5 shrink-0 transition-all">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                <span>Generate Berita</span>
+              </button>
+            </div>
+            <!-- Loading Spinner & Status Alert -->
+            <div id="form-news-ai-status" class="hidden text-[11px] font-medium p-2.5 rounded-lg items-center gap-2"></div>
+          </div>
           
           <div>
             <label class="block font-bold text-slate-700 mb-1">Judul Berita *</label>
@@ -3282,6 +3321,13 @@ function openAddNewsModal() {
   clearFormNewsThumbnail();
   const ytInput = document.getElementById('form-news-youtube');
   if (ytInput) ytInput.value = '';
+  const aiUrl = document.getElementById('form-news-ai-url');
+  if (aiUrl) aiUrl.value = '';
+  const aiStatus = document.getElementById('form-news-ai-status');
+  if (aiStatus) {
+    aiStatus.className = 'hidden text-[11px] font-medium p-2.5 rounded-lg items-center gap-2';
+    aiStatus.innerHTML = '';
+  }
   document.getElementById('form-news-excerpt').value = '';
   document.getElementById('form-news-quote').value = '';
   document.getElementById('form-news-content').value = '';
@@ -3312,6 +3358,15 @@ function openEditNewsModal(id) {
   }
   const ytInput = document.getElementById('form-news-youtube');
   if (ytInput) ytInput.value = item.youtube_url || '';
+
+  const aiUrl = document.getElementById('form-news-ai-url');
+  if (aiUrl) aiUrl.value = '';
+  const aiStatus = document.getElementById('form-news-ai-status');
+  if (aiStatus) {
+    aiStatus.className = 'hidden text-[11px] font-medium p-2.5 rounded-lg items-center gap-2';
+    aiStatus.innerHTML = '';
+  }
+
   document.getElementById('form-news-excerpt').value = item.excerpt || '';
   document.getElementById('form-news-quote').value = item.highlight_quote || '';
   document.getElementById('form-news-content').value = item.content || '';
@@ -3322,6 +3377,128 @@ function openEditNewsModal(id) {
   `;
   openModal('modal-news-form');
   lucide.createIcons();
+}
+
+async function handleFormGenerateNewsWithAI() {
+  const urlInput = document.getElementById('form-news-ai-url');
+  const statusEl = document.getElementById('form-news-ai-status');
+  const btn = document.getElementById('btn-form-news-ai-generate');
+
+  const rawUrl = (urlInput ? urlInput.value : '').trim();
+  if (!rawUrl) {
+    if (statusEl) {
+      statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-red-50 text-red-700 border border-red-200 items-center gap-2';
+      statusEl.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i><span>Harap masukkan tautan link Instagram atau YouTube terlebih dahulu.</span>';
+      if (window.lucide) lucide.createIcons();
+    }
+    if (urlInput) urlInput.focus();
+    return;
+  }
+
+  const origBtnHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `
+      <svg class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>Menganalisis Link...</span>
+    `;
+  }
+
+  if (statusEl) {
+    statusEl.className = 'flex text-[11px] font-medium p-2.5 rounded-lg bg-emerald-100 text-emerald-950 border border-emerald-300 items-center gap-2';
+    statusEl.innerHTML = `
+      <svg class="animate-spin h-3.5 w-3.5 text-emerald-800 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>Mengekstrak konteks, caption/transkrip, dan menyusun draf berita jurnalistik...</span>
+    `;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch('/api/admin/news/ai-generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: rawUrl })
+    });
+    const result = await res.json();
+
+    if (res.ok && result.success && result.data) {
+      const d = result.data;
+
+      const titleInput = document.getElementById('form-news-title');
+      if (titleInput && d.title) titleInput.value = d.title;
+
+      const catSelect = document.getElementById('form-news-category');
+      if (catSelect && d.category) {
+        const hasOpt = Array.from(catSelect.options).some(opt => opt.value === d.category);
+        if (hasOpt) catSelect.value = d.category;
+      }
+
+      const badgeInput = document.getElementById('form-news-badge');
+      if (badgeInput && d.badge_label) badgeInput.value = d.badge_label;
+
+      const layoutSelect = document.getElementById('form-news-layout');
+      if (layoutSelect && d.layout_type) layoutSelect.value = d.layout_type;
+
+      const authorInput = document.getElementById('form-news-author');
+      if (authorInput && d.author) authorInput.value = d.author;
+
+      const excerptInput = document.getElementById('form-news-excerpt');
+      if (excerptInput && d.excerpt) excerptInput.value = d.excerpt;
+
+      const quoteInput = document.getElementById('form-news-quote');
+      if (quoteInput && d.highlight_quote) quoteInput.value = d.highlight_quote;
+
+      const contentInput = document.getElementById('form-news-content');
+      if (contentInput && d.content) contentInput.value = d.content;
+
+      const ytInput = document.getElementById('form-news-youtube');
+      if (ytInput && d.youtube_url) ytInput.value = d.youtube_url;
+
+      if (d.thumbnail_url) {
+        setFormNewsThumbnailPreview(d.thumbnail_url, 'Cover AI Scraped');
+      }
+
+      if (statusEl) {
+        statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-300 items-center gap-2';
+        statusEl.innerHTML = `
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+          <span>Berita berhasil disusun otomatis oleh Gemini AI! Field di bawah telah terisi.</span>
+        `;
+        if (window.lucide) lucide.createIcons();
+      }
+
+      if (titleInput) {
+        titleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        titleInput.classList.add('ring-2', 'ring-emerald-500');
+        setTimeout(() => titleInput.classList.remove('ring-2', 'ring-emerald-500'), 2000);
+      }
+    } else {
+      if (statusEl) {
+        statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-red-50 text-red-700 border border-red-200 items-center gap-2';
+        statusEl.innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i><span>${result.error || 'Gagal menghasilkan berita dari URL tersebut.'}</span>`;
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    if (statusEl) {
+      statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-red-50 text-red-700 border border-red-200 items-center gap-2';
+      statusEl.innerHTML = '<i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i><span>Terjadi gangguan koneksi saat memproses AI.</span>';
+      if (window.lucide) lucide.createIcons();
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origBtnHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
 }
 
 // Aliases for homepage Bento Grid buttons

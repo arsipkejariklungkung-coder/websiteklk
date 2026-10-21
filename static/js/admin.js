@@ -510,6 +510,13 @@ function openNewsCreateModal() {
   clearNewsThumbnail();
   const ytInput = document.getElementById('news-form-youtube');
   if (ytInput) ytInput.value = '';
+  const aiUrl = document.getElementById('admin-news-ai-url');
+  if (aiUrl) aiUrl.value = '';
+  const aiStatus = document.getElementById('admin-news-ai-status');
+  if (aiStatus) {
+    aiStatus.className = 'hidden text-[11px] font-medium p-2.5 rounded-lg items-center gap-2';
+    aiStatus.innerHTML = '';
+  }
   openModal('modal-admin-news-form');
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -532,6 +539,14 @@ function openNewsEditModal(id) {
   const ytInput = document.getElementById('news-form-youtube');
   if (ytInput) ytInput.value = item.youtube_url || '';
 
+  const aiUrl = document.getElementById('admin-news-ai-url');
+  if (aiUrl) aiUrl.value = '';
+  const aiStatus = document.getElementById('admin-news-ai-status');
+  if (aiStatus) {
+    aiStatus.className = 'hidden text-[11px] font-medium p-2.5 rounded-lg items-center gap-2';
+    aiStatus.innerHTML = '';
+  }
+
   if (item.thumbnail_url) {
     setNewsThumbnailPreview(item.thumbnail_url, item.thumbnail_url.split('/').pop() || 'thumbnail.jpg');
   } else {
@@ -540,6 +555,436 @@ function openNewsEditModal(id) {
 
   openModal('modal-admin-news-form');
   if (typeof lucide !== 'undefined') lucide.createIcons();
+}
+
+// ============================================================================
+// ADVANCE FEATURE: AUTO-GENERATE BERITA DENGAN GEMINI AI (URL SCRAPER)
+// ============================================================================
+
+async function handleGenerateNewsWithAI() {
+  const urlInput = document.getElementById('admin-news-ai-url');
+  const statusEl = document.getElementById('admin-news-ai-status');
+  const btn = document.getElementById('btn-admin-news-ai-generate');
+
+  const rawUrl = (urlInput ? urlInput.value : '').trim();
+  if (!rawUrl) {
+    if (statusEl) {
+      statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-red-50 text-red-700 border border-red-200 items-center gap-2';
+      statusEl.innerHTML = '<i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i><span>Harap masukkan tautan link Instagram atau YouTube terlebih dahulu.</span>';
+      if (window.lucide) lucide.createIcons();
+    }
+    if (urlInput) urlInput.focus();
+    return;
+  }
+
+  // Set loading state with spinner
+  const origBtnHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `
+      <svg class="animate-spin -ml-1 mr-1.5 h-3.5 w-3.5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>Menganalisis Link via AI...</span>
+    `;
+  }
+
+  if (statusEl) {
+    statusEl.className = 'flex text-[11px] font-medium p-2.5 rounded-lg bg-emerald-100 text-emerald-950 border border-emerald-300 items-center gap-2';
+    statusEl.innerHTML = `
+      <svg class="animate-spin h-3.5 w-3.5 text-emerald-800 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>Mengekstrak konteks, caption/transkrip, dan menyusun draf berita jurnalistik...</span>
+    `;
+    if (window.lucide) lucide.createIcons();
+  }
+
+  try {
+    const res = await fetch('/api/admin/news/ai-generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: rawUrl })
+    });
+    const result = await res.json();
+
+    if (res.ok && result.success && result.data) {
+      const d = result.data;
+
+      // Auto-fill form fields
+      const titleInput = document.getElementById('news-form-title-input');
+      if (titleInput && d.title) titleInput.value = d.title;
+
+      const catSelect = document.getElementById('news-form-category');
+      if (catSelect && d.category) {
+        // If option exists, select it
+        const hasOpt = Array.from(catSelect.options).some(opt => opt.value === d.category);
+        if (hasOpt) catSelect.value = d.category;
+      }
+
+      const badgeInput = document.getElementById('news-form-badge');
+      if (badgeInput && d.badge_label) badgeInput.value = d.badge_label;
+
+      const layoutSelect = document.getElementById('news-form-layout');
+      if (layoutSelect && d.layout_type) layoutSelect.value = d.layout_type;
+
+      const authorInput = document.getElementById('news-form-author');
+      if (authorInput && d.author) authorInput.value = d.author;
+
+      const excerptInput = document.getElementById('news-form-excerpt');
+      if (excerptInput && d.excerpt) excerptInput.value = d.excerpt;
+
+      const quoteInput = document.getElementById('news-form-quote');
+      if (quoteInput && d.highlight_quote) quoteInput.value = d.highlight_quote;
+
+      const contentInput = document.getElementById('news-form-content');
+      if (contentInput && d.content) contentInput.value = d.content;
+
+      const ytInput = document.getElementById('news-form-youtube');
+      if (ytInput && d.youtube_url) ytInput.value = d.youtube_url;
+
+      if (d.thumbnail_url) {
+        setNewsThumbnailPreview(d.thumbnail_url, 'Cover AI Scraped');
+      }
+
+      if (statusEl) {
+        statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-300 items-center gap-2';
+        statusEl.innerHTML = `
+          <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+          <span>Berita berhasil disusun otomatis oleh Gemini AI! Field di bawah telah terisi.</span>
+        `;
+        if (window.lucide) lucide.createIcons();
+      }
+
+      if (titleInput) {
+        titleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        titleInput.classList.add('ring-2', 'ring-emerald-500');
+        setTimeout(() => titleInput.classList.remove('ring-2', 'ring-emerald-500'), 2000);
+      }
+    } else {
+      if (statusEl) {
+        statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-red-50 text-red-700 border border-red-200 items-center gap-2';
+        statusEl.innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i><span>${result.error || 'Gagal menghasilkan berita dari URL tersebut.'}</span>`;
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    if (statusEl) {
+      statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-red-50 text-red-700 border border-red-200 items-center gap-2';
+      statusEl.innerHTML = '<i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i><span>Terjadi gangguan koneksi saat memproses AI.</span>';
+      if (window.lucide) lucide.createIcons();
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origBtnHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+}
+
+// ============================================================================
+// ADVANCE FEATURE: FITUR IMPORT DATA VIA EXCEL (BULK UPLOAD)
+// ============================================================================
+
+let currentParsedNewsRows = [];
+let currentNewsExcelFile = null;
+
+function openNewsExcelImportModal() {
+  currentParsedNewsRows = [];
+  currentNewsExcelFile = null;
+
+  const fileInput = document.getElementById('news-excel-file-input');
+  if (fileInput) fileInput.value = '';
+
+  const replaceChk = document.getElementById('news-import-replace-all');
+  if (replaceChk) replaceChk.checked = false;
+
+  const emptyState = document.getElementById('news-excel-empty-state');
+  if (emptyState) emptyState.classList.remove('hidden');
+
+  const fileState = document.getElementById('news-excel-file-state');
+  if (fileState) {
+    fileState.classList.add('hidden');
+    fileState.classList.remove('flex');
+  }
+
+  const previewContainer = document.getElementById('news-excel-preview-container');
+  if (previewContainer) previewContainer.classList.add('hidden');
+
+  const errEl = document.getElementById('news-excel-error');
+  if (errEl) {
+    errEl.textContent = '';
+    errEl.classList.add('hidden');
+  }
+
+  openModal('modal-news-excel-import');
+  if (window.lucide) lucide.createIcons();
+}
+
+function downloadNewsExcelTemplate(format = 'xlsx') {
+  window.location.href = `/api/admin/news/template?format=${encodeURIComponent(format)}`;
+}
+
+function handleNewsExcelDragOver(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('news-excel-dropzone');
+  if (dz) {
+    dz.classList.add('border-emerald-600', 'bg-emerald-50/60');
+  }
+}
+
+function handleNewsExcelDragLeave(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const dz = document.getElementById('news-excel-dropzone');
+  if (dz) {
+    dz.classList.remove('border-emerald-600', 'bg-emerald-50/60');
+  }
+}
+
+function handleNewsExcelDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  handleNewsExcelDragLeave(e);
+  const files = e.dataTransfer && e.dataTransfer.files;
+  if (files && files.length > 0) {
+    processNewsExcelFile(files[0]);
+  }
+}
+
+function handleNewsExcelFileSelect(e) {
+  const files = e.target && e.target.files;
+  if (files && files.length > 0) {
+    processNewsExcelFile(files[0]);
+  }
+}
+
+function processNewsExcelFile(file) {
+  const errEl = document.getElementById('news-excel-error');
+  const emptyState = document.getElementById('news-excel-empty-state');
+  const fileState = document.getElementById('news-excel-file-state');
+  const filenameEl = document.getElementById('news-excel-filename');
+  const filesizeEl = document.getElementById('news-excel-filesize');
+  const previewContainer = document.getElementById('news-excel-preview-container');
+
+  if (errEl) {
+    errEl.textContent = '';
+    errEl.classList.add('hidden');
+  }
+
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (ext !== 'xlsx' && ext !== 'csv' && ext !== 'tsv') {
+    if (errEl) {
+      errEl.textContent = 'Format file tidak didukung. Harap pilih file berekstensi .xlsx atau .csv.';
+      errEl.classList.remove('hidden');
+    }
+    return;
+  }
+
+  currentNewsExcelFile = file;
+
+  // Update file selected UI
+  if (emptyState) emptyState.classList.add('hidden');
+  if (fileState) {
+    fileState.classList.remove('hidden');
+    fileState.classList.add('flex');
+  }
+  if (filenameEl) filenameEl.textContent = file.name;
+  if (filesizeEl) {
+    const kb = (file.size / 1024).toFixed(1);
+    filesizeEl.textContent = `(${kb} KB)`;
+  }
+
+  // Parse using SheetJS (XLSX) if available in browser
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    try {
+      if (typeof XLSX !== 'undefined') {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const rawJson = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        if (!rawJson || rawJson.length < 2) {
+          throw new Error('File Excel tidak berisi data artikel berita.');
+        }
+
+        mapAndPreviewNewsExcel(rawJson);
+      } else {
+        // Fallback info if XLSX is not loaded
+        currentParsedNewsRows = [];
+        if (previewContainer) previewContainer.classList.remove('hidden');
+        const list = document.getElementById('news-excel-preview-list');
+        if (list) list.innerHTML = `<div class="p-2 text-slate-500 text-[11px]">File ${file.name} siap diproses oleh backend server.</div>`;
+      }
+    } catch (err) {
+      console.warn('SheetJS parsing fallback to server:', err);
+      if (errEl) {
+        errEl.textContent = 'Catatan: ' + err.message;
+        errEl.classList.remove('hidden');
+      }
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function mapAndPreviewNewsExcel(rowsMatrix) {
+  if (!rowsMatrix || rowsMatrix.length < 2) return;
+
+  const rawHeaders = rowsMatrix[0].map(h => String(h || '').trim());
+  const normHeaders = rawHeaders.map(h =>
+    h.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+  );
+
+  const mappedItems = [];
+  for (let i = 1; i < rowsMatrix.length; i++) {
+    const r = rowsMatrix[i];
+    if (!r || r.length === 0 || !r.some(cell => String(cell || '').trim() !== '')) {
+      continue;
+    }
+
+    const rowObj = {};
+    normHeaders.forEach((k, idx) => {
+      rowObj[k] = (r[idx] !== undefined && r[idx] !== null) ? String(r[idx]).trim() : '';
+      rowObj[`_col_${idx}`] = rowObj[k];
+    });
+
+    const title = rowObj['judul_artikel_wajib'] || rowObj['judul_artikel'] || rowObj['judul'] || rowObj['title'] || rowObj['_col_1'] || '';
+    const category = rowObj['kategori_wajib'] || rowObj['kategori'] || rowObj['category'] || rowObj['_col_2'] || 'Kegiatan Kejari';
+    const badge_label = rowObj['teks_badge_label'] || rowObj['badge_label'] || rowObj['badge'] || rowObj['_col_3'] || 'BERITA TERBARU';
+    const layout_type = rowObj['tata_letak_layout'] || rowObj['tata_letak'] || rowObj['layout_type'] || rowObj['layout'] || rowObj['_col_4'] || 'COMPACT_BOTTOM';
+    const author = rowObj['penulis'] || rowObj['author'] || rowObj['_col_5'] || 'Tim Publikasi Kejari';
+    const excerpt = rowObj['ringkasan_singkat_wajib'] || rowObj['ringkasan_singkat'] || rowObj['ringkasan'] || rowObj['excerpt'] || rowObj['_col_6'] || '';
+    const highlight_quote = rowObj['kutipan_highlight'] || rowObj['kutipan'] || rowObj['highlight_quote'] || rowObj['_col_7'] || '';
+    const thumbnail_url = rowObj['nama_file_url_gambar'] || rowObj['url_gambar'] || rowObj['gambar'] || rowObj['thumbnail_url'] || rowObj['_col_8'] || '/static/images/news-featured.jpg';
+    const youtube_url = rowObj['tautan_video_youtube'] || rowObj['video_youtube'] || rowObj['youtube_url'] || rowObj['_col_9'] || '';
+    const content = rowObj['isi_berita_lengkap'] || rowObj['isi_berita'] || rowObj['content'] || rowObj['_col_10'] || '';
+
+    if (title) {
+      mappedItems.push({
+        title,
+        category,
+        badge_label,
+        layout_type,
+        author,
+        excerpt: excerpt || (content.slice(0, 150) + '...'),
+        highlight_quote,
+        thumbnail_url: thumbnail_url || '/static/images/news-featured.jpg',
+        youtube_url,
+        content: content || excerpt
+      });
+    }
+  }
+
+  currentParsedNewsRows = mappedItems;
+
+  const previewContainer = document.getElementById('news-excel-preview-container');
+  const badgeEl = document.getElementById('news-excel-rows-badge');
+  const listEl = document.getElementById('news-excel-preview-list');
+
+  if (previewContainer) {
+    previewContainer.classList.remove('hidden');
+  }
+  if (badgeEl) {
+    badgeEl.textContent = `${mappedItems.length} Berita Terdeteksi`;
+  }
+  if (listEl) {
+    if (mappedItems.length === 0) {
+      listEl.innerHTML = `<div class="p-2 text-center text-slate-400 text-[11px]">Tidak ada baris judul berita yang valid.</div>`;
+    } else {
+      listEl.innerHTML = mappedItems.slice(0, 5).map((item, idx) => `
+        <div class="flex items-center justify-between p-2 rounded bg-white border border-slate-200 text-[11px] gap-2">
+          <div class="flex items-center gap-2 overflow-hidden">
+            <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-800 font-bold flex items-center justify-center shrink-0 text-[10px]">${idx + 1}</span>
+            <div class="truncate">
+              <span class="font-bold text-slate-800 block truncate">${escapeAdminHtml(item.title)}</span>
+              <span class="text-slate-500 text-[10px]">${escapeAdminHtml(item.category)} &bull; ${escapeAdminHtml(item.layout_type)}</span>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] shrink-0 font-semibold">${item.youtube_url ? 'Ada YouTube' : 'Teks/Foto'}</span>
+        </div>
+      `).join('') + (mappedItems.length > 5 ? `<div class="text-center text-[10px] text-slate-500 pt-1 font-semibold">+ ${mappedItems.length - 5} artikel lainnya siap diimpor</div>` : '');
+    }
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+async function handleNewsExcelImport(e) {
+  e.preventDefault();
+  const replaceAll = document.getElementById('news-import-replace-all')?.checked || false;
+  const btn = document.getElementById('btn-submit-news-import');
+  const errEl = document.getElementById('news-excel-error');
+
+  if (!currentNewsExcelFile && (!currentParsedNewsRows || currentParsedNewsRows.length === 0)) {
+    if (errEl) {
+      errEl.textContent = 'Silakan pilih file Excel (.xlsx) atau .csv terlebih dahulu.';
+      errEl.classList.remove('hidden');
+    }
+    return;
+  }
+
+  // Loading spinner on import button
+  const origBtnHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `
+      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span>Mengimpor Berita...</span>
+    `;
+  }
+
+  try {
+    let payload = {
+      replace_all: replaceAll
+    };
+
+    if (currentParsedNewsRows && currentParsedNewsRows.length > 0) {
+      payload.items = currentParsedNewsRows;
+    }
+
+    if (currentNewsExcelFile) {
+      payload.filename = currentNewsExcelFile.name;
+      payload.file_data = await readFileAsBase64(currentNewsExcelFile);
+    }
+
+    const res = await fetch('/api/admin/news/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      closeModal('modal-news-excel-import');
+      alert(data.message || `${data.count || ''} artikel berita berhasil diimpor!`);
+      loadAllDashboardData();
+    } else {
+      if (errEl) {
+        errEl.textContent = data.error || 'Gagal mengimpor file berita.';
+        errEl.classList.remove('hidden');
+      }
+      alert(data.error || 'Gagal mengimpor data berita.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Terjadi kesalahan jaringan saat mengunggah file.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origBtnHtml;
+      if (window.lucide) lucide.createIcons();
+    }
+  }
 }
 
 async function handleSaveNews(e) {

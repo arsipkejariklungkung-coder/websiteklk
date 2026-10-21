@@ -1218,6 +1218,141 @@ class TestKertagosaPortal(unittest.TestCase):
         del_h.do_DELETE()
         self.assertEqual(del_h.response_code, 200)
 
+    def test_23_news_excel_bulk_import_and_gemini_ai_generator(self):
+        """Verify Advance Features: Excel bulk import (.xlsx & .csv) and Gemini AI URL generator."""
+        import excel_io
+        # 1. Verify Admin Dashboard UI buttons and modals
+        adm_h = MockHandler('GET', '/admin')
+        adm_h.do_GET()
+        adm_html = adm_h.wfile.getvalue().decode('utf-8')
+        self.assertIn('Import via Excel', adm_html)
+        self.assertIn('openNewsExcelImportModal()', adm_html)
+        self.assertIn('id="modal-news-excel-import"', adm_html)
+        self.assertIn('Generate via AI (Gemini)', adm_html)
+        self.assertIn('id="admin-news-ai-url"', adm_html)
+        self.assertIn('btn-admin-news-ai-generate', adm_html)
+        self.assertIn('xlsx.full.min.js', adm_html)
+
+        # 2. Verify News Excel & CSV Template Endpoints
+        tpl_xlsx = MockHandler('GET', '/api/admin/news/template?format=xlsx', headers={'Authorization': f'Bearer {self.token}'})
+        tpl_xlsx.do_GET()
+        self.assertEqual(tpl_xlsx.response_code, 200)
+        self.assertTrue(tpl_xlsx.wfile.getvalue().startswith(b'PK\x03\x04'), "Excel template must be valid OpenXML zip archive")
+
+        tpl_csv = MockHandler('GET', '/api/admin/news/template?format=csv', headers={'Authorization': f'Bearer {self.token}'})
+        tpl_csv.do_GET()
+        self.assertEqual(tpl_csv.response_code, 200)
+        csv_text = tpl_csv.wfile.getvalue().decode('utf-8-sig')
+        self.assertIn('Judul Artikel (Wajib)', csv_text)
+        self.assertIn('Kategori (Wajib)', csv_text)
+        self.assertIn('Ringkasan Singkat (Wajib)', csv_text)
+        self.assertIn('Isi Berita Lengkap', csv_text)
+
+        # 3. Test Bulk Import via JSON items
+        import_payload = {
+            'items': [
+                {
+                    'title': 'Uji Berita Bulk Import Excel 1',
+                    'category': 'Kegiatan Kejari',
+                    'badge_label': 'IMPORT EXCEL',
+                    'layout_type': 'COMPACT_BOTTOM',
+                    'author': 'Redaksi Excel',
+                    'excerpt': 'Ringkasan berita bulk import 1.',
+                    'highlight_quote': 'Kutipan uji coba excel 1.',
+                    'thumbnail_url': '/static/images/news-featured.jpg',
+                    'youtube_url': '',
+                    'content': 'Isi berita lengkap hasil import Excel baris 1.'
+                },
+                {
+                    'title': 'Uji Berita Bulk Import Excel 2',
+                    'category': 'Intelijen & JMS',
+                    'badge_label': 'JMS KLUNGKUNG',
+                    'layout_type': 'FEATURED_SIDE',
+                    'author': 'Seksi Intelijen',
+                    'excerpt': 'Ringkasan berita bulk import 2.',
+                    'highlight_quote': 'Kutipan uji coba excel 2.',
+                    'thumbnail_url': '/static/images/news-jms.jpg',
+                    'youtube_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                    'content': 'Isi berita lengkap hasil import Excel baris 2 dengan tautan video YouTube.'
+                }
+            ]
+        }
+        imp_body = json.dumps(import_payload).encode('utf-8')
+        imp_h = MockHandler('POST', '/api/admin/news/import', {
+            'Content-Length': str(len(imp_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, imp_body)
+        imp_h.do_POST()
+        self.assertEqual(imp_h.response_code, 200)
+        imp_res = imp_h.get_response_json()
+        self.assertTrue(imp_res['success'])
+        self.assertEqual(imp_res['count'], 2)
+
+        # 4. Test Bulk Import via genuine .xlsx file_data (Base64)
+        xlsx_bytes = excel_io.build_xlsx_bytes([
+            {
+                'name': 'Berita',
+                'headers': [
+                    'No', 'Judul Artikel (Wajib)', 'Kategori (Wajib)', 'Teks Badge Label',
+                    'Tata Letak (Layout)', 'Penulis', 'Ringkasan Singkat (Wajib)',
+                    'Kutipan Highlight', 'Nama File / URL Gambar', 'Tautan Video YouTube', 'Isi Berita Lengkap'
+                ],
+                'rows': [
+                    [
+                        '1',
+                        'Berita dari File Asli XLSX',
+                        'Tindak Pidana Khusus',
+                        'PIDSUS',
+                        'FEATURED_MAIN',
+                        'Penyidik Pidsus',
+                        'Ringkasan berita dari file XLSX murni.',
+                        'Transparansi penegakan tipikor.',
+                        '/static/images/news-bb.jpg',
+                        '',
+                        'Isi lengkap berita yang di-parse oleh engine excel_io.'
+                    ]
+                ]
+            }
+        ])
+        b64_xlsx = 'data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,' + base64.b64encode(xlsx_bytes).decode('ascii')
+        file_imp_payload = {
+            'filename': 'import-berita-test.xlsx',
+            'file_data': b64_xlsx
+        }
+        f_body = json.dumps(file_imp_payload).encode('utf-8')
+        f_imp_h = MockHandler('POST', '/api/admin/news/import', {
+            'Content-Length': str(len(f_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, f_body)
+        f_imp_h.do_POST()
+        self.assertEqual(f_imp_h.response_code, 200)
+        self.assertTrue(f_imp_h.get_response_json()['success'])
+
+        # 5. Test Auto-Generate Berita via Gemini AI endpoint
+        ai_payload = {'url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'}
+        ai_body = json.dumps(ai_payload).encode('utf-8')
+        ai_h = MockHandler('POST', '/api/admin/news/ai-generate', {
+            'Content-Length': str(len(ai_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, ai_body)
+        ai_h.do_POST()
+        self.assertEqual(ai_h.response_code, 200)
+        ai_res = ai_h.get_response_json()
+        self.assertTrue(ai_res['success'])
+        self.assertIn('data', ai_res)
+        data = ai_res['data']
+        self.assertTrue(len(data['title']) > 5, "AI generated title should be descriptive")
+        self.assertTrue(len(data['excerpt']) > 10, "AI generated excerpt should be descriptive")
+        self.assertTrue(len(data['content']) > 50, "AI generated content should be multiple journalistic paragraphs")
+        self.assertIn('youtube.com', data['youtube_url'])
+
+        # Clean up imported test news
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM posts WHERE title LIKE 'Uji Berita Bulk Import%' OR title = 'Berita dari File Asli XLSX'")
+        conn.commit()
+        conn.close()
+
 
 if __name__ == '__main__':
     unittest.main()
