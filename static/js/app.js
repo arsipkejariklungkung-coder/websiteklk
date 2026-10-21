@@ -1560,8 +1560,21 @@ function renderAdminFloatingBar() {
     document.body.appendChild(bar);
   }
 
+  if (!state.currentUser) {
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+
+  const isExpanded = !!state.adminBarMobileExpanded;
+  if (isExpanded) {
+    bar.classList.add('is-expanded');
+  } else {
+    bar.classList.remove('is-expanded');
+  }
+
   const pType = getProfilePageType();
-  const profileActionBtn = (pType && pType !== 'STRUKTUR_ORGANISASI') ? `
+  const profileActionBtnDesktop = (pType && pType !== 'STRUKTUR_ORGANISASI') ? `
     <button onclick="openAddProfileItemModal('${pType}')" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 flex items-center gap-1.5 shadow-sm">
       <i data-lucide="plus" class="w-3.5 h-3.5"></i>
       <span>+ Tambah Item ${pType === 'VISI_MISI' ? 'Misi' : pType === 'SEJARAH' ? 'Sejarah' : pType === 'LOGO_MAKNA' ? 'Elemen Logo' : 'Bidang'}</span>
@@ -1569,30 +1582,30 @@ function renderAdminFloatingBar() {
   ` : '';
 
   const iType = getInformationPageType();
-  let infoActionBtn = '';
+  let infoActionBtnDesktop = '';
   if (iType === 'INFO_BERITA') {
-    infoActionBtn = `
+    infoActionBtnDesktop = `
       <button onclick="openAddNewsModal()" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 flex items-center gap-1.5 shadow-sm">
         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
         <span>+ Tambah Berita Baru</span>
       </button>
     `;
   } else if (iType === 'INFO_PENGUMUMAN') {
-    infoActionBtn = `
+    infoActionBtnDesktop = `
       <button onclick="openAddAnnouncementModal()" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 flex items-center gap-1.5 shadow-sm">
         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
         <span>+ Tambah Pengumuman</span>
       </button>
     `;
   } else if (iType === 'INFO_SIDANG') {
-    infoActionBtn = `
+    infoActionBtnDesktop = `
       <button onclick="openAddJagaditaModal()" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 flex items-center gap-1.5 shadow-sm">
         <i data-lucide="plus" class="w-3.5 h-3.5"></i>
         <span>+ Tambah Jadwal Sidang</span>
       </button>
     `;
   } else if (iType === 'INFO_SKM') {
-    infoActionBtn = `
+    infoActionBtnDesktop = `
       <button onclick="openSkmEditModal()" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 flex items-center gap-1.5 shadow-sm">
         <i data-lucide="award" class="w-3.5 h-3.5"></i>
         <span>✏️ Edit Skor & Indikator SKM</span>
@@ -1600,33 +1613,137 @@ function renderAdminFloatingBar() {
     `;
   }
 
+  // Mobile contextual action
+  let mobilePageActionBtn = '';
+  if (pType && pType !== 'STRUKTUR_ORGANISASI') {
+    mobilePageActionBtn = `
+      <button onclick="openAddProfileItemModal('${pType}')" class="p-2.5 rounded-xl text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 flex items-center justify-center gap-1.5 shadow-sm col-span-2">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>+ Tambah Item ${pType === 'VISI_MISI' ? 'Misi' : pType === 'SEJARAH' ? 'Sejarah' : pType === 'LOGO_MAKNA' ? 'Elemen Logo' : 'Bidang'}</span>
+      </button>
+    `;
+  } else if (iType === 'INFO_BERITA') {
+    mobilePageActionBtn = `
+      <button onclick="openAddNewsModal()" class="p-2.5 rounded-xl text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 flex items-center justify-center gap-1.5 shadow-sm col-span-2">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>+ Tambah Berita Baru</span>
+      </button>
+    `;
+  } else if (iType === 'INFO_PENGUMUMAN') {
+    mobilePageActionBtn = `
+      <button onclick="openAddAnnouncementModal()" class="p-2.5 rounded-xl text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 flex items-center justify-center gap-1.5 shadow-sm col-span-2">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>+ Tambah Pengumuman</span>
+      </button>
+    `;
+  } else if (iType === 'INFO_SIDANG') {
+    mobilePageActionBtn = `
+      <button onclick="openAddJagaditaModal()" class="p-2.5 rounded-xl text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 flex items-center justify-center gap-1.5 shadow-sm col-span-2">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>+ Tambah Jadwal Sidang</span>
+      </button>
+    `;
+  } else if (iType === 'INFO_SKM') {
+    mobilePageActionBtn = `
+      <button onclick="openSkmEditModal()" class="p-2.5 rounded-xl text-xs font-bold bg-amber-400 text-slate-950 hover:bg-amber-300 flex items-center justify-center gap-1.5 shadow-sm col-span-2">
+        <i data-lucide="award" class="w-4 h-4"></i>
+        <span>✏️ Edit Skor & Indikator SKM</span>
+      </button>
+    `;
+  }
+
   bar.innerHTML = `
-    <div class="flex items-center gap-2 text-xs font-bold text-white">
-      <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-      <span>👑 Admin: <strong class="text-amber-300">${state.currentUser.full_name}</strong></span>
+    <!-- DESKTOP TOOLBAR (>= 1024px) -->
+    <div class="hidden lg:flex items-center gap-3 text-xs font-bold text-white">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+        <span>👑 Admin: <strong class="text-amber-300">${state.currentUser.full_name}</strong></span>
+      </div>
+
+      <div class="h-4 w-px bg-emerald-700"></div>
+
+      <button onclick="toggleLiveEditMode()" class="px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-all ${state.isLiveEditActive ? 'bg-amber-400 text-slate-900 shadow-lg' : 'bg-emerald-900 text-emerald-200 hover:bg-emerald-800'}">
+        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+        <span>Mode Edit Langsung: ${state.isLiveEditActive ? 'AKTIF' : 'NONAKTIF'}</span>
+      </button>
+
+      ${profileActionBtnDesktop}
+      ${infoActionBtnDesktop}
+
+      <a href="/admin" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white text-emerald-950 hover:bg-slate-100 flex items-center gap-1.5 shadow-sm">
+        <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Dashboard Backoffice
+      </a>
+
+      <button onclick="handleAdminLogout()" class="text-xs text-red-300 hover:text-red-200 font-semibold px-2">
+        Logout
+      </button>
     </div>
 
-    <div class="h-4 w-px bg-emerald-700"></div>
+    <!-- MOBILE TOOLBAR (< 1024px) -->
+    <div class="lg:hidden w-full">
+      ${!isExpanded ? `
+        <!-- COLLAPSED COMPACT PILL ON MOBILE -->
+        <div class="flex items-center justify-between gap-2">
+          <button type="button" onclick="toggleAdminBarMobileExpanded()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/95 text-white text-xs font-bold border border-amber-400/80 shadow-md">
+            <span class="w-2 h-2 rounded-full ${state.isLiveEditActive ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}"></span>
+            <span>👑 Admin</span>
+            <i data-lucide="chevron-up" class="w-3.5 h-3.5 text-amber-400"></i>
+          </button>
 
-    <button onclick="toggleLiveEditMode()" class="px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-all ${state.isLiveEditActive ? 'bg-amber-400 text-slate-900 shadow-lg' : 'bg-emerald-900 text-emerald-200 hover:bg-emerald-800'}">
-      <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-      <span>Mode Edit Langsung: ${state.isLiveEditActive ? 'AKTIF' : 'NONAKTIF'}</span>
-    </button>
+          <button type="button" onclick="toggleLiveEditMode()" class="px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-md transition-all ${state.isLiveEditActive ? 'bg-amber-400 text-slate-950 shadow-amber-400/40 font-black animate-pulse' : 'bg-emerald-950 text-emerald-200 border border-emerald-700/80'}">
+            <i data-lucide="${state.isLiveEditActive ? 'check' : 'edit-3'}" class="w-3.5 h-3.5"></i>
+            <span>${state.isLiveEditActive ? 'Edit: AKTIF' : 'Mode Edit'}</span>
+          </button>
+        </div>
+      ` : `
+        <!-- EXPANDED ACTION SHEET ON MOBILE -->
+        <div class="w-full space-y-2.5 p-1">
+          <div class="flex items-center justify-between pb-2 border-b border-emerald-800/60">
+            <div class="flex items-center gap-2 text-xs font-bold text-white">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <span>👑 Admin: <strong class="text-amber-300">${state.currentUser.full_name}</strong></span>
+            </div>
+            <button type="button" onclick="toggleAdminBarMobileExpanded()" class="p-1 rounded-full text-slate-300 hover:text-white bg-emerald-900/80 text-xs">
+              <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </button>
+          </div>
 
-    ${profileActionBtn}
-    ${infoActionBtn}
+          <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+            <!-- Toggle Edit Mode -->
+            <button onclick="toggleLiveEditMode()" class="col-span-2 p-2.5 rounded-xl flex items-center justify-center gap-2 transition-all ${state.isLiveEditActive ? 'bg-amber-400 text-slate-950 shadow-md font-black' : 'bg-emerald-900/90 text-emerald-100 hover:bg-emerald-800 border border-emerald-700'}">
+              <i data-lucide="edit-3" class="w-4 h-4"></i>
+              <span>Mode Edit Langsung: <strong>${state.isLiveEditActive ? 'AKTIF' : 'NONAKTIF'}</strong></span>
+            </button>
 
-    <a href="/admin" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white text-emerald-950 hover:bg-slate-100 flex items-center gap-1.5">
-      <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Dashboard Backoffice
-    </a>
+            ${mobilePageActionBtn}
 
-    <button onclick="handleAdminLogout()" class="text-xs text-red-300 hover:text-red-200 font-semibold">
-      Logout
-    </button>
+            <!-- Dashboard -->
+            <a href="/admin" class="${mobilePageActionBtn ? 'col-span-1' : 'col-span-2'} p-2.5 rounded-xl bg-white text-emerald-950 flex items-center justify-center gap-1.5 shadow-sm text-center">
+              <i data-lucide="layout-dashboard" class="w-4 h-4 text-emerald-800"></i>
+              <span>Dashboard Backoffice</span>
+            </a>
+
+            <!-- Logout -->
+            <button onclick="handleAdminLogout()" class="col-span-2 p-2 rounded-xl bg-red-950/80 text-red-200 border border-red-800/60 hover:bg-red-900 flex items-center justify-center gap-1.5">
+              <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+              <span>Keluar (Logout)</span>
+            </button>
+          </div>
+        </div>
+      `}
+    </div>
   `;
 
-  lucide.createIcons();
+  if (window.lucide) {
+    lucide.createIcons();
+  }
 }
+
+function toggleAdminBarMobileExpanded() {
+  state.adminBarMobileExpanded = !state.adminBarMobileExpanded;
+  renderAdminFloatingBar();
+}
+window.toggleAdminBarMobileExpanded = toggleAdminBarMobileExpanded;
 
 function toggleLiveEditMode() {
   state.isLiveEditActive = !state.isLiveEditActive;

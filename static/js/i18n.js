@@ -1617,7 +1617,12 @@
   "sudah ada di database, status & catatan akan diperbarui otomatis; jika baru, tiket baru akan ditambahkan.": "already exists in the database, status & notes will be automatically updated; if new, a new ticket will be added.",
   "telah mengembalikan barang bukti berupa :": "has returned the following evidence :",
   "thumbnail.jpg": "thumbnail.jpg",
-  "untuk melihat bagan utuh.": "to view the complete chart."
+  "untuk melihat bagan utuh.": "to view the complete chart.",
+  "Edit: AKTIF": "Edit: ACTIVE",
+  "Dashboard Backoffice": "Backoffice Dashboard",
+  "Keluar (Logout)": "Log Out",
+  "Simpan Perubahan": "Save Changes",
+  "Panel Admin": "Admin Panel"
 };
 
   // 3. Substring Regex Rules for Dynamic / Compound Phrases

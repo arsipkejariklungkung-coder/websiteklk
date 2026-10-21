@@ -1775,6 +1775,59 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('heading-level-5', org_html)
         self.assertIn('handlePublicDrop', org_html)
 
+    def test_28_mobile_floating_widgets_and_edit_mode(self):
+        """Verify non-blocking mobile floating accessibility widget and collapsible mobile edit bar."""
+        # 1. Verify CSS styles for non-blocking mobile widgets
+        with open(os.path.join(BASE_DIR, 'static', 'css', 'styles.css'), 'r', encoding='utf-8') as f:
+            css = f.read()
+        self.assertIn('z-index: 100010 !important', css)
+        self.assertIn('padding-bottom: 96px !important', css)
+        self.assertIn('#admin-floating-bar.is-expanded', css)
+
+        # 2. Verify accessibility CSS on mobile
+        with open(os.path.join(BASE_DIR, 'static', 'css', 'accessibility.css'), 'r', encoding='utf-8') as f:
+            a11y_css = f.read()
+        self.assertIn('bottom: 74px', a11y_css)
+        self.assertIn('max-width: 440px', a11y_css)
+
+        # 3. Verify JavaScript collapsible admin bar
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'app.js'), 'r', encoding='utf-8') as f:
+            app_js = f.read()
+        self.assertIn('toggleAdminBarMobileExpanded', app_js)
+        self.assertIn('adminBarMobileExpanded', app_js)
+        self.assertIn('COLLAPSED COMPACT PILL ON MOBILE', app_js)
+
+        # 4. Verify accessibility mobile repositioning and backdrop
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'accessibility.js'), 'r', encoding='utf-8') as f:
+            a11y_js = f.read()
+        self.assertIn('window.innerWidth < 768', a11y_js)
+        self.assertIn('a11y-backdrop', a11y_js)
+
+        # 5. Functional check for public submissions and ticket tracking
+        complaint_body = json.dumps({
+            'title': 'Uji Sistem Terpadu',
+            'category': 'Pelayanan Publik Kejari',
+            'chronology': 'Pengecekan otomatis fitur MASADU berjalan normal.',
+            'is_anonymous': False,
+            'reporter_name': 'Warga Klungkung',
+            'reporter_phone': '081138004444'
+        }).encode('utf-8')
+        h_comp = MockHandler('POST', '/api/public/complaints', headers={'Content-Type': 'application/json', 'Content-Length': str(len(complaint_body))}, body=complaint_body)
+        h_comp.do_POST()
+        self.assertEqual(h_comp.response_code, 200)
+        c_res = h_comp.get_response_json()
+        self.assertTrue(c_res.get('success'))
+        ticket_code = c_res.get('ticket_code')
+        self.assertTrue(ticket_code.startswith('TRK-MASADU-'))
+
+        # Track complaint ticket
+        h_track = MockHandler('GET', f'/api/public/ticket/{ticket_code}')
+        h_track.do_GET()
+        self.assertEqual(h_track.response_code, 200)
+        t_res = h_track.get_response_json()
+        self.assertTrue(t_res.get('success'))
+        self.assertEqual(t_res.get('ticket', {}).get('ticket_code'), ticket_code)
+
 
 if __name__ == '__main__':
     unittest.main()

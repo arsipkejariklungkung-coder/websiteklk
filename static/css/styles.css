@@ -573,7 +573,7 @@ body.live-edit-active .cms-image-overlay {
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(11, 59, 36, 0.94);
+  background: rgba(11, 59, 36, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1.5px solid var(--color-gold-500);
@@ -583,8 +583,9 @@ body.live-edit-active .cms-image-overlay {
   display: flex;
   align-items: center;
   gap: 16px;
-  z-index: 100000;
-  animation: slideUpFloat 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 99990;
+  animation: slideUpFloat 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideUpFloat {
@@ -604,6 +605,7 @@ body.live-edit-active .cms-image-overlay {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   animation: modalFadeIn 0.25s ease-out;
+  z-index: 100010 !important;
 }
 
 @keyframes modalFadeIn {
@@ -894,19 +896,35 @@ textarea:focus {
 /* Mobile Responsive Adjustments (< 1024px) */
 @media (max-width: 1023px) {
   body:not(.admin-body) {
-    padding-bottom: 74px !important;
+    padding-bottom: 96px !important;
   }
 
   #btn-back-to-top {
-    bottom: 84px !important;
-    right: 16px !important;
+    bottom: 74px !important;
+    right: 14px !important;
+    z-index: 99970 !important;
   }
 
-  #admin-floating-bar {
-    bottom: 80px !important;
-    width: calc(100% - 20px) !important;
-    padding: 8px 12px !important;
-    border-radius: 16px !important;
+  #admin-floating-bar,
+  .admin-floating-bar {
+    bottom: 74px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: auto !important;
+    max-width: calc(100vw - 28px) !important;
+    padding: 6px 10px !important;
+    border-radius: 9999px !important;
+    z-index: 99990 !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(234, 179, 8, 0.25) !important;
+  }
+
+  #admin-floating-bar.is-expanded,
+  .admin-floating-bar.is-expanded {
+    width: calc(100vw - 24px) !important;
+    max-width: 420px !important;
+    border-radius: 20px !important;
+    padding: 12px 14px !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 25px rgba(234, 179, 8, 0.35) !important;
   }
 }
 

@@ -991,8 +991,21 @@
       if (dragThresholdPassed) {
         // Save position
         const rect = trigger.getBoundingClientRect();
+        let targetLeft = rect.left;
+        let targetTop = rect.top;
+
+        // On mobile (< 768px), snap to nearest edge
+        if (window.innerWidth < 768) {
+          if (targetLeft < window.innerWidth / 2) {
+            targetLeft = 14;
+          } else {
+            targetLeft = window.innerWidth - 56;
+          }
+          trigger.style.left = targetLeft + 'px';
+        }
+
         try {
-          localStorage.setItem(POS_STORAGE_KEY, JSON.stringify({ left: rect.left, top: rect.top }));
+          localStorage.setItem(POS_STORAGE_KEY, JSON.stringify({ left: targetLeft, top: targetTop }));
         } catch (err) {}
       } else {
         // Simple click -> Toggle Menu
@@ -1006,6 +1019,19 @@
   function repositionMenu(triggerLeft, triggerTop) {
     const menu = document.getElementById('a11y-widget-menu');
     if (!menu) return;
+
+    if (window.innerWidth < 768) {
+      menu.style.left = '12px';
+      menu.style.right = '12px';
+      menu.style.width = 'auto';
+      menu.style.maxWidth = '420px';
+      menu.style.margin = '0 auto';
+      menu.style.bottom = '76px';
+      menu.style.top = 'auto';
+      menu.style.maxHeight = 'calc(100vh - 96px)';
+      menu.style.borderRadius = '20px';
+      return;
+    }
 
     const menuW = 380;
     const menuH = Math.min(window.innerHeight - 100, 600);
@@ -1031,6 +1057,9 @@
     menu.style.top = mTop + 'px';
     menu.style.bottom = 'auto';
     menu.style.right = 'auto';
+    menu.style.width = '380px';
+    menu.style.maxWidth = '';
+    menu.style.margin = '';
   }
 
   function restoreTriggerPosition() {
@@ -1083,11 +1112,21 @@
     const toggleBtn = document.getElementById('a11y-btn-toggle');
     if (!menu) return;
 
+    let backdrop = document.getElementById('a11y-backdrop');
+    if (!backdrop) {
+      backdrop = document.createElement('div');
+      backdrop.id = 'a11y-backdrop';
+      backdrop.className = 'fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[99995] hidden transition-opacity';
+      backdrop.onclick = () => toggleMenu(false);
+      document.body.appendChild(backdrop);
+    }
+
     const isOpen = !menu.classList.contains('hidden');
     const targetState = typeof forceOpen === 'boolean' ? forceOpen : !isOpen;
 
     if (targetState) {
       menu.classList.remove('hidden');
+      if (backdrop) backdrop.classList.remove('hidden');
       if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'true');
       updateMenuUI();
 
@@ -1099,6 +1138,7 @@
       }
     } else {
       menu.classList.add('hidden');
+      if (backdrop) backdrop.classList.add('hidden');
       if (toggleBtn) toggleBtn.setAttribute('aria-expanded', 'false');
     }
   }
