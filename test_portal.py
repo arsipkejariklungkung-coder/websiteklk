@@ -1549,6 +1549,10 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('nav_home', i18n_content)
         self.assertIn('service_semara_title', i18n_content)
         self.assertIn('service_masadu_title', i18n_content)
+        self.assertIn('PHRASE_DICTIONARY', i18n_content)
+        self.assertIn('translateDom', i18n_content)
+        self.assertIn('translateString', i18n_content)
+        self.assertIn('SUBSTRING_RULES', i18n_content)
 
         # Feature 2: Accessibility Silencing & TTS Reset on Hide
         with open(os.path.join(BASE_DIR, 'static', 'js', 'accessibility.js'), 'r', encoding='utf-8') as f:
