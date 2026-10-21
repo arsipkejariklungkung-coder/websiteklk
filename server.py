@@ -1402,6 +1402,9 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         elif path == '/api/admin/ai/assist':
             self.handle_ai_assist()
             return
+        elif path == '/api/admin/ai/extract-file':
+            self.handle_ai_extract_file()
+            return
         elif path == '/api/admin/upload-media':
             self.handle_upload_media()
             return
@@ -2386,10 +2389,94 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 raw_text = data.get('text') or data.get('raw_text', '')
                 res = ai_assistant.assist_format_court_schedule(raw_text=raw_text, api_key=api_key)
                 self.send_json(res)
+            elif action in ('extract_file', 'read_file'):
+                raw_b64 = data.get('file_data') or data.get('file_b64') or ''
+                filename = data.get('filename') or 'dokumen.docx'
+                mime = data.get('mime_type')
+                target = data.get('target_entity') or 'auto'
+                auto_save = bool(data.get('auto_save', False))
+                file_bytes = safe_b64decode(raw_b64)
+                res = ai_assistant.assist_analyze_and_extract_file(
+                    file_bytes=file_bytes,
+                    filename=filename,
+                    mime_type=mime,
+                    target_entity=target,
+                    api_key=api_key,
+                    model=data.get('model'),
+                    auto_save=auto_save
+                )
+                self.send_json(res)
             else:
                 self.send_json({'error': f'Action AI "{action}" tidak dikenali.'}, 400)
         except Exception as e:
             self.send_json({'error': f'Gagal memproses bantuan AI: {str(e)}'}, 500)
+
+    def handle_ai_extract_file(self):
+        """Extract information from uploaded document/file and auto-populate or save via Gemini 3.5."""
+        content_type = self.headers.get('Content-Type', '')
+        filename = "dokumen"
+        mime_type = "application/octet-stream"
+        file_bytes = b""
+        target_entity = "auto"
+        auto_save = False
+        api_key = None
+        model = None
+
+        if 'application/json' in content_type:
+            data = self.read_json_body()
+            filename = data.get('filename') or 'dokumen'
+            raw_b64 = data.get('file_data') or data.get('file_b64') or ''
+            mime_type = data.get('mime_type')
+            target_entity = data.get('target_entity') or 'auto'
+            auto_save = bool(data.get('auto_save', False))
+            api_key = data.get('api_key')
+            model = data.get('model')
+            file_bytes = safe_b64decode(raw_b64)
+        else:
+            content_length = int(self.headers.get('Content-Length', 0))
+            raw_body = self.rfile.read(content_length)
+            if 'multipart/form-data' in content_type:
+                boundary_match = re.search(r'boundary=([^;]+)', content_type)
+                if boundary_match:
+                    boundary = boundary_match.group(1).strip().strip('"').encode('utf-8')
+                    parts = raw_body.split(b'--' + boundary)
+                    for part in parts:
+                        if b'Content-Disposition' in part:
+                            header_part, _, body_part = part.partition(b'\r\n\r\n')
+                            body_clean = body_part.rstrip(b'\r\n--')
+                            header_str = header_part.decode('utf-8', errors='ignore')
+                            if 'name="target_entity"' in header_str:
+                                target_entity = body_clean.decode('utf-8', errors='ignore').strip()
+                            elif 'name="auto_save"' in header_str:
+                                auto_save = body_clean.decode('utf-8', errors='ignore').strip().lower() in ('true', '1')
+                            elif 'name="file"' in header_str or 'filename=' in header_str:
+                                fn_match = re.search(r'filename="([^"]+)"', header_str)
+                                if fn_match:
+                                    filename = fn_match.group(1)
+                                ct_match = re.search(r'Content-Type:\s*([^\r\n]+)', header_str, re.IGNORECASE)
+                                if ct_match:
+                                    mime_type = ct_match.group(1).strip()
+                                file_bytes = body_clean
+            else:
+                file_bytes = raw_body
+
+        if not file_bytes:
+            self.send_json({'error': 'Tidak ada berkas yang dikirim atau berkas kosong.'}, 400)
+            return
+
+        try:
+            res = ai_assistant.assist_analyze_and_extract_file(
+                file_bytes=file_bytes,
+                filename=filename,
+                mime_type=mime_type,
+                target_entity=target_entity,
+                api_key=api_key,
+                model=model,
+                auto_save=auto_save
+            )
+            self.send_json(res)
+        except Exception as e:
+            self.send_json({'error': f'Gagal membaca dan mengekstrak berkas: {str(e)}'}, 500)
 
     def handle_create_news(self):
         data = self.read_json_body()

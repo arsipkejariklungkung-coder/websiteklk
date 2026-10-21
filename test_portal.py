@@ -3034,6 +3034,160 @@ class TestKertagosaPortal(unittest.TestCase):
             except Exception as e:
                 print("Failed cleaning test gemini key:", e)
 
+    def test_40_gemini_file_reader_and_auto_importer(self):
+        """
+        Verify Gemini 3.5 Multimodal & Document File Reader:
+        - Extracts text from DOCX, XLSX, and documents
+        - Auto-populates and auto-saves News (posts), JAGADITA (court_schedules), and Announcements
+        - Verifies /api/admin/ai/extract-file HTTP endpoint and frontend UI integration
+        """
+        import ai_assistant
+        import excel_io
+        import zipfile
+        import base64
+
+        # 1. Test DOCX parsing & Auto-Save to News (posts)
+        docx_buf = io.BytesIO()
+        with zipfile.ZipFile(docx_buf, 'w') as z:
+            sample_xml = """<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+            <w:body>
+                <w:p><w:r><w:t>Siaran Pers: Jaksa Masuk Sekolah SMAN 1 Semarapura Tingkatkan Kesadaran Hukum Generasi Muda</w:t></w:r></w:p>
+                <w:p><w:r><w:t>Kejaksaan Negeri Klungkung melalui Seksi Intelijen melaksanakan program Jaksa Masuk Sekolah (JMS).</w:t></w:r></w:p>
+                <w:p><w:r><w:t>Kegiatan ini memfokuskan pada pemahaman bahaya narkoba, etika bermedia sosial, dan hukum perlindungan anak.</w:t></w:r></w:p>
+            </w:body>
+            </w:document>"""
+            z.writestr('word/document.xml', sample_xml)
+        docx_bytes = docx_buf.getvalue()
+
+        # Extract text directly
+        extracted_text, mime, meta = ai_assistant.extract_text_and_meta_from_file(docx_bytes, 'siaran_pers_jms.docx')
+        self.assertIn('Jaksa Masuk Sekolah', extracted_text)
+        self.assertEqual(mime, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+
+        # Run assist_analyze_and_extract_file with auto_save=True
+        res_news = ai_assistant.assist_analyze_and_extract_file(
+            file_bytes=docx_bytes,
+            filename='siaran_pers_jms.docx',
+            target_entity='news',
+            auto_save=True
+        )
+        self.assertTrue(res_news['success'])
+        self.assertEqual(res_news['entity_type'], 'news')
+        self.assertTrue(res_news['saved'])
+        news_post_id = res_news['saved_id']
+        self.assertIsNotNone(news_post_id)
+
+        # Verify news was saved in posts table
+        conn = server.get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, title, category, excerpt FROM posts WHERE id = ?", (news_post_id,))
+        saved_post = cursor.fetchone()
+        self.assertIsNotNone(saved_post)
+        self.assertIn('Jaksa Masuk Sekolah', saved_post['title'])
+        # Cleanup news test post
+        cursor.execute("DELETE FROM posts WHERE id = ?", (news_post_id,))
+        conn.commit()
+        conn.close()
+
+        # 2. Test XLSX parsing & Auto-Save to JAGADITA (court_schedules)
+        headers = ['No', 'Nomor Perkara', 'Terdakwa', 'Agenda', 'Jaksa Penuntut Umum', 'Jam Sidang', 'Ruang Sidang']
+        rows = [
+            [1, '99/Pid.B/2026/PN Smp', 'Terdakwa AI File Test', 'Pemeriksaan Saksi', 'I Komang Arimbawa, S.H.', '09:00 WITA', 'Ruang Sidang Cakra']
+        ]
+        xlsx_bytes = excel_io.build_xlsx_bytes([{'name': 'Jadwal', 'headers': headers, 'rows': rows}])
+
+        res_sched = ai_assistant.assist_analyze_and_extract_file(
+            file_bytes=xlsx_bytes,
+            filename='jadwal_sidang_oktober.xlsx',
+            target_entity='jagadita',
+            auto_save=True
+        )
+        self.assertTrue(res_sched['success'])
+        self.assertEqual(res_sched['entity_type'], 'jagadita')
+        self.assertTrue(res_sched['saved'])
+        self.assertEqual(res_sched['saved_count'], 1)
+
+        # Verify saved in court_schedules table
+        conn = server.get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, case_number, defendant_name FROM court_schedules WHERE case_number = '99/Pid.B/2026/PN Smp'")
+        saved_sched = cursor.fetchone()
+        self.assertIsNotNone(saved_sched)
+        self.assertEqual(saved_sched['defendant_name'], 'Terdakwa AI File Test')
+        # Cleanup schedule test row
+        cursor.execute("DELETE FROM court_schedules WHERE case_number = '99/Pid.B/2026/PN Smp'")
+        conn.commit()
+        conn.close()
+
+        # 3. Test Text Document parsing & Auto-Save to Announcements (announcements)
+        ann_text = "Pengumuman Lelang Eksekusi Barang Rampasan Negara Nomor PENG-88/N.1.12/03/2026 bertempat di Kantor Kejaksaan Negeri Klungkung."
+        ann_bytes = ann_text.encode('utf-8')
+        res_ann = ai_assistant.assist_analyze_and_extract_file(
+            file_bytes=ann_bytes,
+            filename='pengumuman_lelang.txt',
+            target_entity='announcement',
+            auto_save=True
+        )
+        self.assertTrue(res_ann['success'])
+        self.assertEqual(res_ann['entity_type'], 'announcement')
+        self.assertTrue(res_ann['saved'])
+        ann_id = res_ann['saved_id']
+        self.assertIsNotNone(ann_id)
+
+        # Verify announcement in database
+        conn = server.get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, title, announcement_number FROM announcements WHERE id = ?", (ann_id,))
+        saved_ann = cursor.fetchone()
+        self.assertIsNotNone(saved_ann)
+        cursor.execute("DELETE FROM announcements WHERE id = ?", (ann_id,))
+        conn.commit()
+        conn.close()
+
+        # 4. Test HTTP Endpoint /api/admin/ai/extract-file (Unauthenticated vs Authenticated)
+        unauth_h = MockHandler('POST', '/api/admin/ai/extract-file', {})
+        unauth_h.do_POST()
+        self.assertEqual(unauth_h.response_code, 401)
+
+        # Authenticated call with base64 payload
+        payload = json.dumps({
+            'filename': 'siaran_pers_uji.docx',
+            'file_data': base64.b64encode(docx_bytes).decode('utf-8'),
+            'mime_type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'target_entity': 'news',
+            'auto_save': False
+        }).encode('utf-8')
+
+        auth_h = MockHandler('POST', '/api/admin/ai/extract-file', {
+            'Content-Length': str(len(payload)),
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.token}'
+        }, payload)
+        auth_h.do_POST()
+        self.assertEqual(auth_h.response_code, 200)
+        res_json = auth_h.get_response_json()
+        self.assertTrue(res_json.get('success'))
+        self.assertEqual(res_json.get('entity_type'), 'news')
+        self.assertIn('title', res_json['data'])
+        self.assertIn('content', res_json['data'])
+
+        # 5. Verify UI Elements in admin.html and static/js/admin.js
+        with open('admin.html', 'r', encoding='utf-8') as f:
+            admin_html = f.read()
+        self.assertIn('tab-news-ai-mode-file', admin_html)
+        self.assertIn('news-ai-panel-file', admin_html)
+        self.assertIn('jagadita-ai-file-input', admin_html)
+        self.assertIn('btn-tab-copilot-file', admin_html)
+        self.assertIn('copilot-panel-file', admin_html)
+        self.assertIn('admin-ann-ai-file', admin_html)
+
+        with open('static/js/admin.js', 'r', encoding='utf-8') as f:
+            admin_js = f.read()
+        self.assertIn('handleNewsFileUpload', admin_js)
+        self.assertIn('handleJagaditaFileUpload', admin_js)
+        self.assertIn('handleAnnouncementFileUpload', admin_js)
+        self.assertIn('runCopilotFileProcess', admin_js)
+
 
 
 if __name__ == '__main__':

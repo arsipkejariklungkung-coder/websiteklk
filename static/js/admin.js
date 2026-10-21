@@ -1001,19 +1001,31 @@ function openGeminiCopilot() {
 function switchCopilotTab(tab) {
   const btnPrompt = document.getElementById('btn-tab-copilot-prompt');
   const btnRefine = document.getElementById('btn-tab-copilot-refine');
+  const btnFile = document.getElementById('btn-tab-copilot-file');
   const panelPrompt = document.getElementById('copilot-panel-prompt');
   const panelRefine = document.getElementById('copilot-panel-refine');
+  const panelFile = document.getElementById('copilot-panel-file');
+
+  const tabActive = 'px-4 py-2 border-b-2 border-[#0B3B24] font-bold text-xs text-[#0B3B24] flex items-center gap-1.5 transition-all';
+  const tabInactive = 'px-4 py-2 border-b-2 border-transparent font-semibold text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-all';
+
+  if (btnPrompt) btnPrompt.className = tabInactive;
+  if (btnRefine) btnRefine.className = tabInactive;
+  if (btnFile) btnFile.className = tabInactive;
+
+  if (panelPrompt) panelPrompt.classList.add('hidden');
+  if (panelRefine) panelRefine.classList.add('hidden');
+  if (panelFile) panelFile.classList.add('hidden');
 
   if (tab === 'prompt') {
-    if (btnPrompt) btnPrompt.className = 'px-4 py-2 border-b-2 border-[#0B3B24] font-bold text-xs text-[#0B3B24] flex items-center gap-1.5 transition-all';
-    if (btnRefine) btnRefine.className = 'px-4 py-2 border-b-2 border-transparent font-semibold text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-all';
+    if (btnPrompt) btnPrompt.className = tabActive;
     if (panelPrompt) panelPrompt.classList.remove('hidden');
-    if (panelRefine) panelRefine.classList.add('hidden');
-  } else {
-    if (btnRefine) btnRefine.className = 'px-4 py-2 border-b-2 border-[#0B3B24] font-bold text-xs text-[#0B3B24] flex items-center gap-1.5 transition-all';
-    if (btnPrompt) btnPrompt.className = 'px-4 py-2 border-b-2 border-transparent font-semibold text-xs text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-all';
+  } else if (tab === 'refine') {
+    if (btnRefine) btnRefine.className = tabActive;
     if (panelRefine) panelRefine.classList.remove('hidden');
-    if (panelPrompt) panelPrompt.classList.add('hidden');
+  } else if (tab === 'file') {
+    if (btnFile) btnFile.className = tabActive;
+    if (panelFile) panelFile.classList.remove('hidden');
   }
   if (window.lucide) lucide.createIcons();
 }
@@ -1143,35 +1155,318 @@ function copyCopilotRefineResult() {
   });
 }
 
+let currentCopilotFileResult = null;
+
+function handleCopilotFileSelect(event) {
+  const file = event.target.files?.[0];
+  const label = document.getElementById('copilot-file-name-label');
+  if (file && label) {
+    const sizeKb = Math.round(file.size / 1024);
+    label.innerHTML = `<span class="text-emerald-800 font-bold">📄 ${file.name}</span> <span class="text-slate-500 font-mono text-[10px]">(${sizeKb} KB)</span>`;
+  }
+}
+
+async function runCopilotFileProcess() {
+  const fileInput = document.getElementById('copilot-file-input');
+  const file = fileInput?.files?.[0];
+  if (!file) {
+    alert('Silakan pilih berkas terlebih dahulu (PDF, Word .docx, Excel .xlsx, atau Gambar).');
+    return;
+  }
+
+  const targetRadio = document.querySelector('input[name="copilot-file-target"]:checked');
+  const targetEntity = targetRadio ? targetRadio.value : 'auto';
+  const autoSaveCheck = document.getElementById('copilot-file-auto-save');
+  const autoSave = autoSaveCheck ? autoSaveCheck.checked : false;
+
+  const btn = document.getElementById('btn-copilot-run-file');
+  const btnText = document.getElementById('btn-copilot-run-file-text');
+  const outBox = document.getElementById('copilot-file-output-container');
+  const outCard = document.getElementById('copilot-file-preview-card');
+  const outActions = document.getElementById('copilot-file-action-buttons');
+
+  const origBtnHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    if (btnText) btnText.textContent = 'Gemini 3.5 sedang membaca berkas...';
+  }
+
+  try {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const b64Data = (e.target.result || '').split(',')[1] || '';
+      try {
+        const res = await fetch('/api/admin/ai/extract-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            mime_type: file.type || 'application/octet-stream',
+            file_data: b64Data,
+            target_entity: targetEntity,
+            auto_save: autoSave
+          })
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          alert('Gagal memproses berkas: ' + (result.error || 'Terjadi kesalahan'));
+          return;
+        }
+
+        currentCopilotFileResult = result;
+        if (outBox) outBox.classList.remove('hidden');
+
+        let cardHtml = '';
+        let actionsHtml = '';
+
+        if (result.saved) {
+          cardHtml += `<div class="mb-3 p-2.5 bg-emerald-100 border border-emerald-300 rounded-lg text-emerald-950 font-bold text-xs flex items-center gap-2">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-700 shrink-0"></i>
+            <span>${result.message}</span>
+          </div>`;
+        }
+
+        if (result.entity_type === 'news') {
+          const d = result.data || {};
+          cardHtml += `<div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-700 text-white font-mono">${d.category || 'Berita'}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-slate-950">${d.badge_label || 'KABAR'}</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm">${d.title || '-'}</h4>
+            <p class="text-slate-600 italic text-xs">${d.excerpt || '-'}</p>
+            <div class="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 max-h-36 overflow-y-auto whitespace-pre-line text-[11px] leading-relaxed">${d.content || '-'}</div>
+          </div>`;
+
+          actionsHtml = `<button type="button" onclick="applyCopilotNewsToForm()" class="px-3 py-1.5 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-lg text-[11px] flex items-center gap-1 shadow-xs transition-colors cursor-pointer">
+            <i data-lucide="edit" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>Buka di Form Berita</span>
+          </button>`;
+
+        } else if (result.entity_type === 'jagadita') {
+          const d = result.data || {};
+          const schedules = d.schedules || [];
+          cardHtml += `<div class="space-y-2">
+            <div class="font-bold text-slate-800 text-xs flex items-center justify-between">
+              <span>Diekstrak ${schedules.length} Sidang JAGADITA (Tanggal: ${d.target_date || '-'})</span>
+              <span class="px-2 py-0.5 rounded text-[10px] bg-purple-100 text-purple-900 font-bold">JAGADITA</span>
+            </div>
+            <div class="divide-y divide-slate-200 border border-slate-200 rounded-lg bg-white overflow-hidden max-h-44 overflow-y-auto text-[11px]">
+              ${schedules.map((s, i) => `
+                <div class="p-2 flex items-center justify-between gap-2">
+                  <div>
+                    <span class="font-bold text-slate-900 font-mono">${s.case_number || '-'}</span>
+                    <span class="text-slate-500 font-medium ml-1">a.n. ${s.defendant_name || '-'}</span>
+                    <div class="text-[10px] text-slate-500">Agenda: ${s.agenda || '-'} &bull; JPU: ${s.prosecutor || '-'}</div>
+                  </div>
+                  <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-slate-100 text-slate-800">${s.session_time || '-'}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>`;
+
+          actionsHtml = `<button type="button" onclick="applyCopilotJagaditaToTable()" class="px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white font-bold rounded-lg text-[11px] flex items-center gap-1 shadow-xs transition-colors cursor-pointer">
+            <i data-lucide="gavel" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>Buka di Tabel JAGADITA</span>
+          </button>`;
+
+        } else if (result.entity_type === 'announcement') {
+          const d = result.data || {};
+          cardHtml += `<div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-slate-950 font-mono">${d.announcement_number || 'PENG-01'}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-800">${d.category || 'UMUM'}</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm">${d.title || '-'}</h4>
+            <div class="p-2.5 bg-white border border-slate-200 rounded-lg text-slate-700 max-h-36 overflow-y-auto whitespace-pre-line text-[11px] leading-relaxed">${d.content || '-'}</div>
+          </div>`;
+
+          actionsHtml = `<button type="button" onclick="applyCopilotAnnouncementToForm()" class="px-3 py-1.5 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-lg text-[11px] flex items-center gap-1 shadow-xs transition-colors cursor-pointer">
+            <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>Buka di Form Pengumuman</span>
+          </button>`;
+        }
+
+        if (outCard) outCard.innerHTML = cardHtml;
+        if (outActions) outActions.innerHTML = actionsHtml;
+        if (window.lucide) lucide.createIcons();
+
+        showAdminToast(result.message || 'Berkas berhasil dibaca dan diproses oleh Gemini 3.5!');
+
+        // If auto-saved, refresh relevant background tables
+        if (result.saved) {
+          if (result.entity_type === 'news' && typeof loadNewsTable === 'function') loadNewsTable();
+          if (result.entity_type === 'jagadita' && typeof loadAdminJagaditaTable === 'function') loadAdminJagaditaTable();
+          if (result.entity_type === 'announcement' && typeof loadAdminAnnouncementsTable === 'function') loadAdminAnnouncementsTable();
+        }
+
+      } catch (err) {
+        alert('Gagal memproses berkas: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origBtnHtml;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    alert('Gagal membaca berkas: ' + err.message);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origBtnHtml;
+    }
+  }
+}
+
+function applyCopilotNewsToForm() {
+  if (!currentCopilotFileResult || !currentCopilotFileResult.data) return;
+  const d = currentCopilotFileResult.data;
+  closeModal('modal-gemini-copilot');
+  switchTab('tab-news');
+  if (d.title && document.getElementById('news-form-title-input')) document.getElementById('news-form-title-input').value = d.title;
+  if (d.category && document.getElementById('news-form-category')) document.getElementById('news-form-category').value = d.category;
+  if (d.badge_label && document.getElementById('news-form-badge')) document.getElementById('news-form-badge').value = d.badge_label;
+  if (d.layout_type && document.getElementById('news-form-layout')) document.getElementById('news-form-layout').value = d.layout_type;
+  if (d.author && document.getElementById('news-form-author')) document.getElementById('news-form-author').value = d.author;
+  if (d.excerpt && document.getElementById('news-form-excerpt')) document.getElementById('news-form-excerpt').value = d.excerpt;
+  if (d.highlight_quote && document.getElementById('news-form-quote')) document.getElementById('news-form-quote').value = d.highlight_quote;
+  if (d.content && document.getElementById('news-form-content')) document.getElementById('news-form-content').value = d.content;
+  showAdminToast('Data berita berhasil diterapkan ke formulir!');
+}
+
+function applyCopilotJagaditaToTable() {
+  if (!currentCopilotFileResult || !currentCopilotFileResult.data) return;
+  const d = currentCopilotFileResult.data;
+  closeModal('modal-gemini-copilot');
+  switchTab('tab-jagadita');
+  openJagaditaAiModal();
+  currentJagaditaAiResults = d.schedules || [];
+  renderJagaditaAiPreview({
+    success: true,
+    source: 'gemini',
+    model: currentCopilotFileResult.model || 'gemini-3.5-flash',
+    schedules: currentJagaditaAiResults,
+    count: currentJagaditaAiResults.length,
+    target_date: d.target_date || new Date().toISOString().split('T')[0]
+  });
+}
+
+function applyCopilotAnnouncementToForm() {
+  if (!currentCopilotFileResult || !currentCopilotFileResult.data) return;
+  const d = currentCopilotFileResult.data;
+  closeModal('modal-gemini-copilot');
+  openModal('modal-admin-announcement');
+  const num = d.announcement_number || d.number || '';
+  if (num && document.getElementById('admin-ann-number')) document.getElementById('admin-ann-number').value = num;
+  if (d.title && document.getElementById('admin-ann-title')) document.getElementById('admin-ann-title').value = d.title;
+  if (d.category && document.getElementById('admin-ann-category')) document.getElementById('admin-ann-category').value = d.category;
+  if (d.content && document.getElementById('admin-ann-content')) document.getElementById('admin-ann-content').value = d.content;
+  if (d.deadline_date && document.getElementById('admin-ann-deadline')) document.getElementById('admin-ann-deadline').value = d.deadline_date;
+  showAdminToast('Data pengumuman berhasil diterapkan ke formulir!');
+}
+
 function switchNewsAiMode(mode) {
   const panelDraft = document.getElementById('news-ai-panel-draft');
+  const panelFile = document.getElementById('news-ai-panel-file');
   const panelUrl = document.getElementById('news-ai-panel-url');
   const tabDraft = document.getElementById('tab-news-ai-mode-draft');
+  const tabFile = document.getElementById('tab-news-ai-mode-file');
   const tabUrl = document.getElementById('tab-news-ai-mode-url');
   const badge = document.getElementById('news-ai-mode-badge');
 
+  if (panelDraft) panelDraft.classList.add('hidden');
+  if (panelFile) panelFile.classList.add('hidden');
+  if (panelUrl) panelUrl.classList.add('hidden');
+
+  const tabActive = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#0B3B24] text-white shadow-xs transition-all';
+  const tabInactive = 'px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-all';
+
+  if (tabDraft) tabDraft.className = tabInactive;
+  if (tabFile) tabFile.className = tabInactive;
+  if (tabUrl) tabUrl.className = tabInactive;
+
   if (mode === 'draft') {
     if (panelDraft) panelDraft.classList.remove('hidden');
-    if (panelUrl) panelUrl.classList.add('hidden');
-    if (tabDraft) {
-      tabDraft.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#0B3B24] text-white shadow-xs transition-all';
-    }
-    if (tabUrl) {
-      tabUrl.className = 'px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-all';
-    }
+    if (tabDraft) tabDraft.className = tabActive;
     if (badge) badge.textContent = 'PENGINPUT CERDAS';
+  } else if (mode === 'file') {
+    if (panelFile) panelFile.classList.remove('hidden');
+    if (tabFile) tabFile.className = tabActive;
+    if (badge) badge.textContent = 'BACA BERKAS (AI)';
   } else {
-    if (panelDraft) panelDraft.classList.add('hidden');
     if (panelUrl) panelUrl.classList.remove('hidden');
-    if (tabUrl) {
-      tabUrl.className = 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-[#0B3B24] text-white shadow-xs transition-all';
-    }
-    if (tabDraft) {
-      tabDraft.className = 'px-2.5 py-1 rounded-md text-[11px] font-semibold text-slate-600 hover:text-slate-900 transition-all';
-    }
+    if (tabUrl) tabUrl.className = tabActive;
     if (badge) badge.textContent = 'URL SCRAPER';
   }
   if (window.lucide) lucide.createIcons();
+}
+
+async function handleNewsFileUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const label = document.getElementById('news-ai-file-label');
+  const statusEl = document.getElementById('admin-news-ai-status');
+  const origLabel = label ? label.textContent : '';
+
+  if (label) label.textContent = `Membaca ${file.name} dengan Gemini 3.5...`;
+  if (statusEl) {
+    statusEl.className = 'flex text-[11px] font-medium p-2.5 rounded-lg bg-emerald-100 text-emerald-950 border border-emerald-300 items-center gap-2';
+    statusEl.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span><span>Gemini 3.5 sedang menganalisis '${file.name}' dan menyusun naskah berita 5W+1H...</span>`;
+  }
+
+  try {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const b64Data = (e.target.result || '').split(',')[1] || '';
+      try {
+        const res = await fetch('/api/admin/ai/extract-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            mime_type: file.type || 'application/octet-stream',
+            file_data: b64Data,
+            target_entity: 'news',
+            auto_save: false
+          })
+        });
+        const result = await res.json();
+        if (result.success && result.data) {
+          const d = result.data;
+          if (d.title && document.getElementById('news-form-title-input')) document.getElementById('news-form-title-input').value = d.title;
+          if (d.category && document.getElementById('news-form-category')) document.getElementById('news-form-category').value = d.category;
+          if (d.badge_label && document.getElementById('news-form-badge')) document.getElementById('news-form-badge').value = d.badge_label;
+          if (d.layout_type && document.getElementById('news-form-layout')) document.getElementById('news-form-layout').value = d.layout_type;
+          if (d.author && document.getElementById('news-form-author')) document.getElementById('news-form-author').value = d.author;
+          if (d.excerpt && document.getElementById('news-form-excerpt')) document.getElementById('news-form-excerpt').value = d.excerpt;
+          if (d.highlight_quote && document.getElementById('news-form-quote')) document.getElementById('news-form-quote').value = d.highlight_quote;
+          if (d.content && document.getElementById('news-form-content')) document.getElementById('news-form-content').value = d.content;
+
+          if (statusEl) {
+            statusEl.className = 'flex text-[11px] font-semibold p-2.5 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-300 items-center gap-2';
+            statusEl.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i><span>${result.message || 'Berkas berhasil dibaca dan diterapkan ke formulir berita!'}</span>`;
+            if (window.lucide) lucide.createIcons();
+          }
+          if (label) label.textContent = `Selesai: ${file.name} diterapkan!`;
+          showAdminToast(`Berkas ${file.name} berhasil dibaca dan dimasukkan ke form berita!`);
+        } else {
+          alert('Gagal membaca berkas: ' + (result.error || 'Format tidak didukung'));
+          if (label) label.textContent = origLabel;
+        }
+      } catch (err) {
+        alert('Gagal memproses berkas: ' + err.message);
+        if (label) label.textContent = origLabel;
+      }
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    alert('Gagal membaca file: ' + err.message);
+    if (label) label.textContent = origLabel;
+  }
 }
 
 async function handleDraftNewsWithAI() {
@@ -1302,6 +1597,57 @@ async function handleDraftAnnouncementWithAI() {
       btn.innerHTML = origHtml;
       if (window.lucide) lucide.createIcons();
     }
+  }
+}
+
+async function handleAnnouncementFileUpload(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  const label = document.getElementById('label-admin-ann-file');
+  const origText = label ? label.textContent : '';
+  if (label) label.textContent = 'Membaca...';
+
+  try {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const b64Data = (e.target.result || '').split(',')[1] || '';
+      try {
+        const res = await fetch('/api/admin/ai/extract-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            mime_type: file.type || 'application/octet-stream',
+            file_data: b64Data,
+            target_entity: 'announcement',
+            auto_save: false
+          })
+        });
+        const result = await res.json();
+        if (result.success && result.data) {
+          const d = result.data;
+          const num = d.announcement_number || d.number || '';
+          if (num && document.getElementById('admin-ann-number')) document.getElementById('admin-ann-number').value = num;
+          if (d.title && document.getElementById('admin-ann-title')) document.getElementById('admin-ann-title').value = d.title;
+          if (d.category && document.getElementById('admin-ann-category')) document.getElementById('admin-ann-category').value = d.category;
+          if (d.content && document.getElementById('admin-ann-content')) document.getElementById('admin-ann-content').value = d.content;
+          if (d.deadline_date && document.getElementById('admin-ann-deadline')) document.getElementById('admin-ann-deadline').value = d.deadline_date;
+
+          showAdminToast(`Pengumuman berhasil diekstrak oleh Gemini 3.5 dari '${file.name}'!`);
+        } else {
+          alert('Gagal mengekstrak pengumuman: ' + (result.error || 'Terjadi kesalahan'));
+        }
+      } catch (err) {
+        alert('Gagal memproses berkas pengumuman: ' + err.message);
+      } finally {
+        if (label) label.textContent = origText;
+      }
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    alert('Gagal membaca file: ' + err.message);
+    if (label) label.textContent = origText;
   }
 }
 
@@ -2647,6 +2993,73 @@ async function handleGenerateJagaditaWithAI(e) {
     if (btn) {
       btn.disabled = false;
       btn.classList.remove('opacity-75', 'cursor-not-allowed');
+      btn.innerHTML = origBtnHtml;
+    }
+  }
+}
+
+async function handleJagaditaFileUpload(event) {
+  if (event && event.preventDefault) event.preventDefault();
+  const fileInput = document.getElementById('jagadita-ai-file-input');
+  const file = fileInput?.files?.[0];
+  if (!file) {
+    alert('Silakan pilih berkas jadwal sidang (Excel .xlsx, PDF, Word, atau gambar) terlebih dahulu.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-jagadita-ai-file');
+  const origBtnHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin inline-block mr-1">⌛</span><span>Membaca Berkas...</span>`;
+  }
+
+  try {
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const b64Data = (e.target.result || '').split(',')[1] || '';
+      try {
+        const res = await fetch('/api/admin/ai/extract-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filename: file.name,
+            mime_type: file.type || 'application/octet-stream',
+            file_data: b64Data,
+            target_entity: 'jagadita',
+            auto_save: false
+          })
+        });
+        const result = await res.json();
+        if (result.success && result.data) {
+          currentJagaditaAiResults = result.data.schedules || [];
+          renderJagaditaAiPreview({
+            success: true,
+            source: 'gemini',
+            model: result.model || 'gemini-3.5-flash',
+            schedules: currentJagaditaAiResults,
+            count: currentJagaditaAiResults.length,
+            target_date: result.data.target_date || new Date().toISOString().split('T')[0]
+          });
+          showAdminToast(`Berhasil mengekstrak ${currentJagaditaAiResults.length} jadwal sidang dari berkas '${file.name}'!`);
+        } else {
+          alert('Gagal mengekstrak jadwal sidang: ' + (result.error || 'Format berkas tidak dikenali'));
+        }
+      } catch (err) {
+        alert('Gagal mengekstrak jadwal sidang: ' + err.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origBtnHtml;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  } catch (err) {
+    alert('Gagal membaca file: ' + err.message);
+    if (btn) {
+      btn.disabled = false;
       btn.innerHTML = origBtnHtml;
     }
   }
