@@ -778,14 +778,18 @@
         
         <!-- Subtab Navigation -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-          <div class="flex items-center gap-2">
-            <button onclick="switchOrgSubtab('members')" id="btn-org-subtab-members" class="px-4 py-2 rounded-xl text-xs font-bold bg-[#0B3B24] text-white shadow-sm flex items-center gap-2 transition-all">
-              <i data-lucide="users" class="w-4 h-4"></i>
-              <span>Daftar Pegawai &amp; Hierarki (<span id="org-total-count-badge">24</span>)</span>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="switchOrgSubtab('members')" id="btn-org-subtab-members" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#0B3B24] text-white shadow-sm flex items-center gap-2 transition-all">
+              <i data-lucide="users" class="w-4 h-4 text-amber-400"></i>
+              <span>Daftar Pegawai (<span id="org-total-count-badge">24</span>)</span>
             </button>
-            <button onclick="switchOrgSubtab('settings')" id="btn-org-subtab-settings" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-2 transition-all">
+            <button onclick="switchOrgSubtab('chart')" id="btn-org-subtab-chart" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-2 transition-all">
+              <i data-lucide="git-merge" class="w-4 h-4 text-emerald-800"></i>
+              <span>Bagan Interaktif (Drag &amp; Drop)</span>
+            </button>
+            <button onclick="switchOrgSubtab('settings')" id="btn-org-subtab-settings" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-2 transition-all">
               <i data-lucide="sliders" class="w-4 h-4 text-emerald-800"></i>
-              <span>Pengaturan Tampilan &amp; Watermark</span>
+              <span>Kustomisasi Teks Level &amp; Tampilan</span>
             </button>
           </div>
 
@@ -860,7 +864,51 @@
           </div>
         </div>
 
-        <!-- VIEW 2: PENGATURAN TAMPILAN & WATERMARK -->
+        <!-- VIEW 2: BAGAN STRUKTUR INTERAKTIF (DRAG & DROP RELASI HIERARKI) -->
+        <div id="org-view-chart" class="space-y-6 hidden">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="font-heading font-bold text-base text-slate-900 flex items-center gap-2">
+                    <i data-lucide="git-merge" class="w-5 h-5 text-emerald-800"></i>
+                    <span>Editor Bagan Interaktif (Drag &amp; Drop Relasi Hierarki)</span>
+                  </h3>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">ADMIN INTERACTIVE</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">Seret (drag) kartu pegawai atau jabatan ke kotak atasan baru untuk mengubah relasi hierarki secara langsung. Garis konektor akan otomatis menyesuaikan.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="loadOrgAdminData()" class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs">
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-emerald-700"></i>
+                  <span>Segarkan Bagan</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Petunjuk Interaktif Drag & Drop -->
+            <div class="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-200/80 flex items-start gap-3 text-xs mb-6">
+              <div class="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-800 flex items-center justify-center shrink-0 mt-0.5">
+                <i data-lucide="hand" class="w-4 h-4"></i>
+              </div>
+              <div class="space-y-0.5">
+                <div class="font-bold text-slate-900">Panduan Drag-and-Drop:</div>
+                <p class="text-slate-600 leading-relaxed">
+                  1. Klik &amp; tahan pada kartu pegawai (bawahan), lalu geser ke kartu pejabat yang ingin dijadikan atasan langsung.<br>
+                  2. Kotak target akan bercahaya kuning putus-putus. Lepaskan (drop) untuk memindahkan hierarki secara permanen.<br>
+                  3. Relasi data dan garis konektor bagan akan langsung disesuaikan dan disimpan realtime.
+                </p>
+              </div>
+            </div>
+
+            <!-- Dynamic Drag & Drop Tree Viewport -->
+            <div id="admin-org-interactive-tree" class="overflow-x-auto p-6 bg-slate-50/80 rounded-2xl border border-slate-200 min-w-full">
+              <!-- Rendered dynamically via admin.js -->
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 3: PENGATURAN TAMPILAN & KUSTOMISASI TEKS LEVEL -->
         <div id="org-view-settings" class="space-y-6 hidden">
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-w-4xl">
             <h3 class="font-heading font-bold text-base text-slate-900 mb-1 flex items-center gap-2">
@@ -960,10 +1008,57 @@
                 <textarea id="org-setting-legal-basis" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg">Berdasarkan Peraturan Kejaksaan RI Nomor PER-006/A/JA/07/2017 tentang Organisasi dan Tata Kerja Kejaksaan Republik Indonesia</textarea>
               </div>
 
+              <!-- 4. Kustomisasi Teks Penamaan Kelompok Jabatan / Level Hierarki -->
+              <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+                      <i data-lucide="tag" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-slate-900 text-xs">Kustomisasi Teks Penamaan Kelompok Jabatan (Level 1 - 5)</h4>
+                      <p class="text-[11px] text-slate-600">Ubah atau tambah tulisan nama kelompok jabatan yang tampil di atas bagan struktural secara dinamis.</p>
+                    </div>
+                  </div>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-200 text-amber-900 border border-amber-300">CMS Realtime</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1 text-[11px]">Penamaan Level 1 (Pimpinan)</label>
+                    <input type="text" id="org-setting-level-1-title" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg font-semibold text-slate-800" placeholder="LEVEL 1: PIMPINAN TERTINGGI">
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1 text-[11px]">Penamaan Level 2 (Kasi / Kabag)</label>
+                    <input type="text" id="org-setting-level-2-title" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg font-semibold text-slate-800" placeholder="LEVEL 2: KEPALA SUB BAGIAN &amp; KEPALA SEKSI">
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1 text-[11px]">Penamaan Level 3 (Kasubsi / Kaur)</label>
+                    <input type="text" id="org-setting-level-3-title" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg font-semibold text-slate-800" placeholder="LEVEL 3: KEPALA SUB SEKSI &amp; KEPALA URUSAN">
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1 text-[11px]">Penamaan Level 4 (Jabatan Fungsional)</label>
+                    <input type="text" id="org-setting-level-4-title" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg font-semibold text-slate-800" placeholder="LEVEL 4: KELOMPOK JABATAN FUNGSIONAL &amp; AHLI YUSTISIAL">
+                  </div>
+                  <div class="sm:col-span-2">
+                    <label class="block font-bold text-slate-700 mb-1 text-[11px]">Penamaan Level 5 (Pelaksana &amp; Staf Teknis)</label>
+                    <input type="text" id="org-setting-level-5-title" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg font-semibold text-slate-800" placeholder="LEVEL 5: PELAKSANA &amp; STAF TEKNIS ADMINISTRASI">
+                  </div>
+                </div>
+
+                <!-- Pintasan Format Standar -->
+                <div class="pt-2 flex items-center justify-between border-t border-amber-200/60">
+                  <span class="text-[10px] text-slate-500">Pintasan format resmi:</span>
+                  <button type="button" onclick="setStandardLevelTitles()" class="px-2.5 py-1 rounded bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-bold transition-colors">
+                    Terapkan Penamaan Standar Kejaksaan
+                  </button>
+                </div>
+              </div>
+
               <div class="pt-3 border-t border-slate-200 flex justify-end">
                 <button type="submit" id="btn-save-org-settings" class="px-6 py-2.5 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl shadow-md flex items-center gap-2 transition-colors">
                   <i data-lucide="check" class="w-4 h-4 text-amber-400"></i>
-                  <span>Simpan Pengaturan Tampilan</span>
+                  <span>Simpan Pengaturan &amp; Teks Level</span>
                 </button>
               </div>
             </form>

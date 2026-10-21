@@ -1521,21 +1521,371 @@ let orgAdminData = {
 
 function switchOrgSubtab(subtab) {
   const btnMembers = document.getElementById('btn-org-subtab-members');
+  const btnChart = document.getElementById('btn-org-subtab-chart');
   const btnSettings = document.getElementById('btn-org-subtab-settings');
   const viewMembers = document.getElementById('org-view-members');
+  const viewChart = document.getElementById('org-view-chart');
   const viewSettings = document.getElementById('org-view-settings');
 
+  const inactiveClass = 'px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-2 transition-all';
+  const activeClass = 'px-3.5 py-2 rounded-xl text-xs font-bold bg-[#0B3B24] text-white shadow-sm flex items-center gap-2 transition-all';
+
+  if (btnMembers) btnMembers.className = inactiveClass;
+  if (btnChart) btnChart.className = inactiveClass;
+  if (btnSettings) btnSettings.className = inactiveClass;
+
+  if (viewMembers) viewMembers.classList.add('hidden');
+  if (viewChart) viewChart.classList.add('hidden');
+  if (viewSettings) viewSettings.classList.add('hidden');
+
   if (subtab === 'members') {
-    viewMembers.classList.remove('hidden');
-    viewSettings.classList.add('hidden');
-    btnMembers.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-[#0B3B24] text-white shadow-sm flex items-center gap-2 transition-all';
-    btnSettings.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-2 transition-all';
-  } else {
-    viewMembers.classList.add('hidden');
-    viewSettings.classList.remove('hidden');
-    btnSettings.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-[#0B3B24] text-white shadow-sm flex items-center gap-2 transition-all';
-    btnMembers.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center gap-2 transition-all';
+    if (viewMembers) viewMembers.classList.remove('hidden');
+    if (btnMembers) btnMembers.className = activeClass;
+  } else if (subtab === 'chart') {
+    if (viewChart) viewChart.classList.remove('hidden');
+    if (btnChart) btnChart.className = activeClass;
+    renderAdminInteractiveTree();
+  } else if (subtab === 'settings') {
+    if (viewSettings) viewSettings.classList.remove('hidden');
+    if (btnSettings) btnSettings.className = activeClass;
   }
+  lucide.createIcons();
+}
+
+let adminDraggedMemberId = null;
+
+function handleAdminDragStart(e, id) {
+  adminDraggedMemberId = id;
+  e.dataTransfer.setData('text/plain', String(id));
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('org-node-dragging');
+}
+
+function handleAdminDragEnd(e) {
+  e.currentTarget.classList.remove('org-node-dragging');
+  document.querySelectorAll('.org-drop-target-active').forEach(node => {
+    node.classList.remove('org-drop-target-active');
+  });
+}
+
+function handleAdminDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('org-drop-target-active');
+}
+
+function handleAdminDragLeave(e) {
+  e.currentTarget.classList.remove('org-drop-target-active');
+}
+
+async function handleAdminDrop(e, targetParentId) {
+  e.preventDefault();
+  e.stopPropagation();
+  e.currentTarget.classList.remove('org-drop-target-active');
+
+  const draggedId = adminDraggedMemberId || parseInt(e.dataTransfer.getData('text/plain'));
+  if (!draggedId || draggedId === targetParentId) return;
+
+  const members = orgAdminData.members || [];
+  const draggedMember = members.find(m => m.id === draggedId);
+  const targetMember = members.find(m => m.id === targetParentId);
+  if (!draggedMember || !targetMember) return;
+
+  let newLevel = targetMember.level + 1;
+  if (newLevel > 5) newLevel = 5;
+
+  const confirmMsg = `Seret & Pindahkan Posisi Hierarki:\n\nPegawai: "${draggedMember.name}" (${draggedMember.position})\nAtasan Baru: "${targetMember.name}" (${targetMember.position})\nLevel Baru: Level ${newLevel}\n\nLanjutkan pemindahan hierarki ini?`;
+  if (!confirm(confirmMsg)) return;
+
+  try {
+    const res = await fetch(`/api/admin/organization/members/${draggedId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ parent_id: targetParentId, level: newLevel })
+    });
+    const data = await res.json();
+    if (data.success) {
+      alert(data.message || 'Relasi hierarki berhasil diubah!');
+      await loadOrgAdminData();
+      renderAdminInteractiveTree();
+    } else {
+      alert('Gagal memindahkan posisi: ' + (data.error || 'Terjadi kesalahan.'));
+    }
+  } catch (err) {
+    alert('Terjadi kesalahan jaringan.');
+  }
+}
+
+function renderAdminInteractiveTree() {
+  const container = document.getElementById('admin-org-interactive-tree');
+  if (!container) return;
+
+  const hierarchy = orgAdminData.hierarchy || {};
+  const settings = orgAdminData.settings || {};
+  const members = orgAdminData.members || [];
+
+  const l1List = hierarchy.level_1 || members.filter(m => m.level === 1);
+  const l2List = hierarchy.level_2 || members.filter(m => m.level === 2);
+  const l3List = hierarchy.level_3 || members.filter(m => m.level === 3);
+  const l4List = hierarchy.level_4 || members.filter(m => m.level === 4);
+  const l5List = hierarchy.level_5 || members.filter(m => m.level === 5);
+
+  const kajari = l1List.length > 0 ? l1List[0] : null;
+
+  let html = `
+    <!-- LEVEL 1: UNSUR PIMPINAN (KAJARI) -->
+    <div class="flex flex-col items-center w-full">
+      <div class="mb-2">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-300 text-[11px] font-extrabold uppercase">
+          <i data-lucide="crown" class="w-3.5 h-3.5 text-amber-600"></i>
+          <span>${escapeHtml(settings.level_1_title || 'LEVEL 1: UNSUR PIMPINAN')}</span>
+        </span>
+      </div>
+  `;
+
+  if (kajari) {
+    html += `
+      <div 
+        ondragover="handleAdminDragOver(event)" 
+        ondragleave="handleAdminDragLeave(event)" 
+        ondrop="handleAdminDrop(event, ${kajari.id})"
+        class="w-96 bg-white rounded-2xl shadow-md border-2 border-amber-400 p-4 relative group transition-all"
+        title="Jatuhkan pegawai ke sini untuk menjadikan Kajari sebagai atasan langsungnya"
+      >
+        <div class="flex items-center gap-3.5">
+          <img src="${escapeAttr(kajari.photo_url || '/static/images/kajari-portrait.jpg')}" alt="${escapeAttr(kajari.name)}" class="w-16 h-16 rounded-xl object-cover border border-amber-300 shadow-sm shrink-0">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">PIMPINAN UTAMA</span>
+              <span class="text-[9px] text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 font-bold">DROP TARGET</span>
+            </div>
+            <h4 class="font-heading font-black text-sm text-slate-900 mt-1 truncate">${escapeHtml(kajari.name)}</h4>
+            <p class="text-xs text-slate-600 truncate">${escapeHtml(kajari.position)}</p>
+            ${kajari.nip ? `<div class="text-[10px] text-amber-900 font-mono font-bold mt-1">NIP. ${escapeHtml(kajari.nip)}</div>` : ''}
+          </div>
+        </div>
+        <div class="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+          <span class="text-[10px] text-slate-500 font-medium">Bawahan Langsung: ${l2List.length} Pejabat</span>
+          <button type="button" onclick="openOrgMemberModal(${kajari.id})" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 transition-colors">
+            <i data-lucide="edit-3" class="w-3 h-3 text-emerald-700"></i> Edit
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Vertical Stem Down from Kajari
+  html += `
+    <div class="w-0.5 h-8 bg-amber-400"></div>
+  `;
+
+  // Horizontal Tree Distributor Bar
+  html += `
+    <div class="w-full max-w-5xl h-0.5 bg-amber-300/80 relative">
+      <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-amber-500"></div>
+    </div>
+  `;
+
+  // LEVEL 2 & LEVEL 3: 6 COLUMNS
+  html += `
+    <div class="mt-4 mb-2">
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-300 text-[11px] font-extrabold uppercase">
+        <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700"></i>
+        <span>${escapeHtml(settings.level_2_title || 'LEVEL 2: UNSUR PEMBANTU PIMPINAN & OPERASIONAL')}</span>
+      </span>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 w-full max-w-7xl pt-1">
+  `;
+
+  l2List.forEach(kasi => {
+    const children = kasi.children || l3List.filter(s => s.parent_id === kasi.id);
+
+    const childrenHtml = children.map(sub => `
+      <div 
+        draggable="true"
+        ondragstart="handleAdminDragStart(event, ${sub.id})"
+        ondragend="handleAdminDragEnd(event)"
+        ondragover="handleAdminDragOver(event)"
+        ondragleave="handleAdminDragLeave(event)"
+        ondrop="handleAdminDrop(event, ${sub.id})"
+        class="org-node-draggable bg-white rounded-lg p-2 border border-slate-200 shadow-2xs hover:shadow-sm border-l-4 border-l-emerald-600 flex items-center gap-2 group transition-all cursor-grab"
+        title="Seret untuk memindahkan ke seksi/atasan lain"
+      >
+        <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-500 shrink-0"></i>
+        <img src="${escapeAttr(sub.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(sub.name)}" class="w-7 h-7 rounded-md object-cover border border-slate-200 shrink-0">
+        <div class="flex-1 min-w-0">
+          <div class="text-[9px] text-slate-500 font-medium truncate">${escapeHtml(sub.position)}</div>
+          <div class="font-bold text-[10.5px] text-slate-900 leading-tight truncate">${escapeHtml(sub.name)}</div>
+          ${sub.nip ? `<div class="text-[8.5px] text-slate-500 font-mono truncate">NIP. ${escapeHtml(sub.nip)}</div>` : ''}
+        </div>
+        <button type="button" onclick="openOrgMemberModal(${sub.id})" class="text-slate-400 hover:text-emerald-700 p-0.5" title="Edit">
+          <i data-lucide="edit-2" class="w-3 h-3"></i>
+        </button>
+      </div>
+    `).join('');
+
+    html += `
+      <div class="flex flex-col items-center bg-slate-50/80 p-2.5 rounded-2xl border border-slate-200">
+        <!-- Connector Stem From Top Bar -->
+        <div class="w-0.5 h-3 bg-amber-400 -mt-2.5 mb-1.5"></div>
+
+        <!-- Level 2 Card (Draggable & Drop Target) -->
+        <div 
+          draggable="true"
+          ondragstart="handleAdminDragStart(event, ${kasi.id})"
+          ondragend="handleAdminDragEnd(event)"
+          ondragover="handleAdminDragOver(event)"
+          ondragleave="handleAdminDragLeave(event)"
+          ondrop="handleAdminDrop(event, ${kasi.id})"
+          class="org-node-draggable w-full bg-white rounded-xl shadow-xs border-2 border-emerald-700/80 hover:border-amber-500 p-2.5 relative group transition-all cursor-grab"
+          title="Seret seksi ini atau jatuhkan bawahan ke sini"
+        >
+          <div class="flex items-center justify-between mb-1">
+            <span class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-emerald-100 text-emerald-900 border border-emerald-300">ESELON IV</span>
+            <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-500"></i>
+          </div>
+          <div class="flex items-center gap-2">
+            <img src="${escapeAttr(kasi.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(kasi.name)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0">
+            <div class="flex-1 min-w-0">
+              <div class="text-[9.5px] text-slate-500 font-semibold truncate leading-tight">${escapeHtml(kasi.position)}</div>
+              <div class="font-heading font-bold text-[11px] text-slate-900 leading-snug truncate mt-0.5">${escapeHtml(kasi.name)}</div>
+              ${kasi.nip ? `<div class="text-[8.5px] text-emerald-900 font-mono font-bold truncate">NIP. ${escapeHtml(kasi.nip)}</div>` : ''}
+            </div>
+          </div>
+          <div class="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px]">
+            <span class="text-slate-400 font-medium">${children.length} Bawahan</span>
+            <button type="button" onclick="openOrgMemberModal(${kasi.id})" class="text-emerald-800 hover:text-emerald-900 font-bold flex items-center gap-0.5">
+              <i data-lucide="edit-3" class="w-2.5 h-2.5"></i> Edit
+            </button>
+          </div>
+        </div>
+
+        <!-- Connector Stem Down to Subordinates -->
+        <div class="w-0.5 h-3 bg-slate-300 my-1"></div>
+
+        <!-- Level 3 Subordinates Container -->
+        <div class="w-full space-y-1.5">
+          ${childrenHtml || '<div class="p-2 rounded border border-dashed border-slate-300 text-[10px] text-slate-400 text-center">Jatuhkan bawahan ke sini</div>'}
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
+    </div>
+  `;
+
+  // LEVEL 4: KELOMPOK JABATAN FUNGSIONAL
+  html += `
+    <div class="w-full max-w-7xl pt-8 mt-6 border-t border-slate-200">
+      <div class="flex items-center justify-between mb-4">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-800 border border-slate-300 text-[11px] font-extrabold uppercase">
+          <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-700"></i>
+          <span>${escapeHtml(settings.level_4_title || 'LEVEL 4: KELOMPOK JABATAN FUNGSIONAL & AHLI YUSTISIAL')}</span>
+        </span>
+        <button type="button" onclick="openOrgMemberModal(null)" class="text-xs text-emerald-800 hover:text-emerald-900 font-bold flex items-center gap-1">
+          <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Tambah Fungsional
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+  `;
+
+  l4List.forEach(f => {
+    html += `
+      <div 
+        draggable="true"
+        ondragstart="handleAdminDragStart(event, ${f.id})"
+        ondragend="handleAdminDragEnd(event)"
+        ondragover="handleAdminDragOver(event)"
+        ondragleave="handleAdminDragLeave(event)"
+        ondrop="handleAdminDrop(event, ${f.id})"
+        class="org-node-draggable bg-white rounded-xl border border-slate-200 p-2.5 shadow-xs hover:shadow-md border-t-4 border-t-amber-400 relative group transition-all cursor-grab"
+        title="Seret pegawai fungsional ini ke seksi atau atasan yang sesuai"
+      >
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[8px] font-bold px-1.5 py-0.2 rounded border text-slate-700 bg-slate-100 border-slate-200">FUNGSIONAL</span>
+          <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-500"></i>
+        </div>
+        <div class="flex items-center gap-2">
+          <img src="${escapeAttr(f.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(f.name)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0">
+          <div class="flex-1 min-w-0">
+            <div class="font-heading font-bold text-[11px] text-slate-900 truncate">${escapeHtml(f.name)}</div>
+            <div class="text-[9.5px] text-slate-500 truncate">${escapeHtml(f.position)}</div>
+            ${f.nip ? `<div class="text-[8.5px] text-amber-900 font-mono font-bold truncate">NIP. ${escapeHtml(f.nip)}</div>` : ''}
+          </div>
+        </div>
+        <div class="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-end">
+          <button type="button" onclick="openOrgMemberModal(${f.id})" class="text-emerald-800 hover:text-emerald-900 font-bold text-[10px] flex items-center gap-0.5">
+            <i data-lucide="edit-3" class="w-2.5 h-2.5"></i> Edit
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
+      </div>
+    </div>
+  `;
+
+  // LEVEL 5: PELAKSANA & STAF TEKNIS ADMINISTRASI
+  html += `
+    <div class="w-full max-w-7xl pt-8 mt-6 border-t border-slate-200">
+      <div class="flex items-center justify-between mb-4">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-50 text-teal-900 border border-teal-300 text-[11px] font-extrabold uppercase">
+          <i data-lucide="user-check" class="w-3.5 h-3.5 text-teal-700"></i>
+          <span>${escapeHtml(settings.level_5_title || 'LEVEL 5: PELAKSANA & STAF TEKNIS ADMINISTRASI')}</span>
+        </span>
+        <button type="button" onclick="openOrgMemberModal(null)" class="text-xs text-teal-800 hover:text-teal-900 font-bold flex items-center gap-1">
+          <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Tambah Pelaksana
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+  `;
+
+  l5List.forEach(p => {
+    html += `
+      <div 
+        draggable="true"
+        ondragstart="handleAdminDragStart(event, ${p.id})"
+        ondragend="handleAdminDragEnd(event)"
+        ondragover="handleAdminDragOver(event)"
+        ondragleave="handleAdminDragLeave(event)"
+        ondrop="handleAdminDrop(event, ${p.id})"
+        class="org-node-draggable bg-white rounded-xl border border-slate-200 p-2.5 shadow-xs hover:shadow-md border-t-4 border-t-teal-500 relative group transition-all cursor-grab"
+        title="Seret pegawai pelaksana ini ke seksi atau atasan yang sesuai"
+      >
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[8px] font-bold px-1.5 py-0.2 rounded border text-teal-800 bg-teal-50 border-teal-300">PELAKSANA</span>
+          <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-500"></i>
+        </div>
+        <div class="flex items-center gap-2">
+          <img src="${escapeAttr(p.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(p.name)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0">
+          <div class="flex-1 min-w-0">
+            <div class="font-heading font-bold text-[11px] text-slate-900 truncate">${escapeHtml(p.name)}</div>
+            <div class="text-[9.5px] text-slate-500 truncate">${escapeHtml(p.position)}</div>
+            ${p.nip ? `<div class="text-[8.5px] text-teal-900 font-mono font-bold truncate">NIP. ${escapeHtml(p.nip)}</div>` : ''}
+          </div>
+        </div>
+        <div class="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-end">
+          <button type="button" onclick="openOrgMemberModal(${p.id})" class="text-teal-800 hover:text-teal-900 font-bold text-[10px] flex items-center gap-0.5">
+            <i data-lucide="edit-3" class="w-2.5 h-2.5"></i> Edit
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  html += `
+      </div>
+    </div>
+  </div>
+  `;
+
+  container.innerHTML = html;
   lucide.createIcons();
 }
 
@@ -1602,11 +1952,34 @@ async function loadOrgAdminData() {
       document.getElementById('org-setting-legal-basis').value = s.legal_basis || '';
     }
 
+    // Dynamic Level Category Titles
+    if (document.getElementById('org-setting-level-1-title')) {
+      document.getElementById('org-setting-level-1-title').value = s.level_1_title || 'LEVEL 1: UNSUR PIMPINAN (KEPALA KEJAKSAAN NEGERI)';
+    }
+    if (document.getElementById('org-setting-level-2-title')) {
+      document.getElementById('org-setting-level-2-title').value = s.level_2_title || 'LEVEL 2: UNSUR PEMBANTU PIMPINAN & OPERASIONAL (KASUBBAG / KASI)';
+    }
+    if (document.getElementById('org-setting-level-3-title')) {
+      document.getElementById('org-setting-level-3-title').value = s.level_3_title || 'LEVEL 3: UNSUR PELAKSANA SUB-BAGIAN / SUB-SEKSI / URUSAN';
+    }
+    if (document.getElementById('org-setting-level-4-title')) {
+      document.getElementById('org-setting-level-4-title').value = s.level_4_title || 'LEVEL 4: KELOMPOK JABATAN FUNGSIONAL & AHLI YUSTISIAL';
+    }
+    if (document.getElementById('org-setting-level-5-title')) {
+      document.getElementById('org-setting-level-5-title').value = s.level_5_title || 'LEVEL 5: PELAKSANA & STAF TEKNIS ADMINISTRASI';
+    }
+
     // 3. Populate Parent Dropdown in Modal
     populateOrgParentDropdown();
 
     // 4. Render Members Table
     renderOrgMembersTable();
+
+    // 5. If interactive tree is active/visible, render tree
+    const chartView = document.getElementById('org-view-chart');
+    if (chartView && !chartView.classList.contains('hidden')) {
+      renderAdminInteractiveTree();
+    }
 
   } catch (err) {
     console.error('Failed to load organization admin data:', err);
@@ -2681,7 +3054,12 @@ async function handleSaveOrgSettings(e) {
     watermark_opacity: parseInt(document.getElementById('org-setting-watermark-opacity').value || '12'),
     title: document.getElementById('org-setting-title').value.trim(),
     subtitle: document.getElementById('org-setting-subtitle').value.trim(),
-    legal_basis: document.getElementById('org-setting-legal-basis').value.trim()
+    legal_basis: document.getElementById('org-setting-legal-basis').value.trim(),
+    level_1_title: document.getElementById('org-setting-level-1-title') ? document.getElementById('org-setting-level-1-title').value.trim() : '',
+    level_2_title: document.getElementById('org-setting-level-2-title') ? document.getElementById('org-setting-level-2-title').value.trim() : '',
+    level_3_title: document.getElementById('org-setting-level-3-title') ? document.getElementById('org-setting-level-3-title').value.trim() : '',
+    level_4_title: document.getElementById('org-setting-level-4-title') ? document.getElementById('org-setting-level-4-title').value.trim() : '',
+    level_5_title: document.getElementById('org-setting-level-5-title') ? document.getElementById('org-setting-level-5-title').value.trim() : ''
   };
 
   try {
@@ -2692,13 +3070,35 @@ async function handleSaveOrgSettings(e) {
     });
     const data = await res.json();
     if (data.success) {
-      alert(data.message || 'Pengaturan tampilan bagan berhasil disimpan!');
+      alert(data.message || 'Pengaturan tampilan & penamaan level bagan berhasil disimpan!');
       await loadOrgAdminData();
     } else {
       alert('Gagal menyimpan pengaturan: ' + (data.error || 'Terjadi kesalahan.'));
     }
   } catch (err) {
     alert('Terjadi kesalahan jaringan.');
+  }
+}
+
+function setStandardLevelTitles(scheme) {
+  const l1 = document.getElementById('org-setting-level-1-title');
+  const l2 = document.getElementById('org-setting-level-2-title');
+  const l3 = document.getElementById('org-setting-level-3-title');
+  const l4 = document.getElementById('org-setting-level-4-title');
+  const l5 = document.getElementById('org-setting-level-5-title');
+
+  if (scheme === 'kejaksaan') {
+    if (l1) l1.value = 'LEVEL 1: UNSUR PIMPINAN (KEPALA KEJAKSAAN NEGERI)';
+    if (l2) l2.value = 'LEVEL 2: UNSUR PEMBANTU PIMPINAN & OPERASIONAL (KASUBBAG / KASI)';
+    if (l3) l3.value = 'LEVEL 3: UNSUR PELAKSANA SUB-BAGIAN / SUB-SEKSI / URUSAN';
+    if (l4) l4.value = 'LEVEL 4: KELOMPOK JABATAN FUNGSIONAL & AHLI YUSTISIAL';
+    if (l5) l5.value = 'LEVEL 5: PELAKSANA & STAF TEKNIS ADMINISTRASI';
+  } else if (scheme === 'struktural') {
+    if (l1) l1.value = 'TINGKAT I: PIMPINAN UTAMA & PENGAMBIL KEBIJAKAN';
+    if (l2) l2.value = 'TINGKAT II: PEJABAT STRUKTURAL ESELON IV / KEPALA SEKSI';
+    if (l3) l3.value = 'TINGKAT III: KEPALA SUB SEKSI & KEPALA URUSAN';
+    if (l4) l4.value = 'TINGKAT IV: PEJABAT FUNGSIONAL KEAHLIAN / KETERAMPILAN';
+    if (l5) l5.value = 'TINGKAT V: PELAKSANA TEKNIS & ADMINISTRASI KEDINASAN';
   }
 }
 

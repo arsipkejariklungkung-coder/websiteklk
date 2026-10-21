@@ -1670,6 +1670,107 @@ class TestKertagosaPortal(unittest.TestCase):
         conn.commit()
         conn.close()
 
+    def test_27_organization_drag_drop_and_custom_level_titles(self):
+        """Verify Drag-and-Drop Reparenting partial update, Custom Level Titles CMS, and Adhyaksa Design System tokens."""
+        # 1. Test Custom Level Titles via Admin Settings API
+        custom_titles = {
+            'title': 'STRUKTUR ORGANISASI RESMI',
+            'level_1_title': 'LEVEL 1: UNSUR PIMPINAN UTAMA KEJARI',
+            'level_2_title': 'LEVEL 2: UNSUR OPERASIONAL & PENINDAKAN',
+            'level_3_title': 'LEVEL 3: UNSUR PELAKSANA SUB-BAGIAN & SUB-SEKSI',
+            'level_4_title': 'LEVEL 4: KELOMPOK JABATAN FUNGSIONAL YUSTISIAL',
+            'level_5_title': 'LEVEL 5: STAF PELAKSANA & OPERATOR TEKNIS'
+        }
+        body = json.dumps(custom_titles).encode('utf-8')
+        sett_h = MockHandler(
+            'POST',
+            '/api/admin/organization/settings',
+            {'Content-Type': 'application/json', 'Content-Length': str(len(body)), 'Authorization': f'Bearer {self.token}'},
+            body
+        )
+        sett_h.do_POST()
+        self.assertEqual(sett_h.response_code, 200)
+        self.assertTrue(sett_h.get_response_json().get('success'))
+
+        # 2. Verify that Public API returns the customized level titles in real-time
+        pub_h = MockHandler('GET', '/api/public/organization')
+        pub_h.do_GET()
+        self.assertEqual(pub_h.response_code, 200)
+        pub_data = pub_h.get_response_json()
+        self.assertTrue(pub_data['success'])
+        settings = pub_data.get('settings', {})
+        self.assertEqual(settings.get('level_1_title'), 'LEVEL 1: UNSUR PIMPINAN UTAMA KEJARI')
+        self.assertEqual(settings.get('level_2_title'), 'LEVEL 2: UNSUR OPERASIONAL & PENINDAKAN')
+        self.assertEqual(settings.get('level_3_title'), 'LEVEL 3: UNSUR PELAKSANA SUB-BAGIAN & SUB-SEKSI')
+        self.assertEqual(settings.get('level_4_title'), 'LEVEL 4: KELOMPOK JABATAN FUNGSIONAL YUSTISIAL')
+        self.assertEqual(settings.get('level_5_title'), 'LEVEL 5: STAF PELAKSANA & OPERATOR TEKNIS')
+
+        # 3. Test Drag-and-Drop Reparenting (Partial PUT without name/position)
+        # 3a. Create test member
+        create_payload = json.dumps({
+            'name': 'Bawahan Uji Drag Drop',
+            'position': 'Staf Khusus Operasional',
+            'level': 4,
+            'parent_id': 1
+        }).encode('utf-8')
+        c_h = MockHandler('POST', '/api/admin/organization/members', {'Content-Type': 'application/json', 'Content-Length': str(len(create_payload)), 'Authorization': f'Bearer {self.token}'}, create_payload)
+        c_h.do_POST()
+        self.assertEqual(c_h.response_code, 200)
+        new_id = c_h.get_response_json()['id']
+
+        # 3b. Drag & drop to Level 2 unit (e.g. parent_id = 3, level = 3) via partial update
+        drag_drop_payload = json.dumps({
+            'parent_id': 3,
+            'level': 3
+        }).encode('utf-8')
+        dd_h = MockHandler('PUT', f'/api/admin/organization/members/{new_id}', {'Content-Type': 'application/json', 'Content-Length': str(len(drag_drop_payload)), 'Authorization': f'Bearer {self.token}'}, drag_drop_payload)
+        dd_h.do_PUT()
+        self.assertEqual(dd_h.response_code, 200)
+        self.assertTrue(dd_h.get_response_json().get('success'))
+
+        # Verify DB updated parent_id and level while preserving name and position
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT name, position, parent_id, level FROM organization_members WHERE id = ?", (new_id,))
+        row = cursor.fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual(row['name'], 'Bawahan Uji Drag Drop')
+        self.assertEqual(row['position'], 'Staf Khusus Operasional')
+        self.assertEqual(row['parent_id'], 3)
+        self.assertEqual(row['level'], 3)
+
+        # Cleanup test member and restore default settings
+        cursor.execute("DELETE FROM organization_members WHERE id = ?", (new_id,))
+        cursor.execute("UPDATE page_contents SET content_value='STRUKTUR ORGANISASI' WHERE section_name='organization' AND content_key='org_title'")
+        cursor.execute("UPDATE page_contents SET content_value='LEVEL 1: UNSUR PIMPINAN (KEPALA KEJAKSAAN NEGERI)' WHERE section_name='organization' AND content_key='org_level_1_title'")
+        cursor.execute("UPDATE page_contents SET content_value='LEVEL 2: UNSUR PEMBANTU PIMPINAN & OPERASIONAL (KASUBBAG / KASI)' WHERE section_name='organization' AND content_key='org_level_2_title'")
+        cursor.execute("UPDATE page_contents SET content_value='LEVEL 3: UNSUR PELAKSANA SUB-BAGIAN / SUB-SEKSI / URUSAN' WHERE section_name='organization' AND content_key='org_level_3_title'")
+        cursor.execute("UPDATE page_contents SET content_value='LEVEL 4: KELOMPOK JABATAN FUNGSIONAL & AHLI YUSTISIAL' WHERE section_name='organization' AND content_key='org_level_4_title'")
+        cursor.execute("UPDATE page_contents SET content_value='LEVEL 5: PELAKSANA & STAF TEKNIS ADMINISTRASI' WHERE section_name='organization' AND content_key='org_level_5_title'")
+        conn.commit()
+        conn.close()
+
+        # 4. Verify Static Assets (CSS and JS tokens for Adhyaksa Design System & Drag-and-Drop)
+        with open('static/css/styles.css', 'r', encoding='utf-8') as f:
+            css_content = f.read()
+        self.assertIn('--color-adhyaksa-navy-900', css_content)
+        self.assertIn('.adhyaksa-badge', css_content)
+        self.assertIn('.adhyaksa-card', css_content)
+        self.assertIn('.org-node-draggable', css_content)
+        self.assertIn('.org-drop-target-active', css_content)
+
+        with open('static/js/admin.js', 'r', encoding='utf-8') as f:
+            admin_js = f.read()
+        self.assertIn('renderAdminInteractiveTree', admin_js)
+        self.assertIn('handleAdminDrop', admin_js)
+        self.assertIn('setStandardLevelTitles', admin_js)
+
+        with open('profil-struktur-organisasi.html', 'r', encoding='utf-8') as f:
+            org_html = f.read()
+        self.assertIn('heading-level-4', org_html)
+        self.assertIn('heading-level-5', org_html)
+        self.assertIn('handlePublicDrop', org_html)
+
 
 if __name__ == '__main__':
     unittest.main()

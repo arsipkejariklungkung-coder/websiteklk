@@ -2920,7 +2920,12 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             'watermark_opacity': int(org_settings.get('org_watermark_opacity', '12')),
             'title': org_settings.get('org_title', 'STRUKTUR ORGANISASI'),
             'subtitle': org_settings.get('org_subtitle', 'KEJAKSAAN NEGERI KLUNGKUNG'),
-            'legal_basis': org_settings.get('org_legal_basis', 'Berdasarkan Peraturan Kejaksaan RI Nomor PER-006/A/JA/07/2017 tentang Organisasi dan Tata Kerja Kejaksaan Republik Indonesia')
+            'legal_basis': org_settings.get('org_legal_basis', 'Berdasarkan Peraturan Kejaksaan RI Nomor PER-006/A/JA/07/2017 tentang Organisasi dan Tata Kerja Kejaksaan Republik Indonesia'),
+            'level_1_title': org_settings.get('org_level_1_title', 'LEVEL 1: PIMPINAN TERTINGGI'),
+            'level_2_title': org_settings.get('org_level_2_title', 'LEVEL 2: KEPALA SUB BAGIAN & KEPALA SEKSI'),
+            'level_3_title': org_settings.get('org_level_3_title', 'LEVEL 3: KEPALA SUB SEKSI & KEPALA URUSAN'),
+            'level_4_title': org_settings.get('org_level_4_title', 'LEVEL 4: KELOMPOK JABATAN FUNGSIONAL & AHLI YUSTISIAL'),
+            'level_5_title': org_settings.get('org_level_5_title', 'LEVEL 5: PELAKSANA & STAF TEKNIS ADMINISTRASI')
         }
 
         # 2. Fetch members
@@ -3014,35 +3019,50 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
     def handle_update_organization_member(self, member_id):
         data = self.read_json_body()
-        name = data.get('name', '').strip()
-        position = data.get('position', '').strip()
-        try:
-            level = int(data.get('level', 4))
-        except:
-            level = 4
-        parent_id = data.get('parent_id')
-        if parent_id in ['', None, 'null', 0, '0']:
-            parent_id = None
-        else:
-            try:
-                parent_id = int(parent_id)
-            except:
-                parent_id = None
-
-        photo_url = data.get('photo_url', '').strip() or '/static/images/avatar-officer-male.svg'
-        nip = data.get('nip', '').strip()
-        rank = data.get('rank', '').strip()
-        try:
-            order_num = int(data.get('order_num', 0))
-        except:
-            order_num = 0
-
-        if not name or not position:
-            self.send_json({'error': 'Nama dan Jabatan wajib diisi.'}, 400)
-            return
-
         conn = get_db()
         cursor = conn.cursor()
+        cursor.execute("SELECT * FROM organization_members WHERE id = ?", (member_id,))
+        existing = cursor.fetchone()
+        if not existing:
+            conn.close()
+            self.send_json({'error': 'Pegawai tidak ditemukan.'}, 404)
+            return
+
+        name = data.get('name', existing['name']).strip() if ('name' in data and data['name']) else existing['name']
+        position = data.get('position', existing['position']).strip() if ('position' in data and data['position']) else existing['position']
+
+        if 'level' in data and data['level'] not in ('', None):
+            try:
+                level = int(data['level'])
+            except:
+                level = existing['level']
+        else:
+            level = existing['level']
+
+        if 'parent_id' in data:
+            pid_raw = data['parent_id']
+            if pid_raw in ['', None, 'null', 0, '0']:
+                parent_id = None
+            else:
+                try:
+                    parent_id = int(pid_raw)
+                except:
+                    parent_id = None
+        else:
+            parent_id = existing['parent_id']
+
+        photo_url = data.get('photo_url', existing['photo_url'])
+        nip = data.get('nip', existing['nip'])
+        rank = data.get('rank', existing['rank'])
+
+        if 'order_num' in data and data['order_num'] not in ('', None):
+            try:
+                order_num = int(data['order_num'])
+            except:
+                order_num = existing['order_num']
+        else:
+            order_num = existing['order_num']
+
         cursor.execute("""
         UPDATE organization_members
         SET name = ?, position = ?, level = ?, parent_id = ?, photo_url = ?, nip = ?, rank = ?, order_num = ?
@@ -3053,7 +3073,11 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
         self.send_json({
             'success': True,
-            'message': f'Data pegawai "{name}" berhasil diperbarui!'
+            'id': int(member_id),
+            'name': name,
+            'parent_id': parent_id,
+            'level': level,
+            'message': f'Hierarki & data pegawai "{name}" berhasil diperbarui!'
         })
 
     def handle_delete_organization_member(self, member_id):
@@ -3079,10 +3103,15 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             'org_logo_left': data.get('logo_left'),
             'org_logo_right': data.get('logo_right'),
             'org_watermark_bg': data.get('watermark_bg'),
-            'org_watermark_opacity': str(data.get('watermark_opacity', '12')),
+            'org_watermark_opacity': str(data.get('watermark_opacity', '12')) if data.get('watermark_opacity') is not None else None,
             'org_title': data.get('title'),
             'org_subtitle': data.get('subtitle'),
-            'org_legal_basis': data.get('legal_basis')
+            'org_legal_basis': data.get('legal_basis'),
+            'org_level_1_title': data.get('level_1_title'),
+            'org_level_2_title': data.get('level_2_title'),
+            'org_level_3_title': data.get('level_3_title'),
+            'org_level_4_title': data.get('level_4_title'),
+            'org_level_5_title': data.get('level_5_title')
         }
 
         conn = get_db()
@@ -3099,7 +3128,7 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
         self.send_json({
             'success': True,
-            'message': 'Pengaturan tampilan bagan organisasi berhasil diperbarui!'
+            'message': 'Pengaturan tampilan & penamaan level bagan organisasi berhasil diperbarui!'
         })
 
     def handle_reset_organization(self):

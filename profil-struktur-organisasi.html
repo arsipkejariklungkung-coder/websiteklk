@@ -428,7 +428,7 @@
                  LEVEL 1: PIMPINAN (1 Kartu di paling atas tengah)
                  ============================================================== -->
             <div class="flex flex-col items-center">
-              <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-900 bg-amber-100 px-3 py-0.5 rounded-full border border-amber-300 mb-2 shadow-sm">
+              <span id="heading-level-1" class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-900 bg-amber-100 px-3 py-0.5 rounded-full border border-amber-300 mb-2 shadow-sm">
                 LEVEL 1: PIMPINAN TERTINGGI
               </span>
 
@@ -476,6 +476,11 @@
             <!-- ==============================================================
                  LEVEL 2 & LEVEL 3: 6 KEPALA SEKSI / BAGIAN + 2 SUB-BAGIAN DI BAWAHNYA
                  ============================================================== -->
+            <div class="flex justify-center mb-3">
+              <span id="heading-level-2-3" class="text-[10px] font-extrabold uppercase tracking-widest text-slate-800 bg-emerald-50 px-3 py-0.5 rounded-full border border-emerald-300 shadow-sm">
+                LEVEL 2 &amp; 3: KEPALA SUB BAGIAN &amp; KEPALA SEKSI
+              </span>
+            </div>
             <div id="container-level-2-and-3" class="grid grid-cols-6 gap-3 lg:gap-4 items-start">
               
               <!-- Column 1: Subbagian Pembinaan -->
@@ -680,64 +685,36 @@
             </div>
 
             <!-- ==============================================================
-                 LEVEL 4: KELOMPOK JABATAN FUNGSIONAL (Berjejer Rapi di Baris Paling Bawah)
+                 LEVEL 4: KELOMPOK JABATAN FUNGSIONAL
                  ============================================================== -->
-            <div class="pt-8 mt-6 border-t border-slate-200/80">
+            <div id="section-level-4" class="pt-8 mt-6 border-t border-slate-200/80">
               <div class="flex items-center justify-center mb-6">
                 <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-300 text-xs font-bold shadow-sm">
                   <i data-lucide="award" class="w-4 h-4 text-emerald-800"></i>
-                  <span>LEVEL 4: KELOMPOK JABATAN FUNGSIONAL &amp; AHLI YUSTISIAL</span>
+                  <span id="heading-level-4">LEVEL 4: KELOMPOK JABATAN FUNGSIONAL &amp; AHLI YUSTISIAL</span>
                 </span>
               </div>
 
               <!-- 5 Columns Grid for Level 4 Cards -->
               <div id="container-level-4" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
-                
-                <div onclick="openMemberDetail(20)" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
-                  <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
-                  <div class="flex-1 min-w-0">
-                    <span class="text-[8.5px] font-bold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">AHLI MADYA</span>
-                    <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">Dr. I Gst Ayu Ratih, S.H.</div>
-                    <div class="text-[9.5px] text-slate-500 truncate">Jaksa Penuntut Umum</div>
-                  </div>
-                </div>
+                <!-- Populated dynamically via JS -->
+              </div>
+            </div>
 
-                <div onclick="openMemberDetail(21)" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
-                  <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
-                  <div class="flex-1 min-w-0">
-                    <span class="text-[8.5px] font-bold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">AHLI MUDA</span>
-                    <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">I Ketut Budiarta, S.H.</div>
-                    <div class="text-[9.5px] text-slate-500 truncate">Jaksa Fungsional</div>
-                  </div>
-                </div>
+            <!-- ==============================================================
+                 LEVEL 5: PELAKSANA & STAF TEKNIS ADMINISTRASI
+                 ============================================================== -->
+            <div id="section-level-5" class="pt-8 mt-6 border-t border-slate-200/80">
+              <div class="flex items-center justify-center mb-6">
+                <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 text-teal-900 border border-teal-300 text-xs font-bold shadow-sm">
+                  <i data-lucide="user-check" class="w-4 h-4 text-teal-700"></i>
+                  <span id="heading-level-5">LEVEL 5: PELAKSANA &amp; STAF TEKNIS ADMINISTRASI</span>
+                </span>
+              </div>
 
-                <div onclick="openMemberDetail(22)" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
-                  <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
-                  <div class="flex-1 min-w-0">
-                    <span class="text-[8.5px] font-bold text-purple-900 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">FORENSIK</span>
-                    <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">Ni Nyoman Dewi, S.E.</div>
-                    <div class="text-[9.5px] text-slate-500 truncate">Auditor Keuangan Negara</div>
-                  </div>
-                </div>
-
-                <div onclick="openMemberDetail(23)" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
-                  <img src="/static/images/avatar-officer-male.svg" alt="Foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
-                  <div class="flex-1 min-w-0">
-                    <span class="text-[8.5px] font-bold text-emerald-900 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">TI / IT</span>
-                    <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">I Dewa Putu Alit, S.Kom.</div>
-                    <div class="text-[9.5px] text-slate-500 truncate">Pranata Komputer Yustisial</div>
-                  </div>
-                </div>
-
-                <div onclick="openMemberDetail(24)" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
-                  <img src="/static/images/avatar-officer-female.svg" alt="Foto" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
-                  <div class="flex-1 min-w-0">
-                    <span class="text-[8.5px] font-bold text-slate-900 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">ANALIS</span>
-                    <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">Ni Made Sri Wahyuni, S.H.</div>
-                    <div class="text-[9.5px] text-slate-500 truncate">Analis Penuntutan Perkara</div>
-                  </div>
-                </div>
-
+              <!-- 5 Columns Grid for Level 5 Cards -->
+              <div id="container-level-5" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+                <!-- Populated dynamically via JS -->
               </div>
             </div>
 
@@ -1013,31 +990,122 @@
         const elLegal = document.getElementById('org-legal-text');
         if (elLegal) elLegal.textContent = settings.legal_basis;
       }
+
+      // Dynamic Level Category Headings
+      if (settings.level_1_title) {
+        const elL1 = document.getElementById('heading-level-1');
+        if (elL1) elL1.textContent = settings.level_1_title;
+      }
+      if (settings.level_2_title) {
+        const elL2 = document.getElementById('heading-level-2-3');
+        if (elL2) elL2.textContent = settings.level_2_title;
+      }
+      if (settings.level_4_title) {
+        const elL4 = document.getElementById('heading-level-4');
+        if (elL4) elL4.textContent = settings.level_4_title;
+      }
+      if (settings.level_5_title) {
+        const elL5 = document.getElementById('heading-level-5');
+        if (elL5) elL5.textContent = settings.level_5_title;
+      }
+    }
+
+    let publicDraggedMemberId = null;
+
+    function handlePublicDragStart(e, id) {
+      if (!publicOrgData.is_admin) return;
+      publicDraggedMemberId = id;
+      e.dataTransfer.setData('text/plain', String(id));
+      e.dataTransfer.effectAllowed = 'move';
+      e.currentTarget.classList.add('org-node-dragging');
+    }
+
+    function handlePublicDragEnd(e) {
+      e.currentTarget.classList.remove('org-node-dragging');
+      document.querySelectorAll('.org-drop-target-active').forEach(el => el.classList.remove('org-drop-target-active'));
+    }
+
+    function handlePublicDragOver(e) {
+      if (!publicOrgData.is_admin) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      e.currentTarget.classList.add('org-drop-target-active');
+    }
+
+    function handlePublicDragLeave(e) {
+      e.currentTarget.classList.remove('org-drop-target-active');
+    }
+
+    async function handlePublicDrop(e, targetParentId) {
+      if (!publicOrgData.is_admin) return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.currentTarget.classList.remove('org-drop-target-active');
+
+      const draggedId = publicDraggedMemberId || parseInt(e.dataTransfer.getData('text/plain'));
+      if (!draggedId || draggedId === targetParentId) return;
+
+      const targetMember = (publicOrgData.members || []).find(m => m.id === targetParentId);
+      const draggedMember = (publicOrgData.members || []).find(m => m.id === draggedId);
+      if (!targetMember || !draggedMember) return;
+
+      let newLevel = targetMember.level + 1;
+      if (newLevel > 5) newLevel = 5;
+
+      const confirmMsg = `Pindahkan "${draggedMember.name}" (${draggedMember.position}) di bawah atasan langsung "${targetMember.name}" (${targetMember.position})?`;
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch(`/api/admin/organization/members/${draggedId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ parent_id: targetParentId, level: newLevel })
+        });
+        const d = await res.json();
+        if (d.success) {
+          await loadPublicOrgData();
+        } else {
+          alert('Gagal memindahkan: ' + (d.error || 'Terjadi kesalahan.'));
+        }
+      } catch (err) {
+        alert('Terjadi kesalahan jaringan.');
+      }
     }
 
     function renderDynamicChart(hierarchy) {
       if (!hierarchy) return;
+      const isAdmin = !!publicOrgData.is_admin;
 
       // 1. Render Level 1 (Pimpinan)
       if (hierarchy.level_1 && hierarchy.level_1.length > 0) {
         const l1 = hierarchy.level_1[0];
         const containerL1 = document.getElementById('container-level-1');
         if (containerL1) {
-          const nipHtml = (publicOrgData.is_admin && l1.nip) ? `
+          const nipHtml = (isAdmin && l1.nip) ? `
             <div class="text-[10px] text-amber-900 font-mono font-bold mt-1.5 inline-flex items-center gap-1 bg-amber-50 px-2 py-0.5 rounded border border-amber-300">
               <i data-lucide="shield" class="w-3 h-3 text-amber-700"></i> NIP. ${escapeHtml(l1.nip)}
             </div>
           ` : '';
 
+          const dragAttrs = isAdmin ? `
+            ondragover="handlePublicDragOver(event)"
+            ondragleave="handlePublicDragLeave(event)"
+            ondrop="handlePublicDrop(event, ${l1.id})"
+            title="Mode Admin: Lepas bawahan di sini untuk dipimpin Kajari"
+          ` : '';
+
           containerL1.innerHTML = `
-            <div onclick="openMemberDetail(${l1.id})" class="org-node-card cursor-pointer w-96 bg-white rounded-2xl shadow-lg border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-600 p-4 flex items-center gap-4 relative group">
+            <div onclick="openMemberDetail(${l1.id})" ${dragAttrs} class="org-node-card cursor-pointer w-96 bg-white rounded-2xl shadow-lg border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-600 p-4 flex items-center gap-4 relative group transition-all">
               <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 border-amber-400 shrink-0 shadow-md bg-slate-100">
                 <img src="${escapeAttr(l1.photo_url || '/static/images/kajari-portrait.jpg')}" alt="${escapeAttr(l1.name)}" class="w-full h-full object-cover">
               </div>
               <div class="flex-1 min-w-0">
-                <span class="inline-block px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-100 text-amber-900 border border-amber-300">
-                  KEPALA KEJAKSAAN NEGERI
-                </span>
+                <div class="flex items-center justify-between">
+                  <span class="inline-block px-2 py-0.5 rounded text-[9px] font-extrabold uppercase bg-amber-100 text-amber-900 border border-amber-300">
+                    KEPALA KEJAKSAAN NEGERI
+                  </span>
+                  ${isAdmin ? '<span class="text-[9px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.2 rounded border border-amber-300">DROP TARGET</span>' : ''}
+                </div>
                 <h2 class="font-heading font-black text-sm sm:text-base text-slate-900 leading-snug mt-1 group-hover:text-emerald-900 transition-colors">
                   ${escapeHtml(l1.name)}
                 </h2>
@@ -1054,24 +1122,50 @@
         const containerL2 = document.getElementById('container-level-2-and-3');
         if (containerL2) {
           containerL2.innerHTML = hierarchy.level_2.map(kasi => {
-            const childrenHtml = (kasi.children || []).map(sub => `
-              <div onclick="openMemberDetail(${sub.id})" class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2">
-                <img src="${escapeAttr(sub.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(sub.name)}" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
-                <div class="flex-1 min-w-0">
-                  <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">${escapeHtml(sub.position)}</div>
-                  <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">${escapeHtml(sub.name)}</div>
-                </div>
-              </div>
-            `).join('');
+            const childrenHtml = (kasi.children || []).map(sub => {
+              const dragAttrsSub = isAdmin ? `
+                draggable="true"
+                ondragstart="handlePublicDragStart(event, ${sub.id})"
+                ondragend="handlePublicDragEnd(event)"
+                class="org-node-card org-node-draggable cursor-grab w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2 transition-all"
+                title="Seret untuk memindahkan bawahan ini ke atasan lain"
+              ` : `
+                class="org-node-card cursor-pointer w-full bg-slate-50/90 rounded-lg shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:bg-white p-2 flex items-center gap-2"
+              `;
 
-            const nipLevel2Html = (publicOrgData.is_admin && kasi.nip) ? `
+              return `
+                <div onclick="openMemberDetail(${sub.id})" ${dragAttrsSub}>
+                  <img src="${escapeAttr(sub.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(sub.name)}" class="w-8 h-8 rounded-md object-cover border border-slate-200 shrink-0">
+                  <div class="flex-1 min-w-0">
+                    <div class="text-[9px] text-slate-500 font-medium leading-tight truncate">${escapeHtml(sub.position)}</div>
+                    <div class="font-heading font-bold text-[11px] text-slate-900 leading-tight truncate">${escapeHtml(sub.name)}</div>
+                  </div>
+                  ${isAdmin ? '<i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>' : ''}
+                </div>
+              `;
+            }).join('');
+
+            const nipLevel2Html = (isAdmin && kasi.nip) ? `
               <div class="text-[9px] text-amber-900 font-mono font-bold truncate bg-amber-50 px-1.5 py-0.5 rounded border border-amber-300 mt-0.5">NIP. ${escapeHtml(kasi.nip)}</div>
             ` : '';
+
+            const dragAttrsL2 = isAdmin ? `
+              draggable="true"
+              ondragstart="handlePublicDragStart(event, ${kasi.id})"
+              ondragend="handlePublicDragEnd(event)"
+              ondragover="handlePublicDragOver(event)"
+              ondragleave="handlePublicDragLeave(event)"
+              ondrop="handlePublicDrop(event, ${kasi.id})"
+              class="org-node-card org-node-draggable cursor-grab w-full bg-white rounded-xl shadow-md border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-700 p-2.5 flex items-center gap-2.5 relative group transition-all"
+              title="Seret pejabat ini atau jatuhkan bawahan ke sini"
+            ` : `
+              class="org-node-card cursor-pointer w-full bg-white rounded-xl shadow-md border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-700 p-2.5 flex items-center gap-2.5 relative group"
+            `;
 
             return `
               <div class="flex flex-col items-center space-y-2">
                 <!-- Level 2 Card with thick gold top border -->
-                <div onclick="openMemberDetail(${kasi.id})" class="org-node-card cursor-pointer w-full bg-white rounded-xl shadow-md border border-slate-200 border-t-4 border-t-amber-400 hover:border-emerald-700 p-2.5 flex items-center gap-2.5 relative group">
+                <div onclick="openMemberDetail(${kasi.id})" ${dragAttrsL2}>
                   <img src="${escapeAttr(kasi.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(kasi.name)}" class="w-11 h-11 rounded-lg object-cover border border-slate-200 shrink-0">
                   <div class="flex-1 min-w-0">
                     <span class="inline-block px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase bg-emerald-50 text-emerald-900 border border-emerald-200">ESELON IV</span>
@@ -1079,12 +1173,13 @@
                     <div class="font-heading font-extrabold text-xs text-slate-900 leading-snug truncate group-hover:text-emerald-900">${escapeHtml(kasi.name)}</div>
                     ${nipLevel2Html}
                   </div>
+                  ${isAdmin ? '<i data-lucide="grip-vertical" class="w-4 h-4 text-slate-400 shrink-0"></i>' : ''}
                 </div>
 
                 <!-- Connector Line Down to Sub-bagian -->
                 <div class="w-0.5 h-4 tree-line-slate"></div>
 
-                <!-- Level 3: 2 Sub-cards -->
+                <!-- Level 3: Sub-cards -->
                 <div class="w-full space-y-2">
                   ${childrenHtml}
                 </div>
@@ -1094,35 +1189,81 @@
         }
       }
 
-      // 3. Render Level 4 (Jabatan Fungsional) & Level 5 (Pelaksana)
-      const fungsionalAndPelaksana = [
-        ...(hierarchy.level_4 || []),
-        ...(hierarchy.level_5 || [])
-      ];
-      if (fungsionalAndPelaksana.length > 0) {
-        const containerL4 = document.getElementById('container-level-4');
-        if (containerL4) {
-          containerL4.innerHTML = fungsionalAndPelaksana.map(f => {
-            const isPelaksana = (f.level === 5);
-            const badgeClass = isPelaksana ? 'text-teal-800 bg-teal-100 border-teal-300' : 'text-slate-700 bg-slate-100 border-slate-200';
-            const badgeText = isPelaksana ? 'PELAKSANA' : 'FUNGSIONAL';
-            const borderTop = isPelaksana ? 'border-t-teal-500' : 'border-t-amber-400';
-            const nipLevel4Html = (publicOrgData.is_admin && f.nip) ? `
+      // 3. Render Level 4 (Jabatan Fungsional)
+      const containerL4 = document.getElementById('container-level-4');
+      const sectionL4 = document.getElementById('section-level-4');
+      const level4List = hierarchy.level_4 || [];
+      if (containerL4) {
+        if (level4List.length > 0) {
+          if (sectionL4) sectionL4.classList.remove('hidden');
+          containerL4.innerHTML = level4List.map(f => {
+            const nipHtml = (isAdmin && f.nip) ? `
               <div class="text-[8.5px] text-amber-900 font-mono font-bold truncate mt-0.5">NIP. ${escapeHtml(f.nip)}</div>
             ` : '';
+            const dragAttrs = isAdmin ? `
+              draggable="true"
+              ondragstart="handlePublicDragStart(event, ${f.id})"
+              ondragend="handlePublicDragEnd(event)"
+              class="org-node-card org-node-draggable cursor-grab bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5 transition-all"
+              title="Seret pegawai ini untuk memindahkan relasi hierarki"
+            ` : `
+              class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5"
+            `;
 
             return `
-              <div onclick="openMemberDetail(${f.id})" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 ${borderTop} hover:shadow-md p-3 flex items-center gap-2.5">
+              <div onclick="openMemberDetail(${f.id})" ${dragAttrs}>
                 <img src="${escapeAttr(f.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(f.name)}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
                 <div class="flex-1 min-w-0">
-                  <span class="text-[8.5px] font-bold px-1.5 py-0.5 rounded border ${badgeClass}">${badgeText}</span>
+                  <span class="text-[8.5px] font-bold px-1.5 py-0.5 rounded border text-slate-700 bg-slate-100 border-slate-200">FUNGSIONAL</span>
                   <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">${escapeHtml(f.name)}</div>
                   <div class="text-[9.5px] text-slate-500 truncate">${escapeHtml(f.position)}</div>
-                  ${nipLevel4Html}
+                  ${nipHtml}
                 </div>
+                ${isAdmin ? '<i data-lucide="grip-vertical" class="w-4 h-4 text-slate-400 shrink-0"></i>' : ''}
               </div>
             `;
           }).join('');
+        } else {
+          if (sectionL4) sectionL4.classList.add('hidden');
+        }
+      }
+
+      // 4. Render Level 5 (Pelaksana & Staf Teknis Administrasi)
+      const containerL5 = document.getElementById('container-level-5');
+      const sectionL5 = document.getElementById('section-level-5');
+      const level5List = hierarchy.level_5 || [];
+      if (containerL5) {
+        if (level5List.length > 0) {
+          if (sectionL5) sectionL5.classList.remove('hidden');
+          containerL5.innerHTML = level5List.map(p => {
+            const nipHtml = (isAdmin && p.nip) ? `
+              <div class="text-[8.5px] text-teal-900 font-mono font-bold truncate mt-0.5">NIP. ${escapeHtml(p.nip)}</div>
+            ` : '';
+            const dragAttrs = isAdmin ? `
+              draggable="true"
+              ondragstart="handlePublicDragStart(event, ${p.id})"
+              ondragend="handlePublicDragEnd(event)"
+              class="org-node-card org-node-draggable cursor-grab bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-teal-500 hover:shadow-md p-3 flex items-center gap-2.5 transition-all"
+              title="Seret pegawai pelaksana ini untuk memindahkan relasi hierarki"
+            ` : `
+              class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-teal-500 hover:shadow-md p-3 flex items-center gap-2.5"
+            `;
+
+            return `
+              <div onclick="openMemberDetail(${p.id})" ${dragAttrs}>
+                <img src="${escapeAttr(p.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(p.name)}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
+                <div class="flex-1 min-w-0">
+                  <span class="text-[8.5px] font-bold px-1.5 py-0.5 rounded border text-teal-800 bg-teal-50 border-teal-300">PELAKSANA</span>
+                  <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">${escapeHtml(p.name)}</div>
+                  <div class="text-[9.5px] text-slate-500 truncate">${escapeHtml(p.position)}</div>
+                  ${nipHtml}
+                </div>
+                ${isAdmin ? '<i data-lucide="grip-vertical" class="w-4 h-4 text-slate-400 shrink-0"></i>' : ''}
+              </div>
+            `;
+          }).join('');
+        } else {
+          if (sectionL5) sectionL5.classList.add('hidden');
         }
       }
 

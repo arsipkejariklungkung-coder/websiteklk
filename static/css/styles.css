@@ -50,7 +50,100 @@
   --shadow-gold-glow: 0 0 25px rgba(234, 179, 8, 0.35);
   --shadow-forest-deep: 0 20px 40px -15px rgba(7, 42, 25, 0.7);
   --shadow-card-elevated: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+
+  /* Nuansa Resmi Institusi Adhyaksa (Biru Tua, Emas Kejaksaan & Netral Bersih) */
+  --color-adhyaksa-navy-950: #061122;
+  --color-adhyaksa-navy-900: #0A1A33;
+  --color-adhyaksa-navy-850: #0E2447;
+  --color-adhyaksa-navy-800: #14325E;
+  --color-adhyaksa-gold-500: #EAB308;
+  --color-adhyaksa-gold-600: #CA8A04;
+  --color-adhyaksa-gold-700: #A16207;
+  --color-adhyaksa-gold-amber: #D97706;
 }
+
+/* ==========================================================================
+   ADHYAKSA UNIFIED DESIGN SYSTEM (NAVY, GOLD, CLEAN NEUTRAL)
+   ========================================================================== */
+.bg-adhyaksa-navy {
+  background-color: var(--color-adhyaksa-navy-900);
+}
+.text-adhyaksa-navy {
+  color: var(--color-adhyaksa-navy-900);
+}
+.border-adhyaksa-navy {
+  border-color: var(--color-adhyaksa-navy-800);
+}
+
+.bg-adhyaksa-gold {
+  background-color: var(--color-adhyaksa-gold-500);
+}
+.text-adhyaksa-gold {
+  color: var(--color-adhyaksa-gold-600);
+}
+
+/* Institutional Badge */
+.adhyaksa-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background-color: #FEF3C7;
+  color: #78350F;
+  border: 1px solid #FCD34D;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Institutional Card */
+.adhyaksa-card {
+  background-color: #FFFFFF;
+  border-radius: 1rem;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.adhyaksa-card:hover {
+  border-color: #FCD34D;
+  box-shadow: 0 10px 25px -5px rgba(11, 28, 56, 0.08), 0 8px 10px -6px rgba(11, 28, 56, 0.03);
+  transform: translateY(-2px);
+}
+
+/* Interactive Drag & Drop Styling for Organization Chart */
+.org-node-draggable {
+  cursor: grab !important;
+  user-select: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.org-node-draggable:active {
+  cursor: grabbing !important;
+}
+.org-node-dragging {
+  opacity: 0.45 !important;
+  transform: scale(0.96) !important;
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2) !important;
+}
+.org-drop-target-active {
+  border: 2px dashed #D97706 !important;
+  background-color: #FFFBEB !important;
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.35) !important;
+  transform: scale(1.025) !important;
+}
+.org-drag-pill-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.375rem;
+  background-color: #0B3B24;
+  color: #FDE047;
+  letter-spacing: 0.04em;
 
 /* 3. Base & Reset Enhancements */
 *, *::before, *::after {
