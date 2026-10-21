@@ -8,3 +8,5 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+*.db-shm
+*.db-wal

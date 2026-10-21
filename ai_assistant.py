@@ -22,8 +22,37 @@ DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible; KertagosaGeminiAssistant/3.5; +ht
 
 
 def get_db_path():
-    """Locate database file consistently."""
+    """Locate database file consistently across local and Vercel serverless environments."""
+    try:
+        import server
+        if hasattr(server, 'DB_PATH') and server.DB_PATH:
+            return server.DB_PATH
+    except Exception:
+        pass
+
+    # Check Vercel serverless environment flags
     base_dir = os.path.dirname(os.path.abspath(__file__))
+    is_vercel = bool(
+        os.environ.get('VERCEL')
+        or os.environ.get('VERCEL_ENV')
+        or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
+        or base_dir.startswith('/var/task')
+        or not os.access(base_dir, os.W_OK)
+    )
+    if is_vercel or os.path.exists('/tmp/kertagosa.db'):
+        tmp_db = '/tmp/kertagosa.db'
+        if not os.path.exists(tmp_db):
+            seed_db = os.path.join(base_dir, "data", "kertagosa.db")
+            if os.path.exists(seed_db):
+                try:
+                    import shutil
+                    os.makedirs('/tmp', exist_ok=True)
+                    shutil.copyfile(seed_db, tmp_db)
+                    os.chmod(tmp_db, 0o666)
+                except Exception as e:
+                    print(f"[Gemini AI Service] Could not copy seed DB to {tmp_db}: {e}")
+        return tmp_db
+
     data_dir = os.path.join(base_dir, "data")
     if os.path.exists(data_dir):
         return os.path.join(data_dir, "kertagosa.db")
@@ -48,13 +77,17 @@ def get_gemini_model(explicit_model: str = None) -> str:
     try:
         db_path = get_db_path()
         if os.path.exists(db_path):
-            conn = sqlite3.connect(db_path)
+            conn = sqlite3.connect(db_path, timeout=10.0)
             cursor = conn.cursor()
             cursor.execute("SELECT content_value FROM page_contents WHERE content_key = 'gemini_model'")
             row = cursor.fetchone()
             conn.close()
             if row and row[0] and str(row[0]).strip():
-                return str(row[0]).strip()
+                val = str(row[0]).strip()
+                # Upgrade legacy 2.5 / 2.0 / 1.5 models to default 3.5
+                if val in ('gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'):
+                    return DEFAULT_MODEL
+                return val
     except Exception as e:
         print(f"[Gemini Service DB Warning] Could not check gemini_model in page_contents: {e}")
 
@@ -66,7 +99,12 @@ def save_gemini_model(model_name: str) -> bool:
     model_name = (model_name or DEFAULT_MODEL).strip()
     try:
         db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
+        if db_path.startswith('/tmp') and os.path.exists(db_path):
+            try:
+                os.chmod(db_path, 0o666)
+            except Exception:
+                pass
+        conn = sqlite3.connect(db_path, timeout=15.0)
         cursor = conn.cursor()
         cursor.execute("""
         INSERT INTO page_contents (content_key, section_name, content_type, content_value, label, updated_at)
@@ -101,7 +139,7 @@ def get_gemini_api_key(explicit_key: str = None) -> tuple[str, str]:
     try:
         db_path = get_db_path()
         if os.path.exists(db_path):
-            conn = sqlite3.connect(db_path)
+            conn = sqlite3.connect(db_path, timeout=10.0)
             cursor = conn.cursor()
             cursor.execute("SELECT content_value FROM page_contents WHERE content_key = 'gemini_api_key'")
             row = cursor.fetchone()
@@ -119,7 +157,12 @@ def save_gemini_api_key(api_key: str) -> bool:
     api_key = (api_key or "").strip()
     try:
         db_path = get_db_path()
-        conn = sqlite3.connect(db_path)
+        if db_path.startswith('/tmp') and os.path.exists(db_path):
+            try:
+                os.chmod(db_path, 0o666)
+            except Exception:
+                pass
+        conn = sqlite3.connect(db_path, timeout=15.0)
         cursor = conn.cursor()
         cursor.execute("""
         INSERT INTO page_contents (content_key, section_name, content_type, content_value, label, updated_at)

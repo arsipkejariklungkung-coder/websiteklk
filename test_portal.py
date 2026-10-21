@@ -8,13 +8,15 @@ import sys
 import io
 import json
 import base64
+import sqlite3
 import subprocess
 import unittest
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 
-from server import KertagosaHandler, get_db, hash_password, SESSIONS
+from server import KertagosaHandler, get_db, hash_password, SESSIONS, DB_PATH
+import server
 
 class MockRequest:
     def __init__(self, data=b""):
@@ -2808,142 +2810,153 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('features', status_data)
 
         # 3. Test Save Gemini API Key & Model to Database
-        test_key = "AIzaSyDummyTestKeyForAdhyaksaKlungkung2026"
-        save_body = json.dumps({'api_key': test_key, 'model': 'gemini-3.5-flash'}).encode('utf-8')
-        h_save = MockHandler('POST', '/api/admin/ai/save-key', {
-            'Content-Length': str(len(save_body)),
-            'Authorization': f'Bearer {self.token}'
-        }, save_body)
-        h_save.do_POST()
-        self.assertEqual(h_save.response_code, 200)
-        save_res = h_save.get_response_json()
-        self.assertTrue(save_res.get('success'))
+        try:
+            test_key = "AIzaSyDummyTestKeyForAdhyaksaKlungkung2026"
+            save_body = json.dumps({'api_key': test_key, 'model': 'gemini-3.5-flash'}).encode('utf-8')
+            h_save = MockHandler('POST', '/api/admin/ai/save-key', {
+                'Content-Length': str(len(save_body)),
+                'Authorization': f'Bearer {self.token}'
+            }, save_body)
+            h_save.do_POST()
+            self.assertEqual(h_save.response_code, 200)
+            save_res = h_save.get_response_json()
+            self.assertTrue(save_res.get('success'))
 
-        # Verify key and model were persisted in page_contents and resolved
-        stored_key, source = ai_assistant.get_gemini_api_key()
-        self.assertEqual(stored_key, test_key)
-        self.assertIn(source, ('db', 'env'))
-        stored_model = ai_assistant.get_gemini_model()
-        self.assertEqual(stored_model, 'gemini-3.5-flash')
+            # Verify key and model were persisted in page_contents and resolved
+            stored_key, source = ai_assistant.get_gemini_api_key()
+            self.assertEqual(stored_key, test_key)
+            self.assertIn(source, ('db', 'env'))
+            stored_model = ai_assistant.get_gemini_model()
+            self.assertEqual(stored_model, 'gemini-3.5-flash')
 
-        # 4. Test AI Assist - Draft News
-        news_payload = json.dumps({
-            'action': 'draft_news',
-            'topic': 'Penyuluhan Hukum Jaksa Masuk Sekolah di SMAN 1 Semarapura',
-            'notes': 'Materi bahaya narkotika, UU ITE, dan restorative justice',
-            'category': 'Intelijen & JMS'
-        }).encode('utf-8')
-        h_news = MockHandler('POST', '/api/admin/ai/assist', {
-            'Content-Length': str(len(news_payload)),
-            'Authorization': f'Bearer {self.token}'
-        }, news_payload)
-        h_news.do_POST()
-        self.assertEqual(h_news.response_code, 200)
-        news_res = h_news.get_response_json()
-        self.assertTrue(news_res.get('success'))
-        self.assertIn('title', news_res['data'])
-        self.assertIn('excerpt', news_res['data'])
-        self.assertIn('content', news_res['data'])
-        self.assertIn('highlight_quote', news_res['data'])
+            # 4. Test AI Assist - Draft News
+            news_payload = json.dumps({
+                'action': 'draft_news',
+                'topic': 'Penyuluhan Hukum Jaksa Masuk Sekolah di SMAN 1 Semarapura',
+                'notes': 'Materi bahaya narkotika, UU ITE, dan restorative justice',
+                'category': 'Intelijen & JMS'
+            }).encode('utf-8')
+            h_news = MockHandler('POST', '/api/admin/ai/assist', {
+                'Content-Length': str(len(news_payload)),
+                'Authorization': f'Bearer {self.token}'
+            }, news_payload)
+            h_news.do_POST()
+            self.assertEqual(h_news.response_code, 200)
+            news_res = h_news.get_response_json()
+            self.assertTrue(news_res.get('success'))
+            self.assertIn('title', news_res['data'])
+            self.assertIn('excerpt', news_res['data'])
+            self.assertIn('content', news_res['data'])
+            self.assertIn('highlight_quote', news_res['data'])
 
-        # 5. Test AI Assist - Draft Announcement
-        ann_payload = json.dumps({
-            'action': 'draft_announcement',
-            'topic': 'Lelang Eksekusi Barang Rampasan Negara',
-            'notes': 'Kendaraan bermotor roda 2 dan roda 4',
-            'category': 'LELANG'
-        }).encode('utf-8')
-        h_ann = MockHandler('POST', '/api/admin/ai/assist', {
-            'Content-Length': str(len(ann_payload)),
-            'Authorization': f'Bearer {self.token}'
-        }, ann_payload)
-        h_ann.do_POST()
-        self.assertEqual(h_ann.response_code, 200)
-        ann_res = h_ann.get_response_json()
-        self.assertTrue(ann_res.get('success'))
-        self.assertIn('number', ann_res['data'])
-        self.assertIn('title', ann_res['data'])
-        self.assertIn('content', ann_res['data'])
+            # 5. Test AI Assist - Draft Announcement
+            ann_payload = json.dumps({
+                'action': 'draft_announcement',
+                'topic': 'Lelang Eksekusi Barang Rampasan Negara',
+                'notes': 'Kendaraan bermotor roda 2 dan roda 4',
+                'category': 'LELANG'
+            }).encode('utf-8')
+            h_ann = MockHandler('POST', '/api/admin/ai/assist', {
+                'Content-Length': str(len(ann_payload)),
+                'Authorization': f'Bearer {self.token}'
+            }, ann_payload)
+            h_ann.do_POST()
+            self.assertEqual(h_ann.response_code, 200)
+            ann_res = h_ann.get_response_json()
+            self.assertTrue(ann_res.get('success'))
+            self.assertIn('number', ann_res['data'])
+            self.assertIn('title', ann_res['data'])
+            self.assertIn('content', ann_res['data'])
 
-        # 6. Test AI Assist - Draft Complaint Response (MASADU)
-        comp_payload = json.dumps({
-            'action': 'draft_complaint_response',
-            'complaint': {
-                'ticket_code': 'TIKET-TEST-01',
-                'category': 'MASADU',
-                'title': 'Laporan Pungutan Liar Parkir Pasar Semarapura',
-                'description': 'Terdapat oknum meminta biaya parkir di luar ketentuan retribusi daerah'
-            },
-            'status': 'DALAM_PROSES'
-        }).encode('utf-8')
-        h_comp = MockHandler('POST', '/api/admin/ai/assist', {
-            'Content-Length': str(len(comp_payload)),
-            'Authorization': f'Bearer {self.token}'
-        }, comp_payload)
-        h_comp.do_POST()
-        self.assertEqual(h_comp.response_code, 200)
-        comp_res = h_comp.get_response_json()
-        self.assertTrue(comp_res.get('success'))
-        self.assertIn('admin_notes', comp_res['data'])
-        self.assertIn('internal_recommendation', comp_res['data'])
+            # 6. Test AI Assist - Draft Complaint Response (MASADU)
+            comp_payload = json.dumps({
+                'action': 'draft_complaint_response',
+                'complaint': {
+                    'ticket_code': 'TIKET-TEST-01',
+                    'category': 'MASADU',
+                    'title': 'Laporan Pungutan Liar Parkir Pasar Semarapura',
+                    'description': 'Terdapat oknum meminta biaya parkir di luar ketentuan retribusi daerah'
+                },
+                'status': 'DALAM_PROSES'
+            }).encode('utf-8')
+            h_comp = MockHandler('POST', '/api/admin/ai/assist', {
+                'Content-Length': str(len(comp_payload)),
+                'Authorization': f'Bearer {self.token}'
+            }, comp_payload)
+            h_comp.do_POST()
+            self.assertEqual(h_comp.response_code, 200)
+            comp_res = h_comp.get_response_json()
+            self.assertTrue(comp_res.get('success'))
+            self.assertIn('admin_notes', comp_res['data'])
+            self.assertIn('internal_recommendation', comp_res['data'])
 
-        # 7. Test AI Assist - Refine Text & Copilot
-        refine_payload = json.dumps({
-            'action': 'refine_text',
-            'text': 'kejari klungkung laksanakan apel pagi bersama seluruh kasi dan staf di halaman kantor',
-            'mode': 'formal_adhyaksa'
-        }).encode('utf-8')
-        h_refine = MockHandler('POST', '/api/admin/ai/assist', {
-            'Content-Length': str(len(refine_payload)),
-            'Authorization': f'Bearer {self.token}'
-        }, refine_payload)
-        h_refine.do_POST()
-        self.assertEqual(h_refine.response_code, 200)
-        refine_res = h_refine.get_response_json()
-        self.assertTrue(refine_res.get('success'))
-        self.assertIn('refined_text', refine_res['data'])
+            # 7. Test AI Assist - Refine Text & Copilot
+            refine_payload = json.dumps({
+                'action': 'refine_text',
+                'text': 'kejari klungkung laksanakan apel pagi bersama seluruh kasi dan staf di halaman kantor',
+                'mode': 'formal_adhyaksa'
+            }).encode('utf-8')
+            h_refine = MockHandler('POST', '/api/admin/ai/assist', {
+                'Content-Length': str(len(refine_payload)),
+                'Authorization': f'Bearer {self.token}'
+            }, refine_payload)
+            h_refine.do_POST()
+            self.assertEqual(h_refine.response_code, 200)
+            refine_res = h_refine.get_response_json()
+            self.assertTrue(refine_res.get('success'))
+            self.assertIn('refined_text', refine_res['data'])
 
-        copilot_payload = json.dumps({
-            'action': 'copilot',
-            'prompt': 'Buatkan pesan penutup apel peringatan Hari Bhakti Adhyaksa'
-        }).encode('utf-8')
-        h_copilot = MockHandler('POST', '/api/admin/ai/assist', {
-            'Content-Length': str(len(copilot_payload)),
-            'Authorization': f'Bearer {self.token}'
-        }, copilot_payload)
-        h_copilot.do_POST()
-        self.assertEqual(h_copilot.response_code, 200)
-        copilot_res = h_copilot.get_response_json()
-        self.assertTrue(copilot_res.get('success'))
-        self.assertIn('reply', copilot_res)
+            copilot_payload = json.dumps({
+                'action': 'copilot',
+                'prompt': 'Buatkan pesan penutup apel peringatan Hari Bhakti Adhyaksa'
+            }).encode('utf-8')
+            h_copilot = MockHandler('POST', '/api/admin/ai/assist', {
+                'Content-Length': str(len(copilot_payload)),
+                'Authorization': f'Bearer {self.token}'
+            }, copilot_payload)
+            h_copilot.do_POST()
+            self.assertEqual(h_copilot.response_code, 200)
+            copilot_res = h_copilot.get_response_json()
+            self.assertTrue(copilot_res.get('success'))
+            self.assertIn('reply', copilot_res)
 
-        # 8. Test AI Assist - Format Court Schedule (JAGADITA)
-        sched_payload = json.dumps({
-            'action': 'format_schedule',
-            'text': 'Perkara 34/Pid.B/2026/PN Smp terdakwa I Nyoman Rai agenda tuntutan JPU I Dewa Made Ruang Cakra 10:00 WITA'
-        }).encode('utf-8')
-        h_sched = MockHandler('POST', '/api/admin/ai/assist', {
-            'Content-Length': str(len(sched_payload)),
-            'Authorization': f'Bearer {self.token}'
-        }, sched_payload)
-        h_sched.do_POST()
-        self.assertEqual(h_sched.response_code, 200)
-        sched_res = h_sched.get_response_json()
-        self.assertTrue(sched_res.get('success'))
-        self.assertEqual(sched_res['data']['case_number'], '34/Pid.B/2026/PN Smp')
+            # 8. Test AI Assist - Format Court Schedule (JAGADITA)
+            sched_payload = json.dumps({
+                'action': 'format_schedule',
+                'text': 'Perkara 34/Pid.B/2026/PN Smp terdakwa I Nyoman Rai agenda tuntutan JPU I Dewa Made Ruang Cakra 10:00 WITA'
+            }).encode('utf-8')
+            h_sched = MockHandler('POST', '/api/admin/ai/assist', {
+                'Content-Length': str(len(sched_payload)),
+                'Authorization': f'Bearer {self.token}'
+            }, sched_payload)
+            h_sched.do_POST()
+            self.assertEqual(h_sched.response_code, 200)
+            sched_res = h_sched.get_response_json()
+            self.assertTrue(sched_res.get('success'))
+            self.assertEqual(sched_res['data']['case_number'], '34/Pid.B/2026/PN Smp')
 
-        # 9. Verify Frontend Elements in admin.html
-        with open('admin.html', 'r', encoding='utf-8') as f:
-            admin_html = f.read()
+            # 9. Verify Frontend Elements in admin.html
+            with open('admin.html', 'r', encoding='utf-8') as f:
+                admin_html = f.read()
 
-        self.assertIn('modal-gemini-copilot', admin_html)
-        self.assertIn('modal-gemini-settings', admin_html)
-        self.assertIn('btn-floating-gemini-copilot', admin_html)
-        self.assertIn('admin-ai-badge-header', admin_html)
-        self.assertIn('btn-admin-news-ai-draft', admin_html)
-        self.assertIn('btn-admin-ann-ai-draft', admin_html)
-        self.assertIn('btn-ai-complaint-draft', admin_html)
-        self.assertIn('btn-admin-jagadita-ai-fill', admin_html)
+            self.assertIn('modal-gemini-copilot', admin_html)
+            self.assertIn('modal-gemini-settings', admin_html)
+            self.assertIn('btn-floating-gemini-copilot', admin_html)
+            self.assertIn('admin-ai-badge-header', admin_html)
+            self.assertIn('btn-admin-news-ai-draft', admin_html)
+            self.assertIn('btn-admin-ann-ai-draft', admin_html)
+            self.assertIn('btn-ai-complaint-draft', admin_html)
+            self.assertIn('btn-admin-jagadita-ai-fill', admin_html)
+        finally:
+            try:
+                conn = sqlite3.connect(server.DB_PATH)
+                c = conn.cursor()
+                c.execute("DELETE FROM page_contents WHERE content_key = 'gemini_api_key'")
+                c.execute("UPDATE page_contents SET content_value = 'gemini-3.5-flash' WHERE content_key = 'gemini_model'")
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print("Failed cleaning test gemini key:", e)
 
 
 

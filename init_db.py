@@ -270,7 +270,8 @@ def init_db(target_path=None):
         ('office_whatsapp_number', 'OFFICE_MAP', 'TEXT', '6281138004444', 'Nomor WhatsApp PTSP'),
         ('office_phone_number', 'OFFICE_MAP', 'TEXT', '(0366) 21151', 'Nomor Telepon Kantor'),
         ('office_email', 'OFFICE_MAP', 'TEXT', 'kejari.klungkung@kejaksaan.go.id', 'Email Resmi'),
-        ('footer_copyright', 'FOOTER', 'TEXT', '© 2026 Kejaksaan Negeri Klungkung - Hak Cipta Dilindungi Undang-Undang. Portal KERTAGOSA v2.4', 'Teks Copyright Footer')
+        ('footer_copyright', 'FOOTER', 'TEXT', '© 2026 Kejaksaan Negeri Klungkung - Hak Cipta Dilindungi Undang-Undang. Portal KERTAGOSA v2.4', 'Teks Copyright Footer'),
+        ('gemini_model', 'SYSTEM_SETTINGS', 'TEXT', 'gemini-3.5-flash', 'Google Gemini Active Model')
     ]
 
     for item in page_contents_seed:

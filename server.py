@@ -300,6 +300,23 @@ def init_db_schema():
     # Seed announcements & information contents if empty
     seed_announcements(cursor)
     seed_information_page_contents(cursor)
+
+    # Ensure Google Gemini active model is seeded with gemini-3.5-flash
+    try:
+        cursor.execute("SELECT content_value FROM page_contents WHERE content_key = 'gemini_model'")
+        row = cursor.fetchone()
+        if not row:
+            cursor.execute("""
+            INSERT INTO page_contents (content_key, section_name, content_type, content_value, label, updated_at)
+            VALUES ('gemini_model', 'system_settings', 'text', 'gemini-3.5-flash', 'Google Gemini Active Model', CURRENT_TIMESTAMP)
+            """)
+        elif row[0] not in ('gemini-3.5-flash', 'gemini-3.5-flash-lite'):
+            cursor.execute("""
+            UPDATE page_contents SET content_value = 'gemini-3.5-flash', updated_at = CURRENT_TIMESTAMP WHERE content_key = 'gemini_model'
+            """)
+    except Exception as e:
+        print(f"[DB Schema Note] gemini_model check: {e}")
+
     conn.commit()
     conn.close()
 
