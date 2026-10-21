@@ -164,7 +164,7 @@ def generate_with_gemini_api(api_key: str, url: str, context: dict) -> dict:
         import ai_assistant
         model_name = ai_assistant.get_gemini_model()
     except Exception:
-        model_name = "gemini-2.5-flash"
+        model_name = "gemini-3.5-flash"
     api_endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
 
     prompt_instruction = f"""

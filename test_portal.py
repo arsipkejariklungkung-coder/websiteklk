@@ -2803,13 +2803,13 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertEqual(h_status.response_code, 200)
         status_data = h_status.get_response_json()
         self.assertIn('model', status_data)
-        self.assertEqual(status_data['model'], 'gemini-2.5-flash')
+        self.assertEqual(status_data['model'], 'gemini-3.5-flash')
         self.assertIn('available_models', status_data)
         self.assertIn('features', status_data)
 
         # 3. Test Save Gemini API Key & Model to Database
         test_key = "AIzaSyDummyTestKeyForAdhyaksaKlungkung2026"
-        save_body = json.dumps({'api_key': test_key, 'model': 'gemini-2.5-flash'}).encode('utf-8')
+        save_body = json.dumps({'api_key': test_key, 'model': 'gemini-3.5-flash'}).encode('utf-8')
         h_save = MockHandler('POST', '/api/admin/ai/save-key', {
             'Content-Length': str(len(save_body)),
             'Authorization': f'Bearer {self.token}'
@@ -2824,7 +2824,7 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertEqual(stored_key, test_key)
         self.assertIn(source, ('db', 'env'))
         stored_model = ai_assistant.get_gemini_model()
-        self.assertEqual(stored_model, 'gemini-2.5-flash')
+        self.assertEqual(stored_model, 'gemini-3.5-flash')
 
         # 4. Test AI Assist - Draft News
         news_payload = json.dumps({

@@ -15,10 +15,10 @@ import urllib.parse
 import datetime
 import sqlite3
 
-DEFAULT_MODEL = "gemini-2.5-flash"
-FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+DEFAULT_MODEL = "gemini-3.5-flash"
+FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible; KertagosaGeminiAssistant/2.5; +https://kejari-klungkung.go.id)"
+DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible; KertagosaGeminiAssistant/3.5; +https://kejari-klungkung.go.id)"
 
 
 def get_db_path():
@@ -36,7 +36,7 @@ def get_gemini_model(explicit_model: str = None) -> str:
     1. Explicit model passed in call
     2. Environment variable: GEMINI_MODEL or GOOGLE_MODEL
     3. Database page_contents table: content_key = 'gemini_model'
-    4. DEFAULT_MODEL (gemini-2.5-flash)
+    4. DEFAULT_MODEL (gemini-3.5-flash)
     """
     if explicit_model and str(explicit_model).strip():
         return str(explicit_model).strip()
@@ -149,7 +149,9 @@ def get_ai_status(explicit_key: str = None, explicit_model: str = None) -> dict:
         "source": source if has_key else "none",
         "model": active_model,
         "available_models": [
-            {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash (Standar Terbaru & Paling Cerdas)", "badge": "TERBARU", "is_default": True},
+            {"id": "gemini-3.5-flash", "name": "Gemini 3.5 Flash (Generasi 3.5 - Flagship Terbaru)", "badge": "TERBARU 3.5", "is_default": True},
+            {"id": "gemini-3.5-flash-lite", "name": "Gemini 3.5 Flash-Lite (Generasi 3.5 - Respon Cepat)", "badge": "3.5 LITE", "is_default": False},
+            {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash (Generasi 2.5)", "badge": "2.5 FLASH", "is_default": False},
             {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash (Multimodal Cepat)", "badge": "STABIL", "is_default": False},
             {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash (Generasi Sebelumnya)", "badge": "LEGACY", "is_default": False}
         ],

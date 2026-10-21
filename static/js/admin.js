@@ -783,7 +783,7 @@ async function loadGeminiAiStatus() {
     const res = await fetch('/api/admin/ai/status');
     const data = await res.json();
     
-    const activeModel = data.model || 'gemini-2.5-flash';
+    const activeModel = data.model || 'gemini-3.5-flash';
 
     if (data.configured) {
       if (headerPill) headerPill.className = 'hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-950 border border-emerald-300 hover:bg-emerald-200 transition-all cursor-pointer shadow-xs';
@@ -853,7 +853,7 @@ async function testGeminiApiKeyConnection() {
   const apiKey = input ? input.value.trim() : '';
 
   const modelSelect = document.getElementById('gemini-model-select');
-  const selectedModel = modelSelect ? modelSelect.value : 'gemini-2.5-flash';
+  const selectedModel = modelSelect ? modelSelect.value : 'gemini-3.5-flash';
 
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) {
@@ -898,7 +898,7 @@ async function saveGeminiApiKeySettings() {
   const input = document.getElementById('gemini-api-key-input');
   const apiKey = input ? input.value.trim() : '';
   const modelSelect = document.getElementById('gemini-model-select');
-  const selectedModel = modelSelect ? modelSelect.value : 'gemini-2.5-flash';
+  const selectedModel = modelSelect ? modelSelect.value : 'gemini-3.5-flash';
   const btn = document.getElementById('btn-save-gemini-api');
 
   const origHtml = btn ? btn.innerHTML : '';
