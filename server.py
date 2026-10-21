@@ -2572,12 +2572,14 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         """Auto-generate news article context from Instagram/YouTube link using Gemini AI."""
         data = self.read_json_body()
         url = (data.get('url') or '').strip()
+        api_key = (data.get('api_key') or '').strip()
+        model = (data.get('model') or '').strip()
         if not url:
             self.send_json({'error': 'Tautan / Link Instagram atau YouTube wajib dimasukkan.'}, 400)
             return
 
         try:
-            res = ai_news_generator.auto_generate_news_from_url(url)
+            res = ai_news_generator.auto_generate_news_from_url(url, api_key=api_key, model=model)
             self.send_json(res)
         except Exception as e:
             self.send_json({'error': f'Gagal menghasilkan berita dari tautan: {str(e)}'}, 500)
@@ -2772,6 +2774,7 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         raw_text = (data.get('raw_text') or '').strip()
         target_date = (data.get('target_date') or '').strip()
         api_key = (data.get('api_key') or '').strip()
+        model = (data.get('model') or '').strip()
         auto_save = bool(data.get('auto_save', False))
 
         try:
@@ -2779,7 +2782,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 url=url,
                 raw_text=raw_text,
                 target_date=target_date,
-                api_key=api_key
+                api_key=api_key,
+                model=model
             )
             schedules = res.get('schedules', [])
             if auto_save and schedules:

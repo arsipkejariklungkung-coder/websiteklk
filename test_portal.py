@@ -2500,6 +2500,10 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('id="jagadita-ai-results-panel"', adm_html)
         self.assertIn('id="jagadita-ai-table-body"', adm_html)
         self.assertIn('id="btn-save-jagadita-ai"', adm_html)
+        self.assertIn('id="jagadita-ai-model-badge"', adm_html)
+        self.assertIn('id="jagadita-ai-engine-name"', adm_html)
+        self.assertIn('Terhubung ke Pengaturan Gemini AI', adm_html)
+        self.assertIn('gemini-custom-model-container', adm_html)
 
         # 5. Verify admin.js contains all required handler functions
         with open(os.path.join(BASE_DIR, 'static', 'js', 'admin.js'), 'r', encoding='utf-8') as f:
@@ -2526,6 +2530,8 @@ class TestKertagosaPortal(unittest.TestCase):
         gen_res = gen_h.get_response_json()
         self.assertTrue(gen_res['success'])
         self.assertTrue(len(gen_res['schedules']) >= 1)
+        self.assertIn('model', gen_res)
+        self.assertEqual(gen_res['model'], 'gemini-3.5-flash')
 
         # 7. Test Backend API Endpoint: POST /api/admin/jagadita/bulk-save
         bulk_items = [
@@ -2829,6 +2835,29 @@ class TestKertagosaPortal(unittest.TestCase):
             stored_model = ai_assistant.get_gemini_model()
             self.assertEqual(stored_model, 'gemini-3.5-flash')
 
+            # 3b. Test Future Model Update: Register and activate custom future model (gemini-4.0-flash)
+            future_model = "gemini-4.0-flash"
+            save_future_body = json.dumps({'api_key': test_key, 'model': future_model}).encode('utf-8')
+            h_future = MockHandler('POST', '/api/admin/ai/save-key', {
+                'Content-Length': str(len(save_future_body)),
+                'Authorization': f'Bearer {self.token}'
+            }, save_future_body)
+            h_future.do_POST()
+            self.assertEqual(h_future.response_code, 200)
+            self.assertEqual(ai_assistant.get_gemini_model(), future_model)
+
+            # Verify future model appears in available_models
+            h_future_status = MockHandler('GET', '/api/admin/ai/status', {'Authorization': f'Bearer {self.token}'})
+            h_future_status.do_GET()
+            fut_data = h_future_status.get_response_json()
+            self.assertEqual(fut_data['model'], future_model)
+            avail_ids = [m['id'] for m in fut_data['available_models']]
+            self.assertIn(future_model, avail_ids)
+
+            # Switch back to gemini-3.5-flash
+            ai_assistant.save_gemini_model('gemini-3.5-flash')
+            self.assertEqual(ai_assistant.get_gemini_model(), 'gemini-3.5-flash')
+
             # 4. Test AI Assist - Draft News
             news_payload = json.dumps({
                 'action': 'draft_news',
@@ -2952,6 +2981,7 @@ class TestKertagosaPortal(unittest.TestCase):
                 conn = sqlite3.connect(server.DB_PATH)
                 c = conn.cursor()
                 c.execute("DELETE FROM page_contents WHERE content_key = 'gemini_api_key'")
+                c.execute("DELETE FROM page_contents WHERE content_key = 'gemini_custom_models'")
                 c.execute("UPDATE page_contents SET content_value = 'gemini-3.5-flash' WHERE content_key = 'gemini_model'")
                 conn.commit()
                 conn.close()

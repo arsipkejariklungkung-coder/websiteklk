@@ -787,10 +787,10 @@ async function loadGeminiAiStatus() {
 
     if (data.configured) {
       if (headerPill) headerPill.className = 'hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-950 border border-emerald-300 hover:bg-emerald-200 transition-all cursor-pointer shadow-xs';
-      if (headerText) headerText.textContent = 'Gemini AI: Aktif';
+      if (headerText) headerText.textContent = `Gemini AI: Aktif (${activeModel})`;
       if (modalBadge) {
         modalBadge.className = 'px-2.5 py-0.5 rounded-full font-bold text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300';
-        modalBadge.textContent = '🟢 Aktif & Terhubung';
+        modalBadge.textContent = '🟢 Aktif & Terhubung (Tersentralisasi)';
       }
       if (cardBadge) {
         cardBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
@@ -814,8 +814,26 @@ async function loadGeminiAiStatus() {
     if (cardActiveModel) cardActiveModel.textContent = activeModel;
     const copilotBadge = document.getElementById('gemini-copilot-model-badge');
     if (copilotBadge) copilotBadge.textContent = activeModel;
+
+    // Synchronize JAGADITA modal active model badge & engine text
+    const jagaditaBadge = document.getElementById('jagadita-ai-model-badge');
+    if (jagaditaBadge) jagaditaBadge.textContent = activeModel;
+    const jagaditaEngine = document.getElementById('jagadita-ai-engine-name');
+    if (jagaditaEngine) jagaditaEngine.textContent = `Google Gemini ${activeModel}`;
+
+    // Dynamically render model select options including any custom future releases
     const modelSelect = document.getElementById('gemini-model-select');
-    if (modelSelect && activeModel) modelSelect.value = activeModel;
+    if (modelSelect && data.available_models && data.available_models.length) {
+      let optHtml = '';
+      data.available_models.forEach(m => {
+        const isSel = (m.id === activeModel);
+        const badgeSuffix = m.badge ? ` [${m.badge}]` : '';
+        optHtml += `<option value="${m.id}" ${isSel ? 'selected' : ''}>${m.name}${badgeSuffix}</option>`;
+      });
+      optHtml += `<option value="__custom__">➕ Tambah / Gunakan Model Versi Baru (Rilis Masa Depan)...</option>`;
+      modelSelect.innerHTML = optHtml;
+      handleGeminiModelSelectChange(modelSelect);
+    }
 
     if (sourceEl) {
       if (data.source === 'env') sourceEl.textContent = 'Environment Variable (.env)';
@@ -829,6 +847,30 @@ async function loadGeminiAiStatus() {
   } catch (err) {
     console.error('Failed to load Gemini AI status:', err);
   }
+}
+
+function handleGeminiModelSelectChange(selectEl) {
+  const customContainer = document.getElementById('gemini-custom-model-container');
+  const customInput = document.getElementById('gemini-custom-model-input');
+  const descEl = document.getElementById('gemini-model-desc');
+  if (!selectEl) return;
+  if (selectEl.value === '__custom__') {
+    if (customContainer) customContainer.classList.remove('hidden');
+    if (customInput) customInput.focus();
+    if (descEl) descEl.innerHTML = '<span class="text-amber-700 font-bold">Mode Versi Baru:</span> Masukkan ID model resmi Google AI di bawah ini untuk digunakan di seluruh fitur.';
+  } else {
+    if (customContainer) customContainer.classList.add('hidden');
+    if (descEl) {
+      if (selectEl.value.includes('3.5-flash-lite')) {
+        descEl.innerHTML = '<strong>gemini-3.5-flash-lite</strong> adalah model generasi 3.5 berkecepatan tinggi dengan efisiensi respon optimal.';
+      } else if (selectEl.value.includes('3.5-flash')) {
+        descEl.innerHTML = '<strong>gemini-3.5-flash</strong> adalah model generasi 3.5 unggulan dari Google AI dengan kecerdasan multimodal tercanggih, penalaran hukum terstruktur, dan penulisan naskah dinas paling presisi.';
+      } else {
+        descEl.innerHTML = `Model aktif yang dipilih: <strong class="font-mono text-emerald-800">${selectEl.value}</strong>`;
+      }
+    }
+  }
+  if (window.lucide) lucide.createIcons();
 }
 
 function toggleGeminiKeyVisibility() {
@@ -853,7 +895,16 @@ async function testGeminiApiKeyConnection() {
   const apiKey = input ? input.value.trim() : '';
 
   const modelSelect = document.getElementById('gemini-model-select');
-  const selectedModel = modelSelect ? modelSelect.value : 'gemini-3.5-flash';
+  let selectedModel = modelSelect ? modelSelect.value : 'gemini-3.5-flash';
+  if (selectedModel === '__custom__') {
+    const customInput = document.getElementById('gemini-custom-model-input');
+    selectedModel = customInput ? customInput.value.trim().toLowerCase() : '';
+    if (!selectedModel) {
+      alert('Silakan masukkan nama/ID model Gemini versi baru (contoh: gemini-4.0-flash).');
+      if (customInput) customInput.focus();
+      return;
+    }
+  }
 
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) {
@@ -898,7 +949,16 @@ async function saveGeminiApiKeySettings() {
   const input = document.getElementById('gemini-api-key-input');
   const apiKey = input ? input.value.trim() : '';
   const modelSelect = document.getElementById('gemini-model-select');
-  const selectedModel = modelSelect ? modelSelect.value : 'gemini-3.5-flash';
+  let selectedModel = modelSelect ? modelSelect.value : 'gemini-3.5-flash';
+  if (selectedModel === '__custom__') {
+    const customInput = document.getElementById('gemini-custom-model-input');
+    selectedModel = customInput ? customInput.value.trim().toLowerCase() : '';
+    if (!selectedModel) {
+      alert('Silakan masukkan nama/ID model Gemini rilis masa depan (contoh: gemini-4.0-flash).');
+      if (customInput) customInput.focus();
+      return;
+    }
+  }
   const btn = document.getElementById('btn-save-gemini-api');
 
   const origHtml = btn ? btn.innerHTML : '';
@@ -2530,6 +2590,9 @@ function openJagaditaAiModal() {
   const resultsPanel = document.getElementById('jagadita-ai-results-panel');
   if (resultsPanel) resultsPanel.classList.add('hidden');
 
+  // Synchronize latest active model and centralized key status
+  loadGeminiAiStatus();
+
   openModal('modal-admin-jagadita-ai');
   if (window.lucide) lucide.createIcons();
 }
@@ -2607,7 +2670,8 @@ function renderJagaditaAiPreview(data) {
 
   if (badgeEl) {
     if (data.source === 'gemini') {
-      badgeEl.textContent = 'GEMINI 1.5 FLASH AI';
+      const activeModelLabel = (data.model || 'Gemini 3.5 Flash').toUpperCase();
+      badgeEl.textContent = `${activeModelLabel} AI`;
       badgeEl.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-600 text-white shadow-sm';
     } else if (data.source === 'heuristic') {
       badgeEl.textContent = 'SIPP HEURISTIC PARSER';

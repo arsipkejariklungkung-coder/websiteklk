@@ -16,9 +16,81 @@ import datetime
 import sqlite3
 
 DEFAULT_MODEL = "gemini-3.5-flash"
+STANDARD_MODELS = [
+    {"id": "gemini-3.5-flash", "name": "Gemini 3.5 Flash (Generasi 3.5 - Flagship Terbaru)", "badge": "TERBARU 3.5", "is_default": True},
+    {"id": "gemini-3.5-flash-lite", "name": "Gemini 3.5 Flash-Lite (Generasi 3.5 - Respon Cepat)", "badge": "3.5 LITE", "is_default": False},
+    {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash (Generasi 2.5)", "badge": "2.5 FLASH", "is_default": False},
+    {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash (Multimodal Cepat)", "badge": "STABIL", "is_default": False},
+    {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash (Generasi Sebelumnya)", "badge": "LEGACY", "is_default": False}
+]
 FALLBACK_MODELS = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible; KertagosaGeminiAssistant/3.5; +https://kejari-klungkung.go.id)"
+
+
+def get_custom_gemini_models() -> list[dict]:
+    """Retrieve custom/future Gemini models registered in page_contents."""
+    try:
+        db_path = get_db_path()
+        if os.path.exists(db_path):
+            conn = sqlite3.connect(db_path, timeout=10.0)
+            cursor = conn.cursor()
+            cursor.execute("SELECT content_value FROM page_contents WHERE content_key = 'gemini_custom_models'")
+            row = cursor.fetchone()
+            conn.close()
+            if row and row[0]:
+                data = json.loads(row[0])
+                if isinstance(data, list):
+                    return data
+    except Exception as e:
+        print(f"[Gemini Custom Models Read Warning] {e}")
+    return []
+
+
+def register_custom_gemini_model(model_id: str, label: str = None) -> bool:
+    """Register or save a custom/future Gemini model into page_contents so it persists."""
+    model_id = (model_id or "").strip().lower()
+    if not model_id or not re.match(r'^[a-z0-9\.\-_]+$', model_id):
+        return False
+
+    built_in_ids = [m["id"] for m in STANDARD_MODELS]
+    if model_id in built_in_ids:
+        return True
+
+    customs = get_custom_gemini_models()
+    existing = [m["id"] for m in customs if isinstance(m, dict) and "id" in m]
+    if model_id not in existing:
+        display_name = label or f"Google Gemini {model_id} (Rilis Kustom / Versi Baru)"
+        customs.append({
+            "id": model_id,
+            "name": display_name,
+            "badge": "RILIS BARU",
+            "is_default": False,
+            "is_custom": True
+        })
+        try:
+            db_path = get_db_path()
+            if db_path.startswith('/tmp') and os.path.exists(db_path):
+                try:
+                    os.chmod(db_path, 0o666)
+                except Exception:
+                    pass
+            conn = sqlite3.connect(db_path, timeout=15.0)
+            cursor = conn.cursor()
+            cursor.execute("""
+            INSERT INTO page_contents (content_key, section_name, content_type, content_value, label, updated_at)
+            VALUES ('gemini_custom_models', 'system_settings', 'json', ?, 'Google Gemini Custom Future Models', CURRENT_TIMESTAMP)
+            ON CONFLICT(content_key) DO UPDATE SET
+                content_value = excluded.content_value,
+                updated_at = CURRENT_TIMESTAMP
+            """, (json.dumps(customs),))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            print(f"[Gemini Register Custom Model Error] {e}")
+            return False
+    return True
 
 
 def get_db_path():
@@ -95,8 +167,11 @@ def get_gemini_model(explicit_model: str = None) -> str:
 
 
 def save_gemini_model(model_name: str) -> bool:
-    """Save selected Gemini model to page_contents in database."""
-    model_name = (model_name or DEFAULT_MODEL).strip()
+    """Save selected Gemini model to page_contents in database and auto-register if custom."""
+    model_name = (model_name or DEFAULT_MODEL).strip().lower()
+    built_in_ids = [m["id"] for m in STANDARD_MODELS]
+    if model_name not in built_in_ids and re.match(r'^[a-z0-9\.\-_]+$', model_name):
+        register_custom_gemini_model(model_name)
     try:
         db_path = get_db_path()
         if db_path.startswith('/tmp') and os.path.exists(db_path):
@@ -180,38 +255,52 @@ def save_gemini_api_key(api_key: str) -> bool:
 
 
 def get_ai_status(explicit_key: str = None, explicit_model: str = None) -> dict:
-    """Return status of Gemini AI configuration."""
+    """Return status of Gemini AI configuration with all standard & registered custom models."""
     key, source = get_gemini_api_key(explicit_key)
     has_key = bool(key and len(key) >= 8)
     masked = f"{key[:4]}...{key[-4:]}" if has_key and len(key) >= 10 else ("***" if has_key else "")
     active_model = get_gemini_model(explicit_model)
+
+    custom_models = get_custom_gemini_models()
+    all_available = [dict(m) for m in STANDARD_MODELS]
+    existing_ids = {m["id"] for m in all_available}
+    for cm in custom_models:
+        if isinstance(cm, dict) and cm.get("id") and cm["id"] not in existing_ids:
+            all_available.append(cm)
+            existing_ids.add(cm["id"])
+
+    # If active_model is custom and not yet in the list, insert it at top
+    if active_model and active_model not in existing_ids:
+        all_available.insert(0, {
+            "id": active_model,
+            "name": f"Google Gemini {active_model} (Model Kustom Aktif)",
+            "badge": "KUSTOM AKTIF",
+            "is_default": False,
+            "is_custom": True
+        })
+
     return {
         "configured": has_key,
         "has_key": has_key,
         "masked_key": masked,
         "source": source if has_key else "none",
         "model": active_model,
-        "available_models": [
-            {"id": "gemini-3.5-flash", "name": "Gemini 3.5 Flash (Generasi 3.5 - Flagship Terbaru)", "badge": "TERBARU 3.5", "is_default": True},
-            {"id": "gemini-3.5-flash-lite", "name": "Gemini 3.5 Flash-Lite (Generasi 3.5 - Respon Cepat)", "badge": "3.5 LITE", "is_default": False},
-            {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash (Generasi 2.5)", "badge": "2.5 FLASH", "is_default": False},
-            {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash (Multimodal Cepat)", "badge": "STABIL", "is_default": False},
-            {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash (Generasi Sebelumnya)", "badge": "LEGACY", "is_default": False}
-        ],
+        "available_models": all_available,
         "features": [
-            {"id": "draft_news", "label": "Bantu Tulis Artikel Berita (5W+1H)"},
+            {"id": "jagadita_generate", "label": "Auto-Generate Jadwal Sidang SIPP (JAGADITA)"},
+            {"id": "jagadita_format", "label": "Format & Standardisasi Jadwal Sidang (JAGADITA)"},
+            {"id": "draft_news", "label": "Auto-Generate & Tulis Berita (Bento Grid 5W+1H / Link Media)"},
             {"id": "draft_announcement", "label": "Buat Draf Pengumuman Resmi"},
-            {"id": "draft_complaint_response", "label": "Saran Tanggapan Aduan Warga (MASADU)"},
+            {"id": "draft_complaint_response", "label": "Saran Tanggapan Aduan Warga (MASADU & SEMARA BAKTI)"},
             {"id": "refine_text", "label": "Poles Bahasa & Ejaan Resmi Adhyaksa"},
-            {"id": "copilot", "label": "Gemini Copilot Bebas & Siaran Pers"},
-            {"id": "format_schedule", "label": "Standardisasi Jadwal Sidang JAGADITA"}
+            {"id": "copilot", "label": "Universal Floating Gemini Copilot"}
         ]
     }
 
 
 def call_gemini_api(prompt: str, system_instruction: str = "", api_key: str = None, json_mode: bool = False, temperature: float = 0.3, model: str = None) -> str:
     """
-    Invoke Google Gemini REST API (defaults to Gemini 2.5 Flash with graceful fallback to 2.0/1.5).
+    Invoke Google Gemini REST API (defaults to Gemini 3.5 Flash with graceful fallback chain).
     Raises RuntimeError or ValueError on failure.
     """
     active_key, _ = get_gemini_api_key(api_key)

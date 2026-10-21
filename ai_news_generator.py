@@ -158,14 +158,20 @@ def scrape_url_context(url: str) -> dict:
     return context
 
 
-def generate_with_gemini_api(api_key: str, url: str, context: dict) -> dict:
-    """Invoke Google Gemini REST API to produce high-standard journalistic article JSON."""
+def generate_with_gemini_api(api_key: str, url: str, context: dict, model: str = None) -> tuple[dict, str]:
+    """Invoke Google Gemini REST API to produce high-standard journalistic article JSON with multi-tier fallback."""
     try:
         import ai_assistant
-        model_name = ai_assistant.get_gemini_model()
+        active_model = ai_assistant.get_gemini_model(model)
+        fallback_models = ai_assistant.FALLBACK_MODELS
     except Exception:
-        model_name = "gemini-3.5-flash"
-    api_endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+        active_model = (model or "gemini-3.5-flash").strip()
+        fallback_models = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
+
+    models_to_try = [active_model]
+    for m in fallback_models:
+        if m not in models_to_try:
+            models_to_try.append(m)
 
     prompt_instruction = f"""
 Anda adalah Redaktur Jurnalistik Senior Kejaksaan Republik Indonesia.
@@ -207,29 +213,43 @@ Keluaran WAJIB berupa JSON murni (raw JSON object) TANPA pembungkus markdown (ja
     }
 
     req_data = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(
-        api_endpoint,
-        data=req_data,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": DEFAULT_USER_AGENT
-        },
-        method="POST"
-    )
+    last_err = None
 
-    with urllib.request.urlopen(req, timeout=12) as resp:
-        if resp.status == 200:
-            res_json = json.loads(resp.read().decode('utf-8'))
-            candidates = res_json.get("candidates", [])
-            if candidates:
-                raw_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                raw_text = raw_text.strip()
-                if raw_text.startswith("```"):
-                    # Strip markdown codeblock if returned
-                    raw_text = re.sub(r'^```(?:json)?\s*', '', raw_text)
-                    raw_text = re.sub(r'\s*```$', '', raw_text)
-                return json.loads(raw_text)
+    for m_name in models_to_try:
+        api_endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={api_key}"
+        req = urllib.request.Request(
+            api_endpoint,
+            data=req_data,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": DEFAULT_USER_AGENT
+            },
+            method="POST"
+        )
 
+        try:
+            with urllib.request.urlopen(req, timeout=12) as resp:
+                if resp.status == 200:
+                    res_json = json.loads(resp.read().decode('utf-8'))
+                    candidates = res_json.get("candidates", [])
+                    if candidates:
+                        raw_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                        raw_text = raw_text.strip()
+                        if raw_text.startswith("```"):
+                            raw_text = re.sub(r'^```(?:json)?\s*', '', raw_text)
+                            raw_text = re.sub(r'\s*```$', '', raw_text)
+                        return json.loads(raw_text), m_name
+        except urllib.error.HTTPError as e:
+            last_err = e
+            if e.code == 404:
+                continue
+            raise
+        except Exception as e:
+            last_err = e
+            raise
+
+    if last_err:
+        raise last_err
     raise ValueError("Gemini API tidak memberikan respons valid.")
 
 
@@ -320,10 +340,11 @@ def generate_with_heuristic_engine(url: str, context: dict) -> dict:
     }
 
 
-def auto_generate_news_from_url(url: str) -> dict:
+def auto_generate_news_from_url(url: str, api_key: str = None, model: str = None) -> dict:
     """
     Main entry point: Scrapes URL context, queries Gemini AI if API key is present,
     or falls back smoothly to heuristic journalistic generator.
+    Integrated with centralized Gemini 3.5 & future models configuration.
     """
     url = (url or "").strip()
     if not url:
@@ -332,25 +353,28 @@ def auto_generate_news_from_url(url: str) -> dict:
     # 1. Scrape context / metadata
     context = scrape_url_context(url)
 
-    # 2. Check for Gemini API key
+    # 2. Check for Gemini API key & model
     try:
         import ai_assistant
-        gemini_key, _ = ai_assistant.get_gemini_api_key()
+        gemini_key, _ = ai_assistant.get_gemini_api_key(api_key)
+        active_model = ai_assistant.get_gemini_model(model)
     except Exception:
-        gemini_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+        gemini_key = (api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
+        active_model = (model or "gemini-3.5-flash").strip()
 
     if gemini_key:
         try:
-            ai_data = generate_with_gemini_api(gemini_key, url, context)
+            ai_data, used_model = generate_with_gemini_api(gemini_key, url, context, model=active_model)
             return {
                 "success": True,
                 "source_url": url,
                 "ai_provider": "gemini",
+                "model": used_model,
                 "data": ai_data,
-                "message": "Artikel berita berhasil di-generate secara otomatis menggunakan Google Gemini AI!"
+                "message": f"Artikel berita berhasil di-generate secara otomatis menggunakan Google Gemini {used_model} AI!"
             }
         except Exception as e:
-            print(f"[Gemini AI Warning] Fallback to heuristic: {e}")
+            print(f"[News AI Warning] Fallback to heuristic: {e}")
 
     # 3. Fallback to heuristic journalistic engine
     heuristic_data = generate_with_heuristic_engine(url, context)
@@ -358,6 +382,7 @@ def auto_generate_news_from_url(url: str) -> dict:
         "success": True,
         "source_url": url,
         "ai_provider": "gemini_journalistic_engine",
+        "model": active_model,
         "data": heuristic_data,
         "message": "Artikel berita berhasil diekstrak dan disusun secara profesional ke format jurnalistik!"
     }

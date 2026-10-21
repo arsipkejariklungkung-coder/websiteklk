@@ -136,21 +136,27 @@ def sanitize_court_schedule_item(item: dict, target_date: str = None) -> dict:
     }
 
 
-def generate_with_gemini_api(api_key: str, text_content: str, target_date: str = None, model: str = None) -> list:
+def generate_with_gemini_api(api_key: str, text_content: str, target_date: str = None, model: str = None) -> tuple[list, str]:
     """
     Call Google Gemini Generative Language REST API to parse and structure court schedules.
+    Uses centralized Gemini active model (defaults to Gemini 3.5 Flash) with resilient multi-tier fallback.
+    Returns (schedules, model_used).
     """
     if not target_date:
         target_date = datetime.date.today().isoformat()
 
-    if not model:
-        try:
-            import ai_assistant
-            model = ai_assistant.get_gemini_model()
-        except Exception:
-            model = "gemini-3.5-flash"
+    try:
+        import ai_assistant
+        active_model = ai_assistant.get_gemini_model(model)
+        fallback_models = ai_assistant.FALLBACK_MODELS
+    except Exception:
+        active_model = (model or "gemini-3.5-flash").strip()
+        fallback_models = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
 
-    api_endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    models_to_try = [active_model]
+    for m in fallback_models:
+        if m not in models_to_try:
+            models_to_try.append(m)
 
     # Trim content to avoid token overflow
     truncated_content = text_content[:18000] if len(text_content) > 18000 else text_content
@@ -210,32 +216,47 @@ Keluaran WAJIB berupa JSON array murni (raw JSON array of objects) TANPA pembung
     }
 
     req_data = json.dumps(payload).encode('utf-8')
-    req = urllib.request.Request(
-        api_endpoint,
-        data=req_data,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": DEFAULT_USER_AGENT
-        },
-        method="POST"
-    )
+    last_err = None
 
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        if resp.status == 200:
-            res_json = json.loads(resp.read().decode('utf-8'))
-            candidates = res_json.get("candidates", [])
-            if candidates:
-                raw_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                raw_text = raw_text.strip()
-                if raw_text.startswith("```"):
-                    raw_text = re.sub(r'^```(?:json)?\s*', '', raw_text)
-                    raw_text = re.sub(r'\s*```$', '', raw_text)
-                parsed = json.loads(raw_text)
-                if isinstance(parsed, list):
-                    return [sanitize_court_schedule_item(item, target_date) for item in parsed if isinstance(item, dict)]
-                elif isinstance(parsed, dict) and "schedules" in parsed:
-                    return [sanitize_court_schedule_item(item, target_date) for item in parsed["schedules"] if isinstance(item, dict)]
+    for m_name in models_to_try:
+        api_endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={api_key}"
+        req = urllib.request.Request(
+            api_endpoint,
+            data=req_data,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": DEFAULT_USER_AGENT
+            },
+            method="POST"
+        )
 
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status == 200:
+                    res_json = json.loads(resp.read().decode('utf-8'))
+                    candidates = res_json.get("candidates", [])
+                    if candidates:
+                        raw_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                        raw_text = raw_text.strip()
+                        if raw_text.startswith("```"):
+                            raw_text = re.sub(r'^```(?:json)?\s*', '', raw_text)
+                            raw_text = re.sub(r'\s*```$', '', raw_text)
+                        parsed = json.loads(raw_text)
+                        if isinstance(parsed, list):
+                            return [sanitize_court_schedule_item(item, target_date) for item in parsed if isinstance(item, dict)], m_name
+                        elif isinstance(parsed, dict) and "schedules" in parsed:
+                            return [sanitize_court_schedule_item(item, target_date) for item in parsed["schedules"] if isinstance(item, dict)], m_name
+        except urllib.error.HTTPError as e:
+            last_err = e
+            if e.code == 404:
+                continue
+            raise
+        except Exception as e:
+            last_err = e
+            raise
+
+    if last_err:
+        raise last_err
     raise ValueError("Gemini API tidak memberikan respons daftar jadwal yang valid.")
 
 
@@ -392,16 +413,18 @@ def auto_generate_jagadita_schedules(
     url: str = DEFAULT_SIPP_URL,
     raw_text: str = None,
     target_date: str = None,
-    api_key: str = None
+    api_key: str = None,
+    model: str = None
 ) -> dict:
     """
     Main generator function orchestrating SIPP web fetch, Gemini AI synthesis,
-    and fallback heuristics.
+    and fallback heuristics. Fully integrated with centralized Gemini settings.
     
     Returns:
     {
         "success": bool,
         "source": "gemini" | "heuristic" | "fallback",
+        "model": str,
         "url": str,
         "target_date": str,
         "total": int,
@@ -416,8 +439,10 @@ def auto_generate_jagadita_schedules(
     try:
         import ai_assistant
         active_key, _ = ai_assistant.get_gemini_api_key(api_key)
+        active_model = ai_assistant.get_gemini_model(model)
     except Exception:
         active_key = (api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
+        active_model = (model or "gemini-3.5-flash").strip()
 
     content = ""
     fetch_error = None
@@ -435,16 +460,17 @@ def auto_generate_jagadita_schedules(
     # Step 2: Try Gemini API if key is available and content is present
     if active_key and content and len(content.strip()) > 30:
         try:
-            schedules = generate_with_gemini_api(active_key, content, target_date=target_date)
+            schedules, used_model = generate_with_gemini_api(active_key, content, target_date=target_date, model=active_model)
             if schedules:
                 return {
                     "success": True,
                     "source": "gemini",
+                    "model": used_model,
                     "url": target_url,
                     "target_date": target_date,
                     "total": len(schedules),
                     "schedules": schedules,
-                    "message": f"Berhasil mengekstrak {len(schedules)} jadwal sidang SIPP menggunakan Google Gemini AI!"
+                    "message": f"Berhasil mengekstrak {len(schedules)} jadwal sidang SIPP menggunakan Google Gemini {used_model} AI!"
                 }
         except Exception as e:
             print(f"[Jagadita AI Warning] Gemini invocation failed: {e}. Falling back to heuristic.")
@@ -456,6 +482,7 @@ def auto_generate_jagadita_schedules(
             return {
                 "success": True,
                 "source": "heuristic",
+                "model": active_model,
                 "url": target_url,
                 "target_date": target_date,
                 "total": len(parsed_heuristic),
@@ -472,6 +499,7 @@ def auto_generate_jagadita_schedules(
     return {
         "success": True,
         "source": "fallback",
+        "model": active_model,
         "url": target_url,
         "target_date": target_date,
         "total": len(fallback_items),
