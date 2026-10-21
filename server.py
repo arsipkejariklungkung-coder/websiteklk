@@ -744,6 +744,131 @@ def get_active_kasi_pb3r(conn):
         'rank': 'Jaksa Muda / III-d'
     }
 
+def safe_b64decode(data_str):
+    """
+    Safely decode base64 strings even if they contain data-URI prefixes,
+    spaces, newlines, or missing padding.
+    """
+    if not data_str:
+        return b''
+    if isinstance(data_str, bytes):
+        data_str = data_str.decode('utf-8', errors='ignore')
+    if ',' in data_str:
+        data_str = data_str.split(',', 1)[1]
+    # Strip whitespace/newlines first, then replace internal spaces with pluses (common URL/form artifact)
+    cleaned = data_str.strip().replace('\n', '').replace('\r', '').replace(' ', '+')
+    rem = len(cleaned) % 4
+    if rem == 1:
+        # A single stray character cannot form a byte in base64, trim it
+        cleaned = cleaned[:-1]
+        rem = len(cleaned) % 4
+    if rem > 0:
+        cleaned += '=' * (4 - rem)
+    try:
+        return base64.b64decode(cleaned)
+    except Exception:
+        try:
+            return base64.b64decode(cleaned + '===')
+        except Exception:
+            return b''
+
+def save_media_binary(binary_data, filename='upload.jpg', content_key=None, conn=None):
+    """
+    Saves raw binary data to Vercel Blob (if configured) or local UPLOADS_DIR fallback.
+    Returns (public_url, storage_type).
+    """
+    ext = os.path.splitext(filename)[1].lower()
+    if not ext:
+        ext = '.jpg'
+    
+    clean_name = f"{int(time.time())}_{uuid.uuid4().hex[:8]}{ext}"
+    public_url = None
+    storage_type = "LOCAL"
+
+    should_close_conn = False
+    if conn is None:
+        conn = get_db()
+        should_close_conn = True
+
+    try:
+        blob_token = vercel_blob.get_blob_token(conn) if vercel_blob else None
+        if blob_token:
+            blob_res = vercel_blob.upload_to_blob(binary_data, clean_name, token=blob_token, add_random_suffix=True)
+            if blob_res.get('success') and blob_res.get('url'):
+                public_url = blob_res['url']
+                storage_type = "VERCEL_BLOB"
+    except Exception as e:
+        print(f"[Blob Upload Error] {e}")
+
+    # Local fallback / backup copy
+    save_path = os.path.join(UPLOADS_DIR, clean_name)
+    try:
+        with open(save_path, 'wb') as f:
+            f.write(binary_data)
+    except Exception as e:
+        print(f"[Upload Local Fallback Notice] {e}")
+
+    if not public_url:
+        public_url = f"/static/uploads/{clean_name}"
+
+    if content_key:
+        cursor = conn.cursor()
+        cursor.execute("""
+        UPDATE page_contents
+        SET content_value = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE content_key = ?
+        """, (public_url, content_key))
+        if cursor.rowcount == 0:
+            cursor.execute("""
+            INSERT INTO page_contents (content_key, section_name, content_type, content_value, label)
+            VALUES (?, 'HEADER', 'IMAGE', ?, 'Logo Resmi Instansi')
+            """, (content_key, public_url))
+        conn.commit()
+
+    if should_close_conn:
+        conn.close()
+
+    return public_url, storage_type
+
+def save_media_data_uri_if_needed(val, default_name_prefix='media'):
+    """
+    If val is a base64 data URI (e.g. 'data:image/...;base64,...'), safely decode
+    and save it to storage, returning the clean storage URL.
+    If val is already a URL or path, returns val unchanged.
+    Prevents megabytes of raw base64 data from bloating SQLite tables.
+    """
+    if not val or not isinstance(val, str):
+        return val
+    val_strip = val.strip()
+    if not val_strip.startswith('data:'):
+        return val_strip
+
+    # Extract extension from data-uri header if possible
+    ext = '.jpg'
+    if ';' in val_strip:
+        header = val_strip.split(';')[0]
+        if 'image/png' in header:
+            ext = '.png'
+        elif 'image/webp' in header:
+            ext = '.webp'
+        elif 'image/svg' in header:
+            ext = '.svg'
+        elif 'image/gif' in header:
+            ext = '.gif'
+        elif 'image/jpeg' in header or 'image/jpg' in header:
+            ext = '.jpg'
+
+    try:
+        binary_data = safe_b64decode(val_strip)
+        if not binary_data:
+            return val_strip
+        filename = f"{default_name_prefix}_{int(time.time())}{ext}"
+        public_url, _ = save_media_binary(binary_data, filename=filename)
+        return public_url
+    except Exception as e:
+        print(f"[save_media_data_uri_if_needed Error] {e}")
+        return val_strip
+
 class KertagosaHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         if 'directory' not in kwargs:
@@ -1334,6 +1459,9 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-Type', content_type)
         self.send_header('Content-Length', str(len(content)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', '*')
         self.send_header('Cache-Control', 'no-cache, must-revalidate')
         self.end_headers()
         self.wfile.write(content)
@@ -1821,6 +1949,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             return
 
         final_value = str(content_value).strip()
+        if final_value.startswith('data:'):
+            final_value = save_media_data_uri_if_needed(final_value, content_key)
         if content_key == 'header_logo_url' and not final_value:
             final_value = '/static/images/logo-kejari.svg'
 
@@ -1863,6 +1993,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         cursor = conn.cursor()
         for key, val in items.items():
             final_val = str(val).strip()
+            if final_val.startswith('data:'):
+                final_val = save_media_data_uri_if_needed(final_val, key)
             if key == 'header_logo_url' and not final_val:
                 final_val = '/static/images/logo-kejari.svg'
             cursor.execute("""
@@ -1893,72 +2025,43 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             self.send_json({'error': 'Tidak ada data file yang diterima'}, 400)
             return
 
-        # Parse base64
-        if ',' in file_data:
-            header, encoded = file_data.split(',', 1)
-        else:
-            encoded = file_data
-
         try:
-            binary_data = base64.b64decode(encoded)
+            binary_data = safe_b64decode(file_data)
+            if not binary_data:
+                self.send_json({'error': 'Format file base64 tidak valid atau kosong'}, 400)
+                return
         except Exception as e:
             self.send_json({'error': f'Format file base64 tidak valid: {str(e)}'}, 400)
             return
 
-        # Determine extension
+        # Determine extension if missing
         ext = os.path.splitext(filename)[1].lower()
         if not ext:
-            if 'svg' in filename.lower():
-                ext = '.svg'
-            elif 'png' in filename.lower():
-                ext = '.png'
-            elif 'webp' in filename.lower():
-                ext = '.webp'
-            else:
-                ext = '.jpg'
-        
-        # Safe filename
-        clean_name = f"{int(time.time())}_{uuid.uuid4().hex[:8]}{ext}"
-        
-        # 1. Attempt Vercel Blob Upload if configured
-        public_url = None
-        storage_type = "LOCAL"
+            if isinstance(file_data, str) and ';' in file_data:
+                header = file_data.split(';')[0]
+                if 'image/png' in header:
+                    ext = '.png'
+                elif 'image/webp' in header:
+                    ext = '.webp'
+                elif 'image/svg' in header:
+                    ext = '.svg'
+                elif 'image/gif' in header:
+                    ext = '.gif'
+                elif 'image/jpeg' in header or 'image/jpg' in header:
+                    ext = '.jpg'
+            if not ext:
+                if 'svg' in filename.lower():
+                    ext = '.svg'
+                elif 'png' in filename.lower():
+                    ext = '.png'
+                elif 'webp' in filename.lower():
+                    ext = '.webp'
+                else:
+                    ext = '.jpg'
+            filename = f"{os.path.splitext(filename)[0]}{ext}"
+
         conn = get_db()
-        blob_token = vercel_blob.get_blob_token(conn) if vercel_blob else None
-
-        if blob_token:
-            blob_res = vercel_blob.upload_to_blob(binary_data, clean_name, token=blob_token, add_random_suffix=True)
-            if blob_res.get('success') and blob_res.get('url'):
-                public_url = blob_res['url']
-                storage_type = "VERCEL_BLOB"
-
-        # 2. Local fallback / backup copy
-        save_path = os.path.join(UPLOADS_DIR, clean_name)
-        try:
-            with open(save_path, 'wb') as f:
-                f.write(binary_data)
-        except Exception as e:
-            print(f"[Upload Local Fallback Notice] {e}")
-
-        # If not uploaded to Blob, use local URL
-        if not public_url:
-            public_url = f"/static/uploads/{clean_name}"
-
-        # If content_key is provided, automatically update the page_contents table!
-        if content_key:
-            cursor = conn.cursor()
-            cursor.execute("""
-            UPDATE page_contents
-            SET content_value = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE content_key = ?
-            """, (public_url, content_key))
-            if cursor.rowcount == 0:
-                cursor.execute("""
-                INSERT INTO page_contents (content_key, section_name, content_type, content_value, label)
-                VALUES (?, 'HEADER', 'IMAGE', ?, 'Logo Resmi Instansi')
-                """, (content_key, public_url))
-            conn.commit()
-
+        public_url, storage_type = save_media_binary(binary_data, filename=filename, content_key=content_key, conn=conn)
         conn.close()
 
         msg = 'Gambar berhasil diunggah ke Vercel Blob Cloud CDN!' if storage_type == 'VERCEL_BLOB' else 'Gambar berhasil diunggah ke penyimpanan lokal!'
@@ -2035,7 +2138,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         excerpt = data.get('excerpt', '').strip()
         content = data.get('content', '').strip()
         highlight_quote = data.get('highlight_quote', None)
-        thumbnail_url = (data.get('thumbnail_url') or '/static/images/news-featured.jpg').strip()
+        raw_thumb = (data.get('thumbnail_url') or '').strip()
+        thumbnail_url = save_media_data_uri_if_needed(raw_thumb, 'news_thumb') or '/static/images/news-featured.jpg'
         youtube_url = (data.get('youtube_url') or '').strip() or None
         layout_type = data.get('layout_type', 'COMPACT_BOTTOM')
         author = data.get('author', 'Tim Publikasi Kejari')
@@ -2080,8 +2184,11 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         params = []
         for col in ['title', 'category', 'badge_label', 'excerpt', 'content', 'highlight_quote', 'thumbnail_url', 'youtube_url', 'author', 'layout_type', 'published_at', 'is_published']:
             if col in data:
+                val = data[col]
+                if col == 'thumbnail_url' and val:
+                    val = save_media_data_uri_if_needed(str(val).strip(), 'news_thumb')
                 fields.append(f"{col} = ?")
-                params.append(data[col])
+                params.append(val)
 
         if fields:
             params.append(news_id)
@@ -2210,9 +2317,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         replace_all = bool(data.get('replace_all', False))
 
         if file_data and not items:
-            raw_b64 = file_data.split(',', 1)[1] if ',' in file_data else file_data
             try:
-                file_bytes = base64.b64decode(raw_b64)
+                file_bytes = safe_b64decode(file_data)
                 parsed_rows = excel_io.parse_excel_or_csv_bytes(file_bytes, filename)
             except Exception as e:
                 self.send_json({'error': f'Gagal membaca file Excel/CSV: {str(e)}'}, 400)
@@ -2435,9 +2541,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         filename = data.get('filename', 'import.xlsx')
 
         if file_data and not items:
-            raw_b64 = file_data.split(',', 1)[1] if ',' in file_data else file_data
             try:
-                file_bytes = base64.b64decode(raw_b64)
+                file_bytes = safe_b64decode(file_data)
                 parsed_rows = excel_io.parse_excel_or_csv_bytes(file_bytes, filename)
             except Exception as e:
                 self.send_json({'error': f'Gagal membaca file Excel/CSV: {str(e)}'}, 400)
@@ -2864,9 +2969,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         items = data.get('items') or []
 
         if file_data and not items:
-            raw_b64 = file_data.split(',', 1)[1] if ',' in file_data else file_data
             try:
-                file_bytes = base64.b64decode(raw_b64)
+                file_bytes = safe_b64decode(file_data)
                 items = excel_io.parse_excel_or_csv_bytes(file_bytes, filename)
             except Exception as e:
                 self.send_json({'error': f'Gagal memproses file Excel ({filename}): {str(e)}'}, 400)
@@ -3090,7 +3194,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             except:
                 parent_id = None
 
-        photo_url = data.get('photo_url', '').strip() or '/static/images/avatar-officer-male.svg'
+        raw_photo = (data.get('photo_url') or '').strip()
+        photo_url = save_media_data_uri_if_needed(raw_photo, 'org_member') or '/static/images/avatar-officer-male.svg'
         nip = data.get('nip', '').strip()
         rank = data.get('rank', '').strip()
         try:
@@ -3153,6 +3258,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             parent_id = existing['parent_id']
 
         photo_url = data.get('photo_url', existing['photo_url'])
+        if photo_url:
+            photo_url = save_media_data_uri_if_needed(str(photo_url).strip(), 'org_member')
         nip = data.get('nip', existing['nip'])
         rank = data.get('rank', existing['rank'])
 
@@ -3327,9 +3434,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         replace_all = bool(data.get('replace_all', False))
 
         if file_data and not items:
-            raw_b64 = file_data.split(',', 1)[1] if ',' in file_data else file_data
             try:
-                file_bytes = base64.b64decode(raw_b64)
+                file_bytes = safe_b64decode(file_data)
                 parsed_rows = excel_io.parse_excel_or_csv_bytes(file_bytes, filename)
             except Exception as e:
                 self.send_json({'error': f'Gagal membaca file Excel/CSV: {str(e)}'}, 400)
@@ -4004,7 +4110,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         deadline_date = data.get('deadline_date', '').strip()
         external_url = data.get('external_url', '').strip()
         external_label = data.get('external_label', '').strip()
-        image_url = data.get('image_url', '').strip() or '/static/images/news-bb.jpg'
+        raw_img = (data.get('image_url') or '').strip()
+        image_url = save_media_data_uri_if_needed(raw_img, 'announcement') or '/static/images/news-bb.jpg'
         order_num = int(data.get('order_num', 1))
 
         if not title or not excerpt:
@@ -4050,8 +4157,11 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         params = []
         for col in ['announcement_number', 'title', 'category', 'badge_label', 'excerpt', 'content', 'deadline_date', 'external_url', 'external_label', 'image_url', 'order_num', 'is_active']:
             if col in data:
+                val = data[col]
+                if col == 'image_url' and val:
+                    val = save_media_data_uri_if_needed(str(val).strip(), 'announcement')
                 fields.append(f"{col} = ?")
-                params.append(data[col])
+                params.append(val)
 
         if fields:
             fields.append("updated_at = CURRENT_TIMESTAMP")

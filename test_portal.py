@@ -2081,6 +2081,80 @@ class TestKertagosaPortal(unittest.TestCase):
             v_json = f.read()
         self.assertIn('vercel_blob.py', v_json)
 
+    def test_33_upload_file_resilience(self):
+        """Verify upload resilience: safe_b64decode, data-URI interceptor, CORS on serve_file, and flyer upload UI."""
+        import server
+        # 1. Test safe_b64decode directly with missing padding and space substitution
+        sample_str = "SGVsbG8gV29ybGQ" # "Hello World" missing '='
+        self.assertEqual(server.safe_b64decode(sample_str), b"Hello World")
+        # Test string where '+' was corrupted into space by URL-encoding
+        # b"\x03\xe0" -> b64 is "A+A="
+        sample_url_corrupted = "A A="
+        self.assertEqual(server.safe_b64decode(sample_url_corrupted), b"\x03\xe0")
+        # With newlines and surrounding whitespace
+        sample_with_newlines = "  \n\rSGVsbG8gV29ybGQ=\n  "
+        self.assertEqual(server.safe_b64decode(sample_with_newlines), b"Hello World")
+        # With data URI prefix
+        sample_data_uri = "data:text/plain;base64,SGVsbG8gV29ybGQ="
+        self.assertEqual(server.safe_b64decode(sample_data_uri), b"Hello World")
+
+        # 2. Test server.save_media_data_uri_if_needed: converts raw data URI to clean URL
+        png_data_uri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        saved_url = server.save_media_data_uri_if_needed(png_data_uri, 'test_media')
+        self.assertTrue(saved_url.startswith('/static/uploads/'))
+        self.assertTrue(saved_url.endswith('.png'))
+
+        # Non-data-URI returns untouched
+        plain_url = "/static/images/logo-kejari.svg"
+        self.assertEqual(server.save_media_data_uri_if_needed(plain_url), plain_url)
+
+        # 3. Test News creation with data URI thumbnail: auto-converts to clean URL in database
+        news_payload = json.dumps({
+            'title': 'Uji Berita Auto-Convert Base64 Thumbnail',
+            'category': 'Kegiatan Kejari',
+            'excerpt': 'Ringkasan uji auto-convert',
+            'content': 'Konten lengkap uji',
+            'thumbnail_url': png_data_uri
+        }).encode('utf-8')
+        h_news = MockHandler('POST', '/api/admin/news', headers={
+            'Content-Type': 'application/json',
+            'Content-Length': str(len(news_payload)),
+            'Authorization': f'Bearer {self.token}'
+        }, body=news_payload)
+        h_news.do_POST()
+        self.assertEqual(h_news.response_code, 200)
+        news_id = h_news.get_response_json().get('id')
+
+        # Verify DB does NOT contain the raw base64 data URI
+        conn = server.get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT thumbnail_url FROM posts WHERE id = ?", (news_id,))
+        row = cursor.fetchone()
+        conn.close()
+        self.assertIsNotNone(row)
+        self.assertFalse(row['thumbnail_url'].startswith('data:image/'))
+        self.assertTrue(row['thumbnail_url'].startswith('/static/uploads/'))
+
+        # 4. Test CORS headers in serve_file
+        h_cors = MockHandler('GET', row['thumbnail_url'])
+        h_cors.do_GET()
+        self.assertEqual(h_cors.response_code, 200)
+        self.assertEqual(h_cors.response_headers.get('Access-Control-Allow-Origin'), '*')
+
+        # 5. Verify admin.html announcement flyer upload UI
+        with open(os.path.join(BASE_DIR, 'admin.html'), 'r', encoding='utf-8') as f:
+            admin_html = f.read()
+        self.assertIn('id="admin-ann-file-input"', admin_html)
+        self.assertIn('uploadAnnouncementFlyer(event)', admin_html)
+
+        # 6. Verify static/js/admin.js has uploadAnnouncementFlyer and resets input value
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'admin.js'), 'r', encoding='utf-8') as f:
+            admin_js = f.read()
+        self.assertIn('function uploadAnnouncementFlyer', admin_js)
+        self.assertIn('uploadSiteLogo', admin_js)
+        self.assertIn('uploadOrgImage', admin_js)
+        self.assertIn('uploadAdminProfileImage', admin_js)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -13,6 +13,8 @@ import sys
 import json
 import time
 import uuid
+import re
+import urllib.parse
 import mimetypes
 import urllib.request
 import urllib.error
@@ -92,8 +94,18 @@ def upload_to_blob(binary_data, filename, content_type=None, token=None, add_ran
         guessed, _ = mimetypes.guess_type(filename)
         content_type = guessed or 'application/octet-stream'
 
-    clean_filename = os.path.basename(filename).replace(' ', '_')
-    url = f"https://blob.vercel-storage.com/{clean_filename}"
+    base_name = os.path.basename(filename).strip()
+    name_part, ext_part = os.path.splitext(base_name)
+    # Sanitize name part: keep alphanumeric, underscore, hyphen
+    safe_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', name_part)
+    safe_ext = re.sub(r'[^a-zA-Z0-9]', '', ext_part.lower())
+    if safe_ext:
+        clean_filename = f"{safe_name}.{safe_ext}"
+    else:
+        clean_filename = safe_name or 'upload_file'
+
+    encoded_filename = urllib.parse.quote(clean_filename)
+    url = f"https://blob.vercel-storage.com/{encoded_filename}"
 
     headers = {
         'Authorization': f'Bearer {token}',
@@ -227,7 +239,7 @@ def sync_all_media_to_blob(uploads_dir, get_db_fn, token=None, limit=100):
         try:
             cursor.execute("UPDATE page_contents SET content_value = ? WHERE content_value = ?", (blob_url, local_ref))
             cursor.execute("UPDATE organization_members SET photo_url = ? WHERE photo_url = ?", (blob_url, local_ref))
-            cursor.execute("UPDATE news SET thumbnail_url = ? WHERE thumbnail_url = ?", (blob_url, local_ref))
+            cursor.execute("UPDATE posts SET thumbnail_url = ? WHERE thumbnail_url = ?", (blob_url, local_ref))
             cursor.execute("UPDATE announcements SET image_url = ? WHERE image_url = ?", (blob_url, local_ref))
             cursor.execute("UPDATE accountability_docs SET file_url = ? WHERE file_url = ?", (blob_url, local_ref))
             cursor.execute("UPDATE complaints SET attachment_url = ? WHERE attachment_url = ?", (blob_url, local_ref))

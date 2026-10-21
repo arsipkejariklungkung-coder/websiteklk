@@ -218,8 +218,12 @@ async function uploadSiteLogo(e) {
 
   const reader = new FileReader();
   reader.onload = async function(evt) {
-    const base64 = evt.target.result;
+    let base64 = evt.target.result;
     try {
+      const isSvg = file.name.toLowerCase().endsWith('.svg') || file.type === 'image/svg+xml';
+      if (!isSvg && typeof resizeImageIfLarge === 'function') {
+        base64 = await resizeImageIfLarge(base64, 1200, 1200);
+      }
       const res = await fetch('/api/admin/upload-media', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -743,22 +747,22 @@ function processNewsThumbnailFile(file) {
   const errEl = document.getElementById('news-thumbnail-error');
   const fileInput = document.getElementById('news-form-thumbnail-file');
 
-  const validMime = ['image/jpeg', 'image/jpg', 'image/png'];
+  const validMime = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
   const ext = (file.name.split('.').pop() || '').toLowerCase();
-  const validExt = ['jpg', 'jpeg', 'png'];
+  const validExt = ['jpg', 'jpeg', 'png', 'webp'];
 
   if (!validMime.includes(file.type) && !validExt.includes(ext)) {
     if (errEl) {
-      errEl.textContent = 'Format file tidak didukung. Harap unggah gambar dengan format JPG atau PNG.';
+      errEl.textContent = 'Format file tidak didukung. Harap unggah gambar dengan format JPG, PNG, atau WEBP.';
       errEl.classList.remove('hidden');
     }
     if (fileInput) fileInput.value = '';
     return;
   }
 
-  if (file.size > 5 * 1024 * 1024) {
+  if (file.size > 10 * 1024 * 1024) {
     if (errEl) {
-      errEl.textContent = 'Ukuran gambar terlalu besar (Maksimal 5MB).';
+      errEl.textContent = 'Ukuran gambar terlalu besar (Maksimal 10MB).';
       errEl.classList.remove('hidden');
     }
     if (fileInput) fileInput.value = '';
@@ -767,17 +771,25 @@ function processNewsThumbnailFile(file) {
 
   const reader = new FileReader();
   reader.onload = async (evt) => {
-    const base64Data = evt.target.result;
+    let base64Data = evt.target.result;
     // Immediately display preview inside the dropzone box
     setNewsThumbnailPreview(base64Data, file.name);
+    const prevName = document.getElementById('news-thumbnail-preview-name');
+    if (prevName) {
+      prevName.innerHTML = `<span class="inline-block animate-pulse text-emerald-700 font-bold">Mengompres &amp; Mengunggah: ${escapeAdminHtml(file.name)}...</span>`;
+    }
 
-    // Upload to backend media endpoint if available
+    // Upload to backend media endpoint with automatic downscaling
     try {
+      if (typeof resizeImageIfLarge === 'function') {
+        base64Data = await resizeImageIfLarge(base64Data, 1280, 800);
+      }
       const res = await fetch('/api/admin/upload-media', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           file_data: base64Data,
+          data: base64Data,
           filename: file.name
         })
       });
@@ -785,12 +797,16 @@ function processNewsThumbnailFile(file) {
       if (data && data.success && data.url) {
         const hiddenInput = document.getElementById('news-form-thumbnail');
         if (hiddenInput) hiddenInput.value = data.url;
+        if (prevName) {
+          prevName.textContent = `${file.name} (Tersimpan di Cloud)`;
+        }
       }
     } catch (_) {
-      // Keep base64Data in hidden input as fallback
+      // Keep base64Data preview, server-side data URI interceptor handles it
     }
   };
   reader.readAsDataURL(file);
+  if (fileInput) fileInput.value = '';
 }
 
 function openNewsCreateModal() {
@@ -3392,25 +3408,34 @@ async function uploadMemberPhoto(e) {
 }
 
 async function uploadOrgImage(e, inputId, previewId) {
-  const file = e.target.files[0];
+  const file = e.target.files ? e.target.files[0] : null;
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = async function(evt) {
-    const base64 = evt.target.result;
+    let base64 = evt.target.result;
     try {
+      showAdminToast('Mengoptimasi & mengunggah gambar...');
+      const isSvg = file.name.toLowerCase().endsWith('.svg') || file.type === 'image/svg+xml';
+      if (!isSvg && typeof resizeImageIfLarge === 'function') {
+        base64 = await resizeImageIfLarge(base64, 1200, 1200);
+      }
       const res = await fetch('/api/admin/upload-media', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           filename: file.name,
-          data: base64
+          data: base64,
+          file_data: base64
         })
       });
       const data = await res.json();
       if (data.success && data.url) {
-        document.getElementById(inputId).value = data.url;
-        document.getElementById(previewId).src = data.url;
+        const inputEl = document.getElementById(inputId);
+        const prevEl = document.getElementById(previewId);
+        if (inputEl) inputEl.value = data.url;
+        if (prevEl) prevEl.src = data.url;
+        showAdminToast('Gambar berhasil diunggah!');
       } else {
         alert('Gagal mengunggah gambar: ' + (data.error || 'Terjadi kesalahan'));
       }
@@ -3419,6 +3444,7 @@ async function uploadOrgImage(e, inputId, previewId) {
     }
   };
   reader.readAsDataURL(file);
+  e.target.value = '';
 }
 
 async function handleSaveOrgMember(e) {
@@ -4330,40 +4356,90 @@ async function saveAdminProfileText(contentKey, inputId) {
 }
 
 async function uploadAdminProfileImage(contentKey, event, previewId) {
-  const file = event.target.files[0];
+  const file = event.target.files ? event.target.files[0] : null;
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = async (e) => {
-    const base64Data = e.target.result;
+    let base64Data = e.target.result;
     const preview = document.getElementById(previewId);
     if (preview) preview.src = base64Data;
 
     try {
+      showAdminToast('Mengoptimasi & mengunggah gambar...');
+      const isSvg = file.name.toLowerCase().endsWith('.svg') || file.type === 'image/svg+xml';
+      if (!isSvg && typeof resizeImageIfLarge === 'function') {
+        base64Data = await resizeImageIfLarge(base64Data, 1200, 1200);
+      }
       const res = await fetch('/api/admin/upload-media', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           file_data: base64Data,
+          data: base64Data,
           filename: file.name,
           content_key: contentKey
         })
       });
       const data = await res.json();
-      if (data.success) {
-        alert('Foto/Logo berhasil diupload dan disimpan!');
+      if (data.success && data.url) {
+        showAdminToast('Foto/Logo berhasil diupload dan disimpan!');
+        if (preview) preview.src = data.url;
         if (contentKey === 'header_logo_url') {
           document.querySelectorAll('.site-logo-img').forEach(img => img.src = data.url);
         }
         await loadAdminProfileCms();
       } else {
-        alert('Gagal upload: ' + (data.error || 'Terjadi kesalahan'));
+        alert('Gagal upload: ' + ((data && data.error) || 'Terjadi kesalahan'));
       }
     } catch (err) {
       alert('Gagal mengirim file ke server.');
     }
   };
   reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+async function uploadAnnouncementFlyer(e) {
+  const file = e.target.files ? e.target.files[0] : null;
+  if (!file) return;
+
+  const btnText = document.getElementById('admin-ann-upload-btn-text');
+  if (btnText) btnText.textContent = '...';
+
+  const reader = new FileReader();
+  reader.onload = async function(evt) {
+    let base64 = evt.target.result;
+    try {
+      showAdminToast('Mengoptimasi & mengunggah flyer...');
+      if (typeof resizeImageIfLarge === 'function') {
+        base64 = await resizeImageIfLarge(base64, 1200, 1600);
+      }
+      const res = await fetch('/api/admin/upload-media', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: file.name || 'flyer_pengumuman.jpg',
+          data: base64,
+          file_data: base64
+        })
+      });
+      const data = await res.json();
+      if (data && data.success && data.url) {
+        const input = document.getElementById('admin-ann-image-url');
+        if (input) input.value = data.url;
+        showAdminToast('Flyer pengumuman berhasil diunggah!');
+      } else {
+        alert('Gagal mengunggah flyer: ' + ((data && data.error) || 'Terjadi kesalahan'));
+      }
+    } catch (err) {
+      alert('Gagal mengunggah flyer pengumuman: Kesalahan jaringan.');
+    } finally {
+      if (btnText) btnText.textContent = 'Unggah';
+    }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
 }
 
 function openAdminProfileItemModal(pageType, itemType, itemId) {
