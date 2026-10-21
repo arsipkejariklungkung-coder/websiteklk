@@ -78,6 +78,9 @@ async function loadAllDashboardData() {
     await loadAccountabilityAdminData();
     await loadAnnouncementsAdminData();
 
+    // 5. Load Vercel Blob Cloud Storage Status
+    await loadVercelBlobStatus();
+
   } catch (err) {
     console.error('Error loading dashboard data:', err);
   }
@@ -306,6 +309,180 @@ async function setPresetSiteLogo(url) {
     }
   } catch (err) {
     console.error('Failed to set preset logo:', err);
+  }
+}
+
+// =====================================================================
+// VERCEL BLOB CLOUD STORAGE INTEGRATION
+// =====================================================================
+
+async function loadVercelBlobStatus() {
+  const badge = document.getElementById('blob-status-badge');
+  const sourceEl = document.getElementById('blob-token-source');
+  const modeEl = document.getElementById('blob-storage-mode');
+  const inputEl = document.getElementById('input-vercel-blob-token');
+  if (!badge) return;
+
+  try {
+    const res = await fetch('/api/admin/blob/status');
+    const data = await res.json();
+    if (data.success) {
+      if (data.configured) {
+        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+        badge.textContent = 'Aktif & Terhubung (Cloud CDN)';
+        if (modeEl) modeEl.textContent = 'Vercel Blob Global CDN';
+      } else {
+        badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30';
+        badge.textContent = 'Standby (Penyimpanan Lokal)';
+        if (modeEl) modeEl.textContent = 'Lokal Server (/static/uploads)';
+      }
+
+      if (sourceEl) {
+        if (data.source === 'ENV') sourceEl.textContent = 'Environment Variable (Vercel)';
+        else if (data.source === 'DATABASE') sourceEl.textContent = 'Database Setting (CMS)';
+        else sourceEl.textContent = 'Belum Dikonfigurasi';
+      }
+
+      if (inputEl && !inputEl.value && data.token_masked) {
+        inputEl.placeholder = data.token_masked;
+      }
+    }
+  } catch (err) {
+    console.error('Failed to load blob status:', err);
+  }
+}
+
+function toggleBlobTokenVisibility() {
+  const input = document.getElementById('input-vercel-blob-token');
+  const icon = document.getElementById('icon-blob-token-eye');
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    if (icon) icon.setAttribute('data-lucide', 'eye-off');
+  } else {
+    input.type = 'password';
+    if (icon) icon.setAttribute('data-lucide', 'eye');
+  }
+  if (window.lucide) lucide.createIcons();
+}
+
+async function saveVercelBlobToken() {
+  const input = document.getElementById('input-vercel-blob-token');
+  if (!input) return;
+  const token = input.value.trim();
+
+  try {
+    showAdminToast('Menyimpan token Vercel Blob...');
+    const res = await fetch('/api/admin/blob/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showAdminToast(data.message || 'Token berhasil disimpan!');
+      input.value = '';
+      await loadVercelBlobStatus();
+    } else {
+      alert('Gagal menyimpan token: ' + (data.error || 'Terjadi kesalahan'));
+    }
+  } catch (err) {
+    alert('Gagal menyimpan token Vercel Blob: Kesalahan jaringan.');
+  }
+}
+
+async function testVercelBlobConnection() {
+  const input = document.getElementById('input-vercel-blob-token');
+  const customToken = input ? input.value.trim() : '';
+  const fbBox = document.getElementById('blob-feedback-box');
+  const fbTitle = document.getElementById('blob-feedback-title');
+  const fbMsg = document.getElementById('blob-feedback-message');
+
+  try {
+    showAdminToast('Menguji koneksi ke Vercel Blob...');
+    if (fbBox) {
+      fbBox.classList.remove('hidden');
+      if (fbTitle) fbTitle.textContent = 'Menguji Koneksi...';
+      if (fbMsg) fbMsg.innerHTML = '<span class="text-amber-300">Mengunggah berkas probe verifikasi ke blob.vercel-storage.com...</span>';
+    }
+
+    const res = await fetch('/api/admin/blob/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: customToken })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showAdminToast('Koneksi ke Vercel Blob Berhasil!');
+      if (fbBox) {
+        if (fbTitle) fbTitle.innerHTML = '<span class="text-emerald-400">✓ Koneksi Berhasil &amp; Aktif</span>';
+        if (fbMsg) {
+          fbMsg.innerHTML = `
+            <div class="text-emerald-300 font-semibold mb-1">Penyimpanan cloud siap digunakan!</div>
+            <div class="text-slate-300 text-[10px]">Probe File URL: <a href="${data.url}" target="_blank" class="text-amber-300 underline">${data.url}</a></div>
+          `;
+        }
+      }
+      await loadVercelBlobStatus();
+    } else {
+      alert('Uji koneksi gagal: ' + (data.error || 'Terjadi kesalahan'));
+      if (fbBox) {
+        if (fbTitle) fbTitle.innerHTML = '<span class="text-red-400">✗ Koneksi Gagal</span>';
+        if (fbMsg) fbMsg.innerHTML = `<span class="text-red-300">${data.error || 'Gagal tersambung'}</span>`;
+      }
+    }
+  } catch (err) {
+    alert('Uji koneksi gagal: Kesalahan jaringan.');
+  }
+}
+
+async function syncAllMediaToVercelBlob() {
+  if (!confirm('Apakah Anda yakin ingin menyinkronkan seluruh berkas media lokal (static/uploads/) ke Vercel Blob Cloud Storage?')) {
+    return;
+  }
+
+  const fbBox = document.getElementById('blob-feedback-box');
+  const fbTitle = document.getElementById('blob-feedback-title');
+  const fbMsg = document.getElementById('blob-feedback-message');
+
+  try {
+    showAdminToast('Memulai sinkronisasi seluruh media ke Vercel Blob...');
+    if (fbBox) {
+      fbBox.classList.remove('hidden');
+      if (fbTitle) fbTitle.textContent = 'Sinkronisasi Media Sedang Berjalan...';
+      if (fbMsg) fbMsg.innerHTML = '<span class="text-amber-300">Sedang membaca berkas lokal dan mengunggah ke Vercel Blob CDN...</span>';
+    }
+
+    const res = await fetch('/api/admin/blob/sync-all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showAdminToast(data.message || 'Sinkronisasi media selesai!');
+      if (fbBox) {
+        if (fbTitle) fbTitle.innerHTML = `<span class="text-emerald-400">✓ Sinkronisasi Selesai (${data.synced_count} Berkas)</span>`;
+        if (fbMsg) {
+          const filesSummary = (data.files || []).slice(0, 5).map(f => `<div>• ${f.local_filename} ➔ <a href="${f.blob_url}" target="_blank" class="text-amber-300 underline text-[10px]">${f.blob_url.split('/').pop()}</a></div>`).join('');
+          fbMsg.innerHTML = `
+            <div class="text-emerald-300 font-semibold mb-1">${data.message}</div>
+            ${filesSummary}
+            ${(data.files || []).length > 5 ? `<div class="text-slate-400 text-[10px] mt-1">... dan ${(data.files || []).length - 5} berkas lainnya.</div>` : ''}
+          `;
+        }
+      }
+      await loadAllDashboardData();
+    } else {
+      alert('Gagal sinkronisasi: ' + (data.error || 'Terjadi kesalahan'));
+      if (fbBox) {
+        if (fbTitle) fbTitle.innerHTML = '<span class="text-red-400">✗ Sinkronisasi Gagal</span>';
+        if (fbMsg) fbMsg.innerHTML = `<span class="text-red-300">${data.error || 'Terjadi kesalahan'}</span>`;
+      }
+    }
+  } catch (err) {
+    alert('Gagal sinkronisasi media: Kesalahan jaringan.');
   }
 }
 

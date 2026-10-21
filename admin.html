@@ -274,6 +274,81 @@
           </div>
 
           <form id="form-general-contents" class="space-y-4 text-xs">
+            <!-- Integrasi Vercel Blob Cloud Storage -->
+            <div class="p-5 bg-gradient-to-br from-slate-900 via-[#0B3B24] to-emerald-950 text-white rounded-2xl mb-6 shadow-md border border-emerald-700/60 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-800/80 pb-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 shadow-sm">
+                    <svg class="w-5 h-5 text-amber-300" viewBox="0 0 76 65" fill="currentColor">
+                      <path d="M37.5274 0L75.0548 65H0L37.5274 0Z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="font-heading font-extrabold text-sm text-white flex items-center gap-2">
+                      <span>Integrasi Vercel Blob Cloud Storage (Global CDN)</span>
+                      <span id="blob-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">Memeriksa...</span>
+                    </h4>
+                    <p class="text-[11px] text-emerald-200/90 mt-0.5">Sinkronkan pasfoto struktur organisasi, gambar berita, dan logo instansi langsung ke Vercel Blob CDN.</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                  <button type="button" onclick="testVercelBlobConnection()" class="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs border border-emerald-600 flex items-center gap-1.5 transition-colors">
+                    <i data-lucide="activity" class="w-3.5 h-3.5 text-amber-300"></i>
+                    <span>Uji Koneksi</span>
+                  </button>
+                  <button type="button" onclick="syncAllMediaToVercelBlob()" class="px-3.5 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow flex items-center gap-1.5 transition-transform active:scale-95">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                    <span>Sinkronkan Media</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Token Input & Configuration Details -->
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                <div class="md:col-span-8 space-y-1.5">
+                  <label class="block font-bold text-xs text-emerald-200">
+                    BLOB_READ_WRITE_TOKEN <span class="text-[10px] font-normal text-emerald-300/80">(Vercel Dashboard &gt; Storage &gt; Blob &gt; Settings)</span>
+                  </label>
+                  <div class="relative flex items-center">
+                    <input type="password" id="input-vercel-blob-token" class="w-full pl-3 pr-24 py-2 bg-slate-950/80 border border-emerald-600/70 rounded-xl text-xs font-mono text-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-400" placeholder="vercel_blob_rw_xxxxxxxxxxxxxxxxxxxxxxxxxx">
+                    <button type="button" onclick="toggleBlobTokenVisibility()" class="absolute right-12 px-2 py-1 text-emerald-400 hover:text-white text-[11px]" title="Lihat/Sembunyikan Token">
+                      <i data-lucide="eye" id="icon-blob-token-eye" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button type="button" onclick="saveVercelBlobToken()" class="absolute right-1.5 px-2.5 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-[11px] rounded-lg shadow-xs transition-colors">
+                      Simpan
+                    </button>
+                  </div>
+                  <p class="text-[10px] text-emerald-300/70">
+                    *Jika dideploy di Vercel, token otomatis terbaca dari <code class="bg-black/30 px-1 py-0.5 rounded text-amber-300">BLOB_READ_WRITE_TOKEN</code>. Masukkan token di sini jika ingin mengubah atau menguji secara manual.
+                  </p>
+                </div>
+
+                <div class="md:col-span-4 p-3 bg-white/5 rounded-xl border border-white/10 text-[11px] space-y-1">
+                  <div class="flex items-center justify-between text-emerald-300 font-semibold">
+                    <span>Sumber Token:</span>
+                    <span id="blob-token-source" class="font-mono font-bold text-white">-</span>
+                  </div>
+                  <div class="flex items-center justify-between text-emerald-300 font-semibold">
+                    <span>Endpoint Storage:</span>
+                    <span class="font-mono text-[10px] text-amber-200">blob.vercel-storage.com</span>
+                  </div>
+                  <div class="flex items-center justify-between text-emerald-300 font-semibold">
+                    <span>Mode Unggah:</span>
+                    <span id="blob-storage-mode" class="font-bold text-emerald-400">Otomatis (Cloud CDN)</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Live Test / Sync Feedback Box -->
+              <div id="blob-feedback-box" class="hidden p-3 bg-slate-950/90 rounded-xl border border-emerald-700/80 text-xs font-mono space-y-1">
+                <div class="flex items-center justify-between text-emerald-400 font-bold text-[11px]">
+                  <span id="blob-feedback-title">Status Sinkronisasi</span>
+                  <button type="button" onclick="document.getElementById('blob-feedback-box').classList.add('hidden')" class="text-slate-400 hover:text-white">&times;</button>
+                </div>
+                <div id="blob-feedback-message" class="text-slate-200 text-[11px] break-all"></div>
+              </div>
+            </div>
+
             <!-- Logo Instansi / Header & Footer Logo -->
             <div class="p-5 bg-gradient-to-br from-emerald-50/80 via-white to-amber-50/40 border border-emerald-300/80 rounded-2xl mb-6 shadow-sm space-y-4">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-100 pb-3">

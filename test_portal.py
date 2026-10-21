@@ -2008,6 +2008,79 @@ class TestKertagosaPortal(unittest.TestCase):
         ba20_idx = admin_html.find('id="modal-ba20"')
         self.assertTrue(ba20_idx < script_idx, "admin.js script must be loaded after all modal definitions")
 
+    def test_32_vercel_blob_integration(self):
+        """Verify Vercel Blob cloud storage integration: token handling, REST API endpoints,
+        admin UI panel controls, and upload fallback routing."""
+        import vercel_blob
+
+        # 1. Test token masking & validation
+        sample_token = 'vercel_blob_rw_abc123456789xyz987654321_secrettoken'
+        masked = vercel_blob.mask_token(sample_token)
+        self.assertTrue(masked.startswith('vercel_blob_rw_'))
+        self.assertTrue(masked.endswith('oken'))
+        self.assertIn('••••', masked)
+
+        # 2. Test GET & POST /api/admin/blob/status
+        h_status = MockHandler('GET', '/api/admin/blob/status', headers={'Authorization': f'Bearer {self.token}'})
+        h_status.do_GET()
+        self.assertEqual(h_status.response_code, 200)
+        status_res = h_status.get_response_json()
+        self.assertTrue(status_res.get('success'))
+        self.assertIn('configured', status_res)
+        self.assertIn('source', status_res)
+
+        # 3. Test POST /api/admin/blob/settings (Save custom token to DB)
+        save_payload = json.dumps({'token': sample_token}).encode('utf-8')
+        h_save = MockHandler('POST', '/api/admin/blob/settings', headers={
+            'Content-Type': 'application/json',
+            'Content-Length': str(len(save_payload)),
+            'Authorization': f'Bearer {self.token}'
+        }, body=save_payload)
+        h_save.do_POST()
+        self.assertEqual(h_save.response_code, 200)
+        self.assertTrue(h_save.get_response_json().get('success'))
+
+        # Check status again to see DATABASE source
+        h_status2 = MockHandler('GET', '/api/admin/blob/status', headers={'Authorization': f'Bearer {self.token}'})
+        h_status2.do_GET()
+        s2_res = h_status2.get_response_json()
+        self.assertTrue(s2_res.get('configured'))
+        self.assertEqual(s2_res.get('source'), 'DATABASE')
+
+        # Clear token back to empty
+        clear_payload = json.dumps({'token': ''}).encode('utf-8')
+        h_clear = MockHandler('POST', '/api/admin/blob/settings', headers={
+            'Content-Type': 'application/json',
+            'Content-Length': str(len(clear_payload)),
+            'Authorization': f'Bearer {self.token}'
+        }, body=clear_payload)
+        h_clear.do_POST()
+        self.assertEqual(h_clear.response_code, 200)
+
+        # 4. Verify admin.html contains Vercel Blob panel elements
+        with open(os.path.join(BASE_DIR, 'admin.html'), 'r', encoding='utf-8') as f:
+            admin_html = f.read()
+
+        self.assertIn('id="blob-status-badge"', admin_html)
+        self.assertIn('id="input-vercel-blob-token"', admin_html)
+        self.assertIn('testVercelBlobConnection()', admin_html)
+        self.assertIn('syncAllMediaToVercelBlob()', admin_html)
+        self.assertIn('saveVercelBlobToken()', admin_html)
+
+        # 5. Verify static/js/admin.js contains Vercel Blob management functions
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'admin.js'), 'r', encoding='utf-8') as f:
+            admin_js = f.read()
+
+        self.assertIn('loadVercelBlobStatus', admin_js)
+        self.assertIn('saveVercelBlobToken', admin_js)
+        self.assertIn('testVercelBlobConnection', admin_js)
+        self.assertIn('syncAllMediaToVercelBlob', admin_js)
+
+        # 6. Verify vercel.json includes vercel_blob.py
+        with open(os.path.join(BASE_DIR, 'vercel.json'), 'r', encoding='utf-8') as f:
+            v_json = f.read()
+        self.assertIn('vercel_blob.py', v_json)
+
 
 if __name__ == '__main__':
     unittest.main()

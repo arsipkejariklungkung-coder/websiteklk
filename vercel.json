@@ -46,7 +46,7 @@
   ],
   "functions": {
     "api/index.py": {
-      "includeFiles": "{server.py,totp_mfa.py,excel_io.py,init_db.py,seed_organization.py,data/**}"
+      "includeFiles": "{server.py,totp_mfa.py,excel_io.py,init_db.py,seed_organization.py,vercel_blob.py,data/**}"
     }
   }
 }

@@ -23,6 +23,10 @@ import csv
 import totp_mfa
 import excel_io
 import ai_news_generator
+try:
+    import vercel_blob
+except ImportError:
+    vercel_blob = None
 
 PORT = 8000
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -1028,6 +1032,13 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 return
             self.handle_get_admin_announcements()
             return
+        elif path == '/api/admin/blob/status':
+            user = get_current_user(self)
+            if not user:
+                self.send_json({'error': 'Unauthorized'}, 401)
+                return
+            self.handle_blob_status()
+            return
 
         # 4. Serve uploaded files from UPLOADS_DIR (/tmp/uploads on Vercel or static/uploads locally)
         if path.startswith('/static/uploads/'):
@@ -1127,6 +1138,18 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
         if path == '/api/admin/page-contents/batch':
             self.handle_batch_update_contents()
+            return
+        elif path == '/api/admin/blob/status':
+            self.handle_blob_status()
+            return
+        elif path == '/api/admin/blob/test':
+            self.handle_blob_test()
+            return
+        elif path == '/api/admin/blob/settings':
+            self.handle_blob_settings()
+            return
+        elif path == '/api/admin/blob/sync-all':
+            self.handle_blob_sync_all()
             return
         elif path == '/api/admin/upload-media':
             self.handle_upload_media()
@@ -1896,15 +1919,33 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         
         # Safe filename
         clean_name = f"{int(time.time())}_{uuid.uuid4().hex[:8]}{ext}"
-        save_path = os.path.join(UPLOADS_DIR, clean_name)
-        with open(save_path, 'wb') as f:
-            f.write(binary_data)
+        
+        # 1. Attempt Vercel Blob Upload if configured
+        public_url = None
+        storage_type = "LOCAL"
+        conn = get_db()
+        blob_token = vercel_blob.get_blob_token(conn) if vercel_blob else None
 
-        public_url = f"/static/uploads/{clean_name}"
+        if blob_token:
+            blob_res = vercel_blob.upload_to_blob(binary_data, clean_name, token=blob_token, add_random_suffix=True)
+            if blob_res.get('success') and blob_res.get('url'):
+                public_url = blob_res['url']
+                storage_type = "VERCEL_BLOB"
+
+        # 2. Local fallback / backup copy
+        save_path = os.path.join(UPLOADS_DIR, clean_name)
+        try:
+            with open(save_path, 'wb') as f:
+                f.write(binary_data)
+        except Exception as e:
+            print(f"[Upload Local Fallback Notice] {e}")
+
+        # If not uploaded to Blob, use local URL
+        if not public_url:
+            public_url = f"/static/uploads/{clean_name}"
 
         # If content_key is provided, automatically update the page_contents table!
         if content_key:
-            conn = get_db()
             cursor = conn.cursor()
             cursor.execute("""
             UPDATE page_contents
@@ -1917,14 +1958,74 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 VALUES (?, 'HEADER', 'IMAGE', ?, 'Logo Resmi Instansi')
                 """, (content_key, public_url))
             conn.commit()
-            conn.close()
 
+        conn.close()
+
+        msg = 'Gambar berhasil diunggah ke Vercel Blob Cloud CDN!' if storage_type == 'VERCEL_BLOB' else 'Gambar berhasil diunggah ke penyimpanan lokal!'
         self.send_json({
             'success': True,
             'url': public_url,
+            'storage': storage_type,
             'content_key': content_key,
-            'message': 'Gambar berhasil diunggah dan diperbarui!'
+            'message': msg
         })
+
+    def handle_blob_status(self):
+        conn = get_db()
+        token = vercel_blob.get_blob_token(conn) if vercel_blob else ''
+        configured = bool(token and token.startswith('vercel_blob_rw_'))
+        source = 'ENV' if os.environ.get('BLOB_READ_WRITE_TOKEN') else ('DATABASE' if token else 'NONE')
+        masked = vercel_blob.mask_token(token) if vercel_blob else ''
+        conn.close()
+        self.send_json({
+            'success': True,
+            'configured': configured,
+            'source': source,
+            'token_masked': masked,
+            'blob_store_endpoint': 'https://blob.vercel-storage.com',
+            'message': 'Vercel Blob Cloud Storage aktif & terhubung' if configured else 'Vercel Blob belum terhubung (Mode penyimpanan lokal)'
+        })
+
+    def handle_blob_settings(self):
+        data = self.read_json_body()
+        token = data.get('token', '').strip()
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+        INSERT OR REPLACE INTO page_contents (content_key, section_name, content_type, content_value, label, updated_at)
+        VALUES ('vercel_blob_token', 'SYSTEM', 'SECRET', ?, 'Vercel Blob Read/Write Token', CURRENT_TIMESTAMP)
+        """, (token,))
+        conn.commit()
+        conn.close()
+        self.send_json({
+            'success': True,
+            'message': 'Token Vercel Blob berhasil disimpan!' if token else 'Token Vercel Blob dihapus (kembali ke penyimpanan lokal).'
+        })
+
+    def handle_blob_test(self):
+        data = self.read_json_body() if (self.headers.get('Content-Length') and int(self.headers.get('Content-Length', 0)) > 0) else {}
+        custom_token = data.get('token', '').strip() or None
+        conn = get_db()
+        token = custom_token or (vercel_blob.get_blob_token(conn) if vercel_blob else None)
+        conn.close()
+        if not token:
+            self.send_json({'error': 'Token BLOB_READ_WRITE_TOKEN belum diisi atau dikonfigurasi.'}, 400)
+            return
+        res = vercel_blob.test_blob_connection(token=token)
+        if res.get('success'):
+            self.send_json(res)
+        else:
+            self.send_json({'error': res.get('error', 'Gagal tes koneksi ke Vercel Blob')}, 400)
+
+    def handle_blob_sync_all(self):
+        conn = get_db()
+        token = vercel_blob.get_blob_token(conn) if vercel_blob else None
+        conn.close()
+        if not token:
+            self.send_json({'error': 'Token BLOB_READ_WRITE_TOKEN diperlukan untuk sinkronisasi. Masukkan token terlebih dahulu.'}, 400)
+            return
+        res = vercel_blob.sync_all_media_to_blob(UPLOADS_DIR, get_db, token=token)
+        self.send_json(res)
 
     def handle_create_news(self):
         data = self.read_json_body()
