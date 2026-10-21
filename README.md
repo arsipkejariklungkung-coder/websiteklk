@@ -74,7 +74,7 @@ python3 test_portal.py
 
 | Username | Password | Tipe MFA |
 | :--- | :--- | :--- |
-| `admin` atau `admin@kejariklungkung.go.id` | `admin123` | Google / Microsoft Authenticator (RFC 6238 TOTP) |
+| `admin` atau `admin` | `admin5678` | Google / Microsoft Authenticator (RFC 6238 TOTP) |
 
 *Pindai QR Code di layar login atau masukkan Kunci Setup Base32 pada aplikasi Google Authenticator / Microsoft Authenticator di smartphone Anda.*
 
