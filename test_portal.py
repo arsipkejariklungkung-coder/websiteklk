@@ -8,6 +8,7 @@ import sys
 import io
 import json
 import base64
+import subprocess
 import unittest
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -2154,6 +2155,83 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('uploadSiteLogo', admin_js)
         self.assertIn('uploadOrgImage', admin_js)
         self.assertIn('uploadAdminProfileImage', admin_js)
+
+    def test_34_i18n_bilingual_integrity(self):
+        """Verify i18n English/Indonesian language switcher script integrity, no syntax errors, and button bindings."""
+        i18n_path = os.path.join(BASE_DIR, 'static', 'js', 'i18n.js')
+        self.assertTrue(os.path.exists(i18n_path))
+        with open(i18n_path, 'r', encoding='utf-8') as f:
+            i18n_content = f.read()
+
+        # 1. Verify strict mode compliance: no illegal octal escapes in string literals
+        # (e.g. '\1' in replacements instead of '$1')
+        self.assertNotIn("'\\1", i18n_content)
+        self.assertNotIn('"\\1', i18n_content)
+
+        # 2. Verify global exposure and key functions
+        self.assertIn('window.setLanguage = setLanguage', i18n_content)
+        self.assertIn('window.I18N =', i18n_content)
+        self.assertIn('window.currentLanguage', i18n_content)
+        self.assertIn('function setLanguage(lang', i18n_content)
+        self.assertIn('function translateDom(', i18n_content)
+
+        # 3. Check JavaScriptCore parsing (if jsc is present on macOS)
+        jsc_bin = '/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc'
+        if os.path.exists(jsc_bin):
+            test_script = f"""
+            var window = {{
+              dispatchEvent: function() {{}},
+              localStorage: {{ getItem: function() {{ return null; }}, setItem: function() {{}} }}
+            }};
+            var localStorage = window.localStorage;
+            var clearTimeout = function() {{}};
+            var setTimeout = function() {{}};
+            var NodeFilter = {{ SHOW_TEXT: 4, FILTER_ACCEPT: 1, FILTER_REJECT: 2, FILTER_SKIP: 3 }};
+            var document = {{
+              readyState: 'complete',
+              documentElement: {{ lang: 'id' }},
+              body: {{ appendChild: function() {{}} }},
+              getElementById: function() {{ return {{ className: '', classList: {{ remove: function() {{}}, add: function() {{}} }}, innerHTML: '', textContent: '' }}; }},
+              querySelectorAll: function() {{ return []; }},
+              createElement: function() {{ return {{ classList: {{ remove: function() {{}}, add: function() {{}} }} }}; }},
+              createTreeWalker: function() {{ return {{ nextNode: function() {{ return null; }} }}; }},
+              addEventListener: function() {{}}
+            }};
+            var CustomEvent = function(name, opts) {{ this.name = name; this.opts = opts; }};
+            load('{i18n_path}');
+            if (typeof window.setLanguage !== 'function') throw new Error('window.setLanguage is not a function');
+            window.setLanguage('en');
+            if (window.I18N.getLanguage() !== 'en') throw new Error('Failed to set language to en');
+            window.setLanguage('id');
+            if (window.I18N.getLanguage() !== 'id') throw new Error('Failed to set language to id');
+            """
+            result = subprocess.run([jsc_bin, '-e', test_script], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, f"jsc failed: {result.stderr}")
+
+        # 4. Verify all 11 portal HTML pages include both desktop and mobile buttons
+        pages = [
+            'index.html',
+            'profil-sejarah.html',
+            'profil-visi-misi.html',
+            'profil-struktur-organisasi.html',
+            'profil-tugas-wewenang.html',
+            'profil-logo-makna.html',
+            'informasi-berita.html',
+            'informasi-pengumuman.html',
+            'informasi-jadwal-sidang.html',
+            'informasi-skm.html',
+            'akuntabilitas-kinerja.html'
+        ]
+        for page in pages:
+            page_path = os.path.join(BASE_DIR, page)
+            self.assertTrue(os.path.exists(page_path), f"Page {page} does not exist")
+            with open(page_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            self.assertIn('id="btn-lang-id"', content, f"Page {page} missing desktop ID button")
+            self.assertIn('id="btn-lang-en"', content, f"Page {page} missing desktop EN button")
+            self.assertIn('id="mob-btn-lang-id"', content, f"Page {page} missing mobile ID button")
+            self.assertIn('id="mob-btn-lang-en"', content, f"Page {page} missing mobile EN button")
+            self.assertIn('static/js/i18n.js', content, f"Page {page} missing i18n.js script tag")
 
 
 if __name__ == '__main__':

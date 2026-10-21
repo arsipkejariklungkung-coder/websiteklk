@@ -2070,8 +2070,8 @@ function ensureCommonModals() {
           <span>Pilih Bahasa / Language:</span>
         </span>
         <div class="flex items-center bg-white p-0.5 rounded-lg border border-slate-200 shadow-xs">
-          <button type="button" onclick="setLanguage('id')" class="px-3 py-1 rounded-md text-xs font-bold bg-[#0B3B24] text-white">ID</button>
-          <button type="button" onclick="setLanguage('en')" class="px-3 py-1 rounded-md text-xs font-bold text-slate-600">EN</button>
+          <button type="button" id="mob-btn-lang-id" onclick="setLanguage('id')" class="px-3 py-1 rounded-md text-xs font-bold bg-[#0B3B24] text-white">ID</button>
+          <button type="button" id="mob-btn-lang-en" onclick="setLanguage('en')" class="px-3 py-1 rounded-md text-xs font-bold text-slate-600">EN</button>
         </div>
       </div>
       <div>

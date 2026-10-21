@@ -754,6 +754,8 @@
   "PIMPINAN SATUAN KERJA": "LEADERSHIP OF WORK UNIT",
   "PORTAL LAYANAN PUBLIK DIGITAL TERPADU": "INTEGRATED DIGITAL PUBLIC SERVICE PORTAL",
   "PTSP / Pelayanan Terpadu": "PTSP / Integrated Service",
+  "Pelayanan Terpadu Satu Pintu": "One-Stop Integrated Service",
+  "Pelayanan Terpadu": "Integrated Service",
   "Panduan Hubungkan Google / Microsoft Authenticator:": "Guide to Connect Google / Microsoft Authenticator:",
   "Pangkat/NIP": "Rank / NIP",
   "Password *": "Password *",
@@ -1627,20 +1629,20 @@
 
   // 3. Substring Regex Rules for Dynamic / Compound Phrases
   const SUBSTRING_RULES = [
-    { from: /Terakhir diperbarui: Hari ini, Pukul ([\d:]+) WITA • Sumber: CMS Pengadilan Negeri & Kejari Klungkung/gi, to: 'Last updated: Today, \1 WITA • Source: District Court & Kejari Klungkung CMS' },
-    { from: /Terakhir diperbarui: Hari ini, Pukul ([\d:]+) WITA/gi, to: 'Last updated: Today, \1 WITA' },
+    { from: /Terakhir diperbarui: Hari ini, Pukul ([\d:]+) WITA • Sumber: CMS Pengadilan Negeri & Kejari Klungkung/gi, to: 'Last updated: Today, $1 WITA • Source: District Court & Kejari Klungkung CMS' },
+    { from: /Terakhir diperbarui: Hari ini, Pukul ([\d:]+) WITA/gi, to: 'Last updated: Today, $1 WITA' },
     { from: /Mutu Pelayanan: A \(Sangat Baik\)/gi, to: 'Service Quality: A (Excellent)' },
     { from: /Mutu Pelayanan: B \(Baik\)/gi, to: 'Service Quality: B (Good)' },
     { from: /Mutu Pelayanan: C \(Cukup\)/gi, to: 'Service Quality: C (Fair)' },
-    { from: /(\d+) Warga/gi, to: '\1 Citizens' },
-    { from: /(\d+)x dilihat/gi, to: '\1 views' },
-    { from: /Tahun (\d{4})/gi, to: 'Year \1' },
+    { from: /(\d+) Warga/gi, to: '$1 Citizens' },
+    { from: /(\d+)x dilihat/gi, to: '$1 views' },
+    { from: /Tahun (\d{4})/gi, to: 'Year $1' },
     { from: /Hak Cipta Dilindungi Undang-Undang/gi, to: 'All Rights Reserved' },
     { from: /Senin - Jumat: 08\.00 - 16\.00 WITA/gi, to: 'Monday - Friday: 08.00 - 16.00 WITA' },
     { from: /Senin - Kamis: 08\.00 - 16\.00 WITA \| Jumat: 08\.00 - 16\.30 WITA/gi, to: 'Mon - Thu: 08.00 - 16.00 WITA | Fri: 08.00 - 16.30 WITA' },
     { from: /Kejaksaan Negeri Klungkung/gi, to: 'District Attorney of Klungkung' },
     { from: /Kejaksaan Republik Indonesia/gi, to: 'Attorney General of Indonesia' },
-    { from: /Zona Integritas WBK / WBBM/gi, to: 'Integrity Zone WBK / WBBM' },
+    { from: /Zona Integritas WBK \/ WBBM/gi, to: 'Integrity Zone WBK / WBBM' },
     { from: /Pengadilan Negeri Semarapura/gi, to: 'Semarapura District Court' },
     { from: /Pengantaran Barang Bukti/gi, to: 'Evidence Doorstep Delivery' },
     { from: /Aduan Masyarakat/gi, to: 'Citizen Grievances' },
@@ -1883,7 +1885,9 @@
     }
 
     // 7. Dispatch language changed event
-    window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
+    try {
+      window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
+    } catch (_) {}
 
     if (showToastNotification) {
       showLangToast(lang === 'en' ? 'Switched to English' : 'Bahasa Indonesia aktif');
