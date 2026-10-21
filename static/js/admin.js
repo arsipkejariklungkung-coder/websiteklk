@@ -1638,6 +1638,215 @@ async function handleJagaditaExcelImport(e) {
   }
 }
 
+// ==============================================================================
+// JAGADITA AUTO-GENERATE VIA GEMINI AI & SIPP SEMARAPURA
+// ==============================================================================
+let currentJagaditaAiResults = [];
+
+function openJagaditaAiModal() {
+  const dateInput = document.getElementById('jagadita-ai-date');
+  if (dateInput && !dateInput.value) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+  }
+  const urlInput = document.getElementById('jagadita-ai-url');
+  if (urlInput && !urlInput.value) {
+    urlInput.value = 'https://sipp.pn-semarapura.go.id/list_jadwal_sidang';
+  }
+  const rawTextInput = document.getElementById('jagadita-ai-raw-text');
+  if (rawTextInput) rawTextInput.value = '';
+
+  const resultsPanel = document.getElementById('jagadita-ai-results-panel');
+  if (resultsPanel) resultsPanel.classList.add('hidden');
+
+  openModal('modal-admin-jagadita-ai');
+  if (window.lucide) lucide.createIcons();
+}
+
+async function handleGenerateJagaditaWithAI(e) {
+  if (e && e.preventDefault) e.preventDefault();
+  const urlInput = document.getElementById('jagadita-ai-url');
+  const dateInput = document.getElementById('jagadita-ai-date');
+  const keyInput = document.getElementById('jagadita-ai-key');
+  const rawTextInput = document.getElementById('jagadita-ai-raw-text');
+  const btn = document.getElementById('btn-run-jagadita-ai');
+  const btnText = document.getElementById('btn-run-jagadita-ai-text');
+
+  const url = (urlInput ? urlInput.value : '').trim() || 'https://sipp.pn-semarapura.go.id/list_jadwal_sidang';
+  const targetDate = (dateInput ? dateInput.value : '').trim() || new Date().toISOString().split('T')[0];
+  const apiKey = (keyInput ? keyInput.value : '').trim();
+  const rawText = (rawTextInput ? rawTextInput.value : '').trim();
+
+  const origBtnHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('opacity-75', 'cursor-not-allowed');
+    if (btnText) btnText.textContent = 'Menghubungkan SIPP & Memproses AI...';
+  }
+
+  try {
+    const res = await fetch('/api/admin/jagadita/generate-ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: url,
+        target_date: targetDate,
+        api_key: apiKey,
+        raw_text: rawText
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      alert(data.error || 'Gagal mengekstrak jadwal sidang dari SIPP.');
+      return;
+    }
+
+    currentJagaditaAiResults = data.schedules || [];
+    renderJagaditaAiPreview(data);
+
+    if (window.lucide) lucide.createIcons();
+  } catch (err) {
+    console.error(err);
+    alert('Terjadi kesalahan koneksi saat memproses jadwal sidang AI.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('opacity-75', 'cursor-not-allowed');
+      btn.innerHTML = origBtnHtml;
+    }
+  }
+}
+
+function renderJagaditaAiPreview(data) {
+  const panel = document.getElementById('jagadita-ai-results-panel');
+  const summaryEl = document.getElementById('jagadita-ai-status-summary');
+  const badgeEl = document.getElementById('jagadita-ai-source-badge');
+  const tbody = document.getElementById('jagadita-ai-table-body');
+  const selectAll = document.getElementById('jagadita-ai-select-all');
+
+  if (!panel || !tbody) return;
+
+  panel.classList.remove('hidden');
+
+  const count = data.schedules ? data.schedules.length : 0;
+  if (summaryEl) {
+    summaryEl.textContent = `Ditemukan ${count} Jadwal Sidang untuk ${data.target_date || 'Hari Ini'}`;
+  }
+
+  if (badgeEl) {
+    if (data.source === 'gemini') {
+      badgeEl.textContent = 'GEMINI 1.5 FLASH AI';
+      badgeEl.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-600 text-white shadow-sm';
+    } else if (data.source === 'heuristic') {
+      badgeEl.textContent = 'SIPP HEURISTIC PARSER';
+      badgeEl.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-600 text-white shadow-sm';
+    } else {
+      badgeEl.textContent = 'SIPP PN SEMARAPURA';
+      badgeEl.className = 'px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-700 text-white shadow-sm';
+    }
+  }
+
+  if (selectAll) selectAll.checked = true;
+
+  if (count === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" class="p-8 text-center text-slate-400">
+          Tidak ada jadwal sidang pidana yang ditemukan dari sumber data.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = data.schedules.map((row, idx) => {
+    const isTipikor = (row.case_type || '').toUpperCase().includes('TIPIKOR');
+    const badgeType = isTipikor
+      ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">TIPIKOR</span>'
+      : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">PIDUM</span>';
+
+    const statusBadge = row.status === 'SEDANG BERLANGSUNG'
+      ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 animate-pulse">BERLANGSUNG</span>'
+      : (row.status === 'SELESAI'
+        ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">SELESAI</span>'
+        : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">TERJADWAL</span>');
+
+    return `
+      <tr class="hover:bg-slate-50/80 transition-colors" data-idx="${idx}">
+        <td class="p-2.5 text-center">
+          <input type="checkbox" class="jagadita-ai-row-check w-4 h-4 accent-purple-800 rounded cursor-pointer" data-idx="${idx}" checked>
+        </td>
+        <td class="p-2.5 font-bold text-slate-900 whitespace-nowrap">${escapeHtml(row.session_time || '-')}</td>
+        <td class="p-2.5 text-slate-700">${escapeHtml(row.court_room || '-')}</td>
+        <td class="p-2.5 font-mono text-[11px] font-bold text-purple-950">${escapeHtml(row.case_number || '-')}</td>
+        <td class="p-2.5 font-medium text-slate-900">${escapeHtml(row.defendant_name || '-')}</td>
+        <td class="p-2.5">${badgeType}</td>
+        <td class="p-2.5 text-slate-600 max-w-[200px] truncate" title="${escapeHtml(row.agenda || '')}">${escapeHtml(row.agenda || '-')}</td>
+        <td class="p-2.5 text-slate-700">${escapeHtml(row.prosecutor || '-')}</td>
+        <td class="p-2.5">${statusBadge}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function toggleAllJagaditaAiCheckboxes(masterCheckbox) {
+  const isChecked = masterCheckbox ? masterCheckbox.checked : true;
+  document.querySelectorAll('.jagadita-ai-row-check').forEach(chk => {
+    chk.checked = isChecked;
+  });
+}
+
+async function handleSaveGeneratedJagadita() {
+  const checkboxes = document.querySelectorAll('.jagadita-ai-row-check:checked');
+  if (checkboxes.length === 0) {
+    alert('Pilih minimal 1 jadwal sidang dari tabel hasil generate untuk disimpan.');
+    return;
+  }
+
+  const selectedIndices = Array.from(checkboxes).map(c => parseInt(c.getAttribute('data-idx'), 10));
+  const selectedItems = selectedIndices.map(i => currentJagaditaAiResults[i]).filter(Boolean);
+
+  const replaceExisting = document.getElementById('jagadita-ai-replace-existing')?.checked || false;
+  const targetDate = document.getElementById('jagadita-ai-date')?.value || '';
+
+  const btn = document.getElementById('btn-save-jagadita-ai');
+  const origHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span>Menyimpan ke Database...</span>';
+  }
+
+  try {
+    const res = await fetch('/api/admin/jagadita/bulk-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        schedules: selectedItems,
+        replace_all: replaceExisting,
+        target_date: targetDate
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      closeModal('modal-admin-jagadita-ai');
+      alert(data.message || `${selectedItems.length} jadwal sidang berhasil disimpan.`);
+      loadAllDashboardData();
+    } else {
+      alert(data.error || 'Gagal menyimpan jadwal sidang ke database.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Terjadi kesalahan jaringan saat menyimpan jadwal sidang.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
+  }
+}
+
 // 7. SKM Settings Tab
 function populateSkmSettings() {
   const skm = adminData.skm;

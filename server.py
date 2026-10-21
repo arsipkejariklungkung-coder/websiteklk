@@ -23,6 +23,8 @@ import csv
 import totp_mfa
 import excel_io
 import ai_news_generator
+import ai_jagadita_generator
+import datetime
 try:
     import vercel_blob
 except ImportError:
@@ -1293,6 +1295,12 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             return
         elif path == '/api/admin/jagadita/import':
             self.handle_import_jagadita()
+            return
+        elif path == '/api/admin/jagadita/generate-ai':
+            self.handle_ai_generate_jagadita()
+            return
+        elif path == '/api/admin/jagadita/bulk-save':
+            self.handle_bulk_save_jagadita()
             return
         elif path == '/api/admin/submissions/import':
             self.handle_import_submissions()
@@ -2604,6 +2612,101 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             'success': True,
             'count': imported,
             'message': f'{imported} jadwal sidang JAGADITA berhasil diimpor dari Excel ke sistem!'
+        })
+
+    def handle_ai_generate_jagadita(self):
+        """Auto-generate court schedules from SIPP Semarapura using Gemini AI / heuristic engine."""
+        data = self.read_json_body()
+        url = (data.get('url') or 'https://sipp.pn-semarapura.go.id/list_jadwal_sidang').strip()
+        raw_text = (data.get('raw_text') or '').strip()
+        target_date = (data.get('target_date') or '').strip()
+        api_key = (data.get('api_key') or '').strip()
+        auto_save = bool(data.get('auto_save', False))
+
+        try:
+            res = ai_jagadita_generator.auto_generate_jagadita_schedules(
+                url=url,
+                raw_text=raw_text,
+                target_date=target_date,
+                api_key=api_key
+            )
+            schedules = res.get('schedules', [])
+            if auto_save and schedules:
+                conn = get_db()
+                cursor = conn.cursor()
+                inserted = 0
+                for item in schedules:
+                    sched_date = item.get('schedule_date') or target_date or datetime.date.today().isoformat()
+                    cursor.execute("""
+                    INSERT INTO court_schedules (session_time, court_room, case_number, defendant_name, case_type, agenda, prosecutor, status, schedule_date)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        item.get('session_time', '09:00 WITA'),
+                        item.get('court_room', 'Ruang Sidang Cakra'),
+                        item.get('case_number', '-'),
+                        item.get('defendant_name', '-'),
+                        item.get('case_type', 'PIDUM'),
+                        item.get('agenda', '-'),
+                        item.get('prosecutor', '-'),
+                        item.get('status', 'TERJADWAL'),
+                        sched_date
+                    ))
+                    inserted += 1
+                conn.commit()
+                conn.close()
+                res['saved_count'] = inserted
+                res['message'] += f" Sebanyak {inserted} jadwal telah otomatis disimpan ke database."
+
+            self.send_json(res)
+        except Exception as e:
+            self.send_json({'error': f'Gagal menghasilkan jadwal sidang JAGADITA: {str(e)}'}, 500)
+
+    def handle_bulk_save_jagadita(self):
+        """Bulk save selected/edited court schedules into court_schedules database."""
+        data = self.read_json_body()
+        schedules = data.get('schedules', [])
+        replace_all = bool(data.get('replace_all', False))
+        target_date = (data.get('target_date') or '').strip()
+
+        if not schedules or not isinstance(schedules, list):
+            self.send_json({'error': 'Tidak ada jadwal sidang yang dikirim untuk disimpan.'}, 400)
+            return
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        if replace_all:
+            if target_date:
+                cursor.execute("DELETE FROM court_schedules WHERE schedule_date = ?", (target_date,))
+            else:
+                cursor.execute("DELETE FROM court_schedules")
+
+        inserted = 0
+        for item in schedules:
+            sched_date = item.get('schedule_date') or target_date or datetime.date.today().isoformat()
+            cursor.execute("""
+            INSERT INTO court_schedules (session_time, court_room, case_number, defendant_name, case_type, agenda, prosecutor, status, schedule_date)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                item.get('session_time', '09:00 WITA'),
+                item.get('court_room', 'Ruang Sidang Cakra'),
+                item.get('case_number', '-'),
+                item.get('defendant_name', '-'),
+                item.get('case_type', 'PIDUM'),
+                item.get('agenda', '-'),
+                item.get('prosecutor', '-'),
+                item.get('status', 'TERJADWAL'),
+                sched_date
+            ))
+            inserted += 1
+
+        conn.commit()
+        conn.close()
+
+        self.send_json({
+            'success': True,
+            'count': inserted,
+            'message': f'{inserted} jadwal sidang JAGADITA berhasil disimpan ke database!'
         })
 
     def handle_update_skm(self):

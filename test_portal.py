@@ -2432,6 +2432,154 @@ class TestKertagosaPortal(unittest.TestCase):
             res = subprocess.run([jsc_bin, '-e', test_script], capture_output=True, text=True)
             self.assertEqual(res.returncode, 0, f"JSC conditional rendering test failed: {res.stderr}")
 
+    def test_37_jagadita_gemini_ai_generator(self):
+        """Verify JAGADITA Court Schedule AI Generator via SIPP Semarapura & Gemini AI."""
+        import ai_jagadita_generator
+
+        # 1. Test generator helper functions & heuristic fallback
+        raw_html_sample = """
+        <html>
+          <body>
+            <script>alert('skip');</script>
+            <table class="table table-striped">
+              <tr>
+                <td>1</td>
+                <td>09:30 WITA</td>
+                <td>Ruang Sidang Cakra</td>
+                <td>188/Pid.B/2026/PN Kp</td>
+                <td>Terdakwa: I Nyoman Sudiarta alias Mang Tut</td>
+                <td>PIDUM</td>
+                <td>Pemeriksaan Saksi</td>
+                <td>I Kadek Darmawan, S.H.</td>
+                <td>TERJADWAL</td>
+              </tr>
+            </table>
+          </body>
+        </html>
+        """
+        cleaned = ai_jagadita_generator.clean_html_markup(raw_html_sample)
+        self.assertNotIn('<script>', cleaned)
+        self.assertIn('188/Pid.B/2026/PN Kp', cleaned)
+
+        # 2. Test heuristic parsing of SIPP content
+        heur_res = ai_jagadita_generator.auto_generate_jagadita_schedules(
+            raw_text=raw_html_sample,
+            target_date='2026-10-21'
+        )
+        self.assertTrue(heur_res['success'])
+        self.assertIn('schedules', heur_res)
+        self.assertTrue(len(heur_res['schedules']) >= 1)
+        first_item = heur_res['schedules'][0]
+        self.assertEqual(first_item['case_number'], '188/Pid.B/2026/PN Kp')
+        self.assertEqual(first_item['court_room'], 'Ruang Sidang Cakra')
+        self.assertEqual(first_item['case_type'], 'PIDUM')
+
+        # 3. Test fallback generator when no content is provided
+        fallback_res = ai_jagadita_generator.auto_generate_jagadita_schedules(target_date='2026-10-21')
+        self.assertTrue(fallback_res['success'])
+        self.assertEqual(fallback_res['source'], 'fallback')
+        self.assertTrue(len(fallback_res['schedules']) >= 4)
+        for s in fallback_res['schedules']:
+            for key in ['session_time', 'court_room', 'case_number', 'defendant_name', 'case_type', 'agenda', 'prosecutor', 'status', 'schedule_date']:
+                self.assertIn(key, s)
+
+        # 4. Verify Admin UI HTML elements in admin.html
+        adm_h = MockHandler('GET', '/admin')
+        adm_h.do_GET()
+        adm_html = adm_h.wfile.getvalue().decode('utf-8')
+        self.assertIn('Auto-Generate AI (Gemini)', adm_html)
+        self.assertIn('id="modal-admin-jagadita-ai"', adm_html)
+        self.assertIn('id="jagadita-ai-url"', adm_html)
+        self.assertIn('https://sipp.pn-semarapura.go.id/list_jadwal_sidang', adm_html)
+        self.assertIn('id="jagadita-ai-date"', adm_html)
+        self.assertIn('id="jagadita-ai-key"', adm_html)
+        self.assertIn('id="jagadita-ai-raw-text"', adm_html)
+        self.assertIn('id="btn-run-jagadita-ai"', adm_html)
+        self.assertIn('id="jagadita-ai-results-panel"', adm_html)
+        self.assertIn('id="jagadita-ai-table-body"', adm_html)
+        self.assertIn('id="btn-save-jagadita-ai"', adm_html)
+
+        # 5. Verify admin.js contains all required handler functions
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'admin.js'), 'r', encoding='utf-8') as f:
+            admin_js = f.read()
+        self.assertIn('function openJagaditaAiModal', admin_js)
+        self.assertIn('async function handleGenerateJagaditaWithAI', admin_js)
+        self.assertIn('function renderJagaditaAiPreview', admin_js)
+        self.assertIn('function toggleAllJagaditaAiCheckboxes', admin_js)
+        self.assertIn('async function handleSaveGeneratedJagadita', admin_js)
+
+        # 6. Test Backend API Endpoint: POST /api/admin/jagadita/generate-ai
+        gen_payload = {
+            'url': 'https://sipp.pn-semarapura.go.id/list_jadwal_sidang',
+            'raw_text': raw_html_sample,
+            'target_date': '2026-10-21'
+        }
+        gen_body = json.dumps(gen_payload).encode('utf-8')
+        gen_h = MockHandler('POST', '/api/admin/jagadita/generate-ai', {
+            'Content-Length': str(len(gen_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, gen_body)
+        gen_h.do_POST()
+        self.assertEqual(gen_h.response_code, 200)
+        gen_res = gen_h.get_response_json()
+        self.assertTrue(gen_res['success'])
+        self.assertTrue(len(gen_res['schedules']) >= 1)
+
+        # 7. Test Backend API Endpoint: POST /api/admin/jagadita/bulk-save
+        bulk_items = [
+            {
+                'session_time': '09:00 WITA',
+                'court_room': 'Ruang Sidang Cakra',
+                'case_number': '777/Pid.B/2026/PN Kp',
+                'defendant_name': 'Terdakwa AI Test 1',
+                'case_type': 'PIDUM',
+                'agenda': 'Pemeriksaan Saksi',
+                'prosecutor': 'I Kadek Darmawan, S.H.',
+                'status': 'TERJADWAL',
+                'schedule_date': '2026-10-21'
+            },
+            {
+                'session_time': '10:30 WITA',
+                'court_room': 'PN Tipikor Denpasar',
+                'case_number': '888/Pid.Sus-TPK/2026/PN Dps',
+                'defendant_name': 'Terdakwa AI Test 2',
+                'case_type': 'TIPIKOR',
+                'agenda': 'Pembacaan Tuntutan',
+                'prosecutor': 'A.A. Gede Putra, S.H., M.H.',
+                'status': 'TERJADWAL',
+                'schedule_date': '2026-10-21'
+            }
+        ]
+        save_payload = {
+            'schedules': bulk_items,
+            'replace_all': False,
+            'target_date': '2026-10-21'
+        }
+        save_body = json.dumps(save_payload).encode('utf-8')
+        save_h = MockHandler('POST', '/api/admin/jagadita/bulk-save', {
+            'Content-Length': str(len(save_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, save_body)
+        save_h.do_POST()
+        self.assertEqual(save_h.response_code, 200)
+        save_res = save_h.get_response_json()
+        self.assertTrue(save_res['success'])
+        self.assertEqual(save_res['count'], 2)
+
+        # 8. Verify items were persisted in court_schedules table
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM court_schedules WHERE case_number IN ('777/Pid.B/2026/PN Kp', '888/Pid.Sus-TPK/2026/PN Dps')")
+        rows = cursor.fetchall()
+        self.assertEqual(len(rows), 2)
+        tipikor_row = [r for r in rows if r['case_type'] == 'TIPIKOR'][0]
+        self.assertEqual(tipikor_row['court_room'], 'PN Tipikor Denpasar')
+
+        # Clean up test schedules
+        cursor.execute("DELETE FROM court_schedules WHERE case_number IN ('777/Pid.B/2026/PN Kp', '888/Pid.Sus-TPK/2026/PN Dps')")
+        conn.commit()
+        conn.close()
+
 
 
 if __name__ == '__main__':
