@@ -1333,6 +1333,30 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         elif path == '/api/admin/announcements':
             self.handle_create_announcement()
             return
+        elif path == '/api/admin/bulk-delete':
+            self.handle_bulk_delete()
+            return
+        elif path == '/api/admin/news/bulk-delete':
+            self.handle_bulk_delete('news')
+            return
+        elif path == '/api/admin/jagadita/bulk-delete':
+            self.handle_bulk_delete('jagadita')
+            return
+        elif path == '/api/admin/submissions/bulk-delete':
+            self.handle_bulk_delete('submissions')
+            return
+        elif path == '/api/admin/submissions/bulk-status':
+            self.handle_bulk_status_submissions()
+            return
+        elif path == '/api/admin/organization/members/bulk-delete':
+            self.handle_bulk_delete('organization')
+            return
+        elif path == '/api/admin/accountability/bulk-delete':
+            self.handle_bulk_delete('accountability')
+            return
+        elif path == '/api/admin/users/bulk-delete':
+            self.handle_bulk_delete('users')
+            return
         elif path.startswith('/api/admin/deliveries/') and path.endswith('/ba'):
             ticket_code = path[len('/api/admin/deliveries/'):-3]
             self.handle_save_delivery_ba(ticket_code)
@@ -1441,6 +1465,16 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             ann_id = path[len('/api/admin/announcements/'):]
             self.handle_delete_announcement(ann_id)
             return
+        elif path.startswith('/api/admin/submissions/'):
+            parts = path.split('/')
+            if len(parts) >= 6:
+                sub_type = parts[4]
+                sub_id = parts[5]
+                self.handle_delete_submission(sub_type, sub_id)
+                return
+            else:
+                self.send_json({'error': 'Format URL delete permohonan salah.'}, 400)
+                return
         else:
             self.send_json({'error': 'Endpoint not found'}, 404)
 
@@ -3218,6 +3252,105 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             'count': imported,
             'target': target,
             'message': f'{imported} data tiket {label_target} berhasil diimpor dari file Excel!'
+        })
+
+    def handle_delete_submission(self, sub_type, sub_id):
+        conn = get_db()
+        cursor = conn.cursor()
+        table = 'complaints' if sub_type in ['complaint', 'complaints'] else 'bb_deliveries'
+        cursor.execute(f"DELETE FROM {table} WHERE id = ? OR ticket_code = ?", (sub_id, sub_id))
+        conn.commit()
+        conn.close()
+        self.send_json({'success': True, 'message': 'Tiket permohonan berhasil dihapus!'})
+
+    def handle_bulk_delete(self, entity_type=None):
+        data = self.read_json_body()
+        entity = (entity_type or data.get('entity') or '').strip().lower()
+        ids = data.get('ids') or []
+        sub_type = (data.get('sub_type') or data.get('type') or 'complaints').strip().lower()
+
+        if not ids or not isinstance(ids, list):
+            self.send_json({'error': 'Daftar ID yang ingin dihapus tidak boleh kosong.'}, 400)
+            return
+
+        conn = get_db()
+        cursor = conn.cursor()
+        deleted_count = 0
+
+        current_user = get_current_user(self)
+        current_user_id = current_user.get('id') if current_user else None
+
+        if entity in ['news', 'posts']:
+            placeholders = ','.join(['?'] * len(ids))
+            cursor.execute(f"DELETE FROM posts WHERE id IN ({placeholders})", ids)
+            deleted_count = cursor.rowcount
+        elif entity in ['jagadita', 'court_schedules']:
+            placeholders = ','.join(['?'] * len(ids))
+            cursor.execute(f"DELETE FROM court_schedules WHERE id IN ({placeholders})", ids)
+            deleted_count = cursor.rowcount
+        elif entity in ['submissions', 'inbox', 'complaints', 'deliveries']:
+            table = 'complaints' if sub_type in ['complaint', 'complaints'] else 'bb_deliveries'
+            str_ids = [str(x) for x in ids]
+            placeholders = ','.join(['?'] * len(ids))
+            cursor.execute(f"DELETE FROM {table} WHERE id IN ({placeholders}) OR ticket_code IN ({placeholders})", str_ids + str_ids)
+            deleted_count = cursor.rowcount
+        elif entity in ['organization', 'org', 'members']:
+            placeholders = ','.join(['?'] * len(ids))
+            cursor.execute(f"UPDATE organization_members SET parent_id = NULL WHERE parent_id IN ({placeholders})", ids)
+            cursor.execute(f"DELETE FROM organization_members WHERE id IN ({placeholders})", ids)
+            deleted_count = cursor.rowcount
+        elif entity in ['accountability', 'sakip', 'accountability_docs']:
+            placeholders = ','.join(['?'] * len(ids))
+            cursor.execute(f"DELETE FROM accountability_docs WHERE id IN ({placeholders})", ids)
+            deleted_count = cursor.rowcount
+        elif entity in ['users', 'admins']:
+            # Security: Prevent deleting the active administrator user
+            safe_ids = [uid for uid in ids if uid != current_user_id]
+            if not safe_ids:
+                conn.close()
+                self.send_json({'error': 'Tidak dapat menghapus akun administrator yang sedang aktif digunakan.'}, 400)
+                return
+            placeholders = ','.join(['?'] * len(safe_ids))
+            cursor.execute(f"DELETE FROM users WHERE id IN ({placeholders})", safe_ids)
+            deleted_count = cursor.rowcount
+        else:
+            conn.close()
+            self.send_json({'error': f'Entitas {entity} tidak dikenali untuk penghapusan massal.'}, 400)
+            return
+
+        conn.commit()
+        conn.close()
+
+        self.send_json({
+            'success': True,
+            'count': deleted_count,
+            'message': f'Berhasil menghapus {deleted_count} data terpilih.'
+        })
+
+    def handle_bulk_status_submissions(self):
+        data = self.read_json_body()
+        ids = data.get('ids') or []
+        new_status = (data.get('status') or 'SELESAI').strip()
+        sub_type = (data.get('sub_type') or data.get('type') or 'complaints').strip().lower()
+
+        if not ids or not isinstance(ids, list):
+            self.send_json({'error': 'Daftar ID tiket tidak boleh kosong.'}, 400)
+            return
+
+        table = 'complaints' if sub_type in ['complaint', 'complaints'] else 'bb_deliveries'
+        conn = get_db()
+        cursor = conn.cursor()
+        str_ids = [str(x) for x in ids]
+        placeholders = ','.join(['?'] * len(ids))
+        cursor.execute(f"UPDATE {table} SET status = ? WHERE id IN ({placeholders}) OR ticket_code IN ({placeholders})", [new_status] + str_ids + str_ids)
+        updated_count = cursor.rowcount
+        conn.commit()
+        conn.close()
+
+        self.send_json({
+            'success': True,
+            'count': updated_count,
+            'message': f'Status {updated_count} tiket berhasil diperbarui menjadi {new_status}!'
         })
 
     # ==============================================================

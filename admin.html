@@ -643,10 +643,30 @@
             </select>
           </div>
 
+          <!-- News Bulk Action Bar -->
+          <div id="news-bulk-bar" class="hidden mb-3 p-3 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span class="font-bold text-emerald-950 text-xs" id="news-bulk-count">0 artikel berita terpilih</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="executeBulkDelete('news')" class="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Hapus Terpilih</span>
+              </button>
+              <button type="button" onclick="clearSelection('news')" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg font-semibold text-xs transition-colors">
+                Batal
+              </button>
+            </div>
+          </div>
+
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+                  <th class="py-3 px-3 w-10 text-center">
+                    <input type="checkbox" id="news-select-all" class="w-4 h-4 accent-emerald-800 rounded cursor-pointer" onchange="toggleSelectAll('news', this)" title="Pilih Semua Berita">
+                  </th>
                   <th class="py-3 px-3">Thumbnail</th>
                   <th class="py-3 px-3">Judul Berita</th>
                   <th class="py-3 px-3">Kategori</th>
@@ -722,10 +742,30 @@
             </select>
           </div>
 
+          <!-- Jagadita Bulk Action Bar -->
+          <div id="jagadita-bulk-bar" class="hidden mb-3 p-3 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span class="font-bold text-emerald-950 text-xs" id="jagadita-bulk-count">0 sidang terpilih</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="executeBulkDelete('jagadita')" class="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Hapus Terpilih</span>
+              </button>
+              <button type="button" onclick="clearSelection('jagadita')" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg font-semibold text-xs transition-colors">
+                Batal
+              </button>
+            </div>
+          </div>
+
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+                  <th class="py-3 px-3 w-10 text-center">
+                    <input type="checkbox" id="jagadita-select-all" class="w-4 h-4 accent-emerald-800 rounded cursor-pointer" onchange="toggleSelectAll('jagadita', this)" title="Pilih Semua Jadwal Sidang">
+                  </th>
                   <th class="py-3 px-3">Waktu &amp; Ruang</th>
                   <th class="py-3 px-3">No. Perkara &amp; Terdakwa</th>
                   <th class="py-3 px-3">Jenis</th>
@@ -862,10 +902,38 @@
             </button>
           </div>
 
+          <!-- Inbox Bulk Action Bar -->
+          <div id="inbox-bulk-bar" class="hidden mb-3 p-3 bg-emerald-50 border border-emerald-300 rounded-xl flex flex-wrap items-center justify-between gap-2 shadow-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span class="font-bold text-emerald-950 text-xs" id="inbox-bulk-count">0 tiket terpilih</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="executeBulkStatusChange('SELESAI')" class="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors">
+                <i data-lucide="check-circle" class="w-3.5 h-3.5 text-amber-300"></i>
+                <span>Tandai Selesai</span>
+              </button>
+              <button type="button" onclick="executeBulkStatusChange('DIVERIFIKASI')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                <span>Verifikasi</span>
+              </button>
+              <button type="button" onclick="executeBulkDelete('submissions')" class="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Hapus Terpilih</span>
+              </button>
+              <button type="button" onclick="clearSelection('submissions')" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg font-semibold text-xs transition-colors">
+                Batal
+              </button>
+            </div>
+          </div>
+
           <div id="inbox-complaints-view" class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+                  <th class="py-3 px-3 w-10 text-center">
+                    <input type="checkbox" id="complaints-select-all" class="w-4 h-4 accent-emerald-800 rounded cursor-pointer" onchange="toggleSelectAll('complaints', this)" title="Pilih Semua Aduan">
+                  </th>
                   <th class="py-3 px-3">No. Tiket</th>
                   <th class="py-3 px-3">Pelapor</th>
                   <th class="py-3 px-3">Kategori &amp; Judul</th>
@@ -884,6 +952,9 @@
             <table class="w-full text-left text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase">
+                  <th class="py-3 px-3 w-10 text-center">
+                    <input type="checkbox" id="deliveries-select-all" class="w-4 h-4 accent-emerald-800 rounded cursor-pointer" onchange="toggleSelectAll('deliveries', this)" title="Pilih Semua Antar BB">
+                  </th>
                   <th class="py-3 px-3">No. Tiket</th>
                   <th class="py-3 px-3">No. Perkara &amp; Pemilik</th>
                   <th class="py-3 px-3">Barang Bukti</th>
@@ -974,11 +1045,31 @@
               <button onclick="filterOrgLevel(5)" id="btn-org-filter-5" class="org-filter-btn px-3 py-1.5 rounded-lg font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">Level 5: Pelaksana (<span id="count-level-5">0</span>)</button>
             </div>
 
+            <!-- Org Bulk Action Bar -->
+            <div id="org-bulk-bar" class="hidden mb-3 p-3 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center justify-between shadow-sm">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                <span class="font-bold text-emerald-950 text-xs" id="org-bulk-count">0 pegawai terpilih</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="executeBulkDelete('org')" class="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                  <span>Hapus Terpilih</span>
+                </button>
+                <button type="button" onclick="clearSelection('org')" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg font-semibold text-xs transition-colors">
+                  Batal
+                </button>
+              </div>
+            </div>
+
             <!-- Members Table -->
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                    <th class="py-3 px-3 w-10 text-center">
+                      <input type="checkbox" id="org-select-all" class="w-4 h-4 accent-emerald-800 rounded cursor-pointer" onchange="toggleSelectAll('org', this)" title="Pilih Semua Pegawai">
+                    </th>
                     <th class="py-3 px-3">Pegawai / Foto</th>
                     <th class="py-3 px-3">Jabatan &amp; Seksi</th>
                     <th class="py-3 px-3 text-center">Level Hierarki</th>
@@ -1237,11 +1328,31 @@
             </div>
           </div>
 
+          <!-- Users Bulk Action Bar -->
+          <div id="users-bulk-bar" class="hidden mb-3 p-3 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span class="font-bold text-emerald-950 text-xs" id="users-bulk-count">0 pengguna terpilih</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="executeBulkDelete('users')" class="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Hapus Terpilih</span>
+              </button>
+              <button type="button" onclick="clearSelection('users')" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg font-semibold text-xs transition-colors">
+                Batal
+              </button>
+            </div>
+          </div>
+
           <!-- Admins Table -->
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                  <th class="py-3 px-3 w-10 text-center">
+                    <input type="checkbox" id="users-select-all" class="w-4 h-4 accent-emerald-800 rounded cursor-pointer" onchange="toggleSelectAll('users', this)" title="Pilih Semua Administrator">
+                  </th>
                   <th class="py-3 px-3">Administrator / Nama Lengkap</th>
                   <th class="py-3 px-3">Username &amp; Email</th>
                   <th class="py-3 px-3 text-center">Peran / Hak Akses</th>
@@ -1367,11 +1478,31 @@
             </div>
           </div>
 
+          <!-- SAKIP Bulk Action Bar -->
+          <div id="sakip-bulk-bar" class="hidden mb-3 p-3 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center justify-between shadow-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+              <span class="font-bold text-emerald-950 text-xs" id="sakip-bulk-count">0 dokumen terpilih</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="executeBulkDelete('sakip')" class="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Hapus Terpilih</span>
+              </button>
+              <button type="button" onclick="clearSelection('sakip')" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg font-semibold text-xs transition-colors">
+                Batal
+              </button>
+            </div>
+          </div>
+
           <!-- Table -->
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs border-collapse">
               <thead>
                 <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider">
+                  <th class="py-3 px-3 w-10 text-center">
+                    <input type="checkbox" id="sakip-select-all" class="w-4 h-4 accent-emerald-800 rounded cursor-pointer" onchange="toggleSelectAll('sakip', this)" title="Pilih Semua Dokumen">
+                  </th>
                   <th class="py-3 px-3 w-12 text-center">Urutan</th>
                   <th class="py-3 px-3 w-28">Kategori</th>
                   <th class="py-3 px-3">Nama / Judul Dokumen</th>

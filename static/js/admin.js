@@ -13,6 +13,279 @@ let adminData = {
   deliveries: []
 };
 
+// ==============================================================================
+// BULK SELECTION & BATCH ACTIONS MANAGER
+// (News, Jagadita, MASADU/SEMARA BAKTI, Organization, SAKIP, Users)
+// ==============================================================================
+const bulkSelectionState = {
+  news: new Set(),
+  jagadita: new Set(),
+  complaints: new Set(),
+  deliveries: new Set(),
+  org: new Set(),
+  sakip: new Set(),
+  users: new Set()
+};
+
+function getActiveSelectionEntity(entity) {
+  if (entity === 'submissions' || entity === 'inbox') {
+    return window.currentInboxSubtab || 'complaints';
+  }
+  return entity;
+}
+
+function toggleRowSelection(entity, id, checkboxEl) {
+  const actualEntity = getActiveSelectionEntity(entity);
+  const set = bulkSelectionState[actualEntity];
+  if (!set) return;
+
+  const numId = typeof id === 'number' ? id : (isNaN(Number(id)) ? id : Number(id));
+
+  if (checkboxEl && checkboxEl.checked) {
+    set.add(numId);
+  } else {
+    set.delete(numId);
+  }
+
+  const tr = checkboxEl ? checkboxEl.closest('tr') : null;
+  if (tr) {
+    if (checkboxEl.checked) {
+      tr.classList.add('bg-emerald-50/70');
+    } else {
+      tr.classList.remove('bg-emerald-50/70');
+    }
+  }
+
+  updateBulkBarUI(actualEntity);
+}
+
+function toggleSelectAll(entity, masterCheckbox) {
+  const actualEntity = getActiveSelectionEntity(entity);
+  const set = bulkSelectionState[actualEntity];
+  if (!set) return;
+
+  const isChecked = masterCheckbox ? masterCheckbox.checked : false;
+  const checkboxes = document.querySelectorAll(`.${actualEntity}-row-check`);
+
+  checkboxes.forEach(cb => {
+    cb.checked = isChecked;
+    const rawId = cb.getAttribute('data-id');
+    const idVal = isNaN(Number(rawId)) ? rawId : Number(rawId);
+    if (isChecked) {
+      set.add(idVal);
+    } else {
+      set.delete(idVal);
+    }
+    const tr = cb.closest('tr');
+    if (tr) {
+      if (isChecked) {
+        tr.classList.add('bg-emerald-50/70');
+      } else {
+        tr.classList.remove('bg-emerald-50/70');
+      }
+    }
+  });
+
+  updateBulkBarUI(actualEntity);
+}
+
+function clearSelection(entity) {
+  const actualEntity = getActiveSelectionEntity(entity);
+  const set = bulkSelectionState[actualEntity];
+  if (set) set.clear();
+
+  if (entity === 'submissions' || entity === 'inbox') {
+    bulkSelectionState.complaints.clear();
+    bulkSelectionState.deliveries.clear();
+    const cMaster = document.getElementById('complaints-select-all');
+    if (cMaster) { cMaster.checked = false; cMaster.indeterminate = false; }
+    const dMaster = document.getElementById('deliveries-select-all');
+    if (dMaster) { dMaster.checked = false; dMaster.indeterminate = false; }
+    document.querySelectorAll('.complaints-row-check, .deliveries-row-check').forEach(cb => {
+      cb.checked = false;
+      const tr = cb.closest('tr');
+      if (tr) tr.classList.remove('bg-emerald-50/70');
+    });
+  } else {
+    const master = document.getElementById(`${actualEntity}-select-all`);
+    if (master) { master.checked = false; master.indeterminate = false; }
+    document.querySelectorAll(`.${actualEntity}-row-check`).forEach(cb => {
+      cb.checked = false;
+      const tr = cb.closest('tr');
+      if (tr) tr.classList.remove('bg-emerald-50/70');
+    });
+  }
+
+  updateBulkBarUI(actualEntity);
+}
+
+function updateBulkBarUI(entity) {
+  const actualEntity = getActiveSelectionEntity(entity);
+  const set = bulkSelectionState[actualEntity] || new Set();
+  const count = set.size;
+
+  const barId = (actualEntity === 'complaints' || actualEntity === 'deliveries') ? 'inbox-bulk-bar' : `${actualEntity}-bulk-bar`;
+  const countId = (actualEntity === 'complaints' || actualEntity === 'deliveries') ? 'inbox-bulk-count' : `${actualEntity}-bulk-count`;
+  const masterId = (actualEntity === 'complaints' || actualEntity === 'deliveries') ? `${actualEntity}-select-all` : `${actualEntity}-select-all`;
+
+  const barEl = document.getElementById(barId);
+  const countEl = document.getElementById(countId);
+  const masterEl = document.getElementById(masterId);
+
+  const labels = {
+    news: 'artikel berita',
+    jagadita: 'jadwal sidang',
+    complaints: 'aduan warga',
+    deliveries: 'pengantaran BB',
+    submissions: 'tiket permohonan',
+    org: 'pegawai',
+    sakip: 'dokumen SAKIP',
+    users: 'administrator'
+  };
+  const unitLabel = labels[actualEntity] || 'item';
+
+  if (barEl) {
+    if (count > 0) {
+      barEl.classList.remove('hidden');
+      if (countEl) countEl.textContent = `${count} ${unitLabel} terpilih`;
+    } else {
+      barEl.classList.add('hidden');
+    }
+  }
+
+  if (masterEl) {
+    const rowCheckboxes = document.querySelectorAll(`.${actualEntity}-row-check`);
+    const totalVisible = rowCheckboxes.length;
+    if (totalVisible === 0 || count === 0) {
+      masterEl.checked = false;
+      masterEl.indeterminate = false;
+    } else if (count >= totalVisible) {
+      masterEl.checked = true;
+      masterEl.indeterminate = false;
+    } else {
+      masterEl.checked = false;
+      masterEl.indeterminate = true;
+    }
+  }
+}
+
+async function executeBulkDelete(entity) {
+  const actualEntity = getActiveSelectionEntity(entity);
+  const set = bulkSelectionState[actualEntity];
+  if (!set || set.size === 0) {
+    alert('Pilih minimal 1 item terlebih dahulu.');
+    return;
+  }
+
+  const ids = Array.from(set);
+  const count = ids.length;
+
+  const entityNames = {
+    news: 'artikel berita',
+    jagadita: 'jadwal persidangan',
+    complaints: 'tiket aduan MASADU',
+    deliveries: 'tiket pengantaran SEMARA BAKTI',
+    submissions: 'tiket warga',
+    org: 'pegawai struktur organisasi',
+    sakip: 'dokumen akuntabilitas SAKIP',
+    users: 'akun administrator'
+  };
+  const nameLabel = entityNames[actualEntity] || 'item';
+
+  if (!confirm(`Apakah Anda yakin ingin menghapus ${count} ${nameLabel} terpilih secara massal? Tindakan ini permanen dan tidak dapat dibatalkan.`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/bulk-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        entity: actualEntity === 'complaints' || actualEntity === 'deliveries' ? 'submissions' : actualEntity,
+        ids: ids,
+        sub_type: actualEntity === 'deliveries' ? 'deliveries' : 'complaints'
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(data.message || `Berhasil menghapus ${count} data terpilih.`);
+      clearSelection(entity);
+      if (actualEntity === 'org') {
+        loadOrgAdminData();
+      } else if (actualEntity === 'users') {
+        loadAdminUsers();
+      } else if (actualEntity === 'sakip') {
+        loadAccountabilityDocs();
+      } else {
+        loadAllDashboardData();
+      }
+    } else {
+      alert(data.error || 'Gagal menghapus data terpilih.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Terjadi kesalahan koneksi saat menghapus data massal.');
+  }
+}
+
+async function executeBulkStatusChange(newStatus = 'SELESAI') {
+  const subType = window.currentInboxSubtab || 'complaints';
+  const set = bulkSelectionState[subType];
+  if (!set || set.size === 0) {
+    alert('Pilih minimal 1 tiket warga terlebih dahulu.');
+    return;
+  }
+
+  const ids = Array.from(set);
+  if (!confirm(`Ubah status ${ids.length} tiket terpilih menjadi "${newStatus}"?`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/admin/submissions/bulk-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ids: ids,
+        status: newStatus,
+        sub_type: subType
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(data.message || `Status berhasil diperbarui.`);
+      clearSelection(subType);
+      loadAllDashboardData();
+    } else {
+      alert(data.error || 'Gagal memperbarui status tiket.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Terjadi kesalahan koneksi saat memperbarui status massal.');
+  }
+}
+
+async function deleteSubmissionItem(subType, id) {
+  if (!confirm('Apakah Anda yakin ingin menghapus tiket ini?')) return;
+  try {
+    const res = await fetch(`/api/admin/submissions/${subType}/${id}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      alert(data.message || 'Tiket berhasil dihapus.');
+      loadAllDashboardData();
+    } else {
+      alert(data.error || 'Gagal menghapus tiket.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Terjadi kesalahan saat menghapus tiket.');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     await verifyAdminSession();
@@ -642,16 +915,22 @@ function renderAdminNewsTable(items = null) {
   if (list.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="py-8 text-center text-slate-400">
+        <td colspan="7" class="py-8 text-center text-slate-400">
           Tidak ada artikel berita yang cocok dengan kriteria pencarian atau filter.
         </td>
       </tr>
     `;
+    updateBulkBarUI('news');
     return;
   }
 
-  tbody.innerHTML = list.map(item => `
-    <tr class="hover:bg-slate-50 transition-colors">
+  tbody.innerHTML = list.map(item => {
+    const isChecked = bulkSelectionState.news.has(item.id);
+    return `
+    <tr class="hover:bg-slate-50 transition-colors ${isChecked ? 'bg-emerald-50/70' : ''}">
+      <td class="py-3 px-3 w-10 text-center">
+        <input type="checkbox" class="news-row-check w-4 h-4 accent-emerald-800 rounded cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''} onchange="toggleRowSelection('news', ${item.id}, this)">
+      </td>
       <td class="py-3 px-3">
         <img src="${item.thumbnail_url || '/static/images/news-featured.jpg'}" class="w-12 h-8 rounded object-cover border border-slate-200" onerror="this.onerror=null; this.src='/static/images/news-featured.jpg';">
       </td>
@@ -664,7 +943,9 @@ function renderAdminNewsTable(items = null) {
         <button onclick="deleteNewsItem(${item.id})" class="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded font-semibold text-[11px]">Hapus</button>
       </td>
     </tr>
-  `).join('');
+    `;
+  }).join('');
+  updateBulkBarUI('news');
 }
 
 function setNewsThumbnailPreview(src, labelText) {
@@ -1452,16 +1733,22 @@ function renderAdminJagaditaTable(schedules = null) {
   if (list.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7" class="py-8 text-center text-slate-400">
+        <td colspan="8" class="py-8 text-center text-slate-400">
           Tidak ada jadwal sidang yang sesuai dengan pencarian atau filter.
         </td>
       </tr>
     `;
+    updateBulkBarUI('jagadita');
     return;
   }
 
-  tbody.innerHTML = list.map(row => `
-    <tr class="hover:bg-slate-50 transition-colors">
+  tbody.innerHTML = list.map(row => {
+    const isChecked = bulkSelectionState.jagadita.has(row.id);
+    return `
+    <tr class="hover:bg-slate-50 transition-colors ${isChecked ? 'bg-emerald-50/70' : ''}">
+      <td class="py-3 px-3 w-10 text-center">
+        <input type="checkbox" class="jagadita-row-check w-4 h-4 accent-emerald-800 rounded cursor-pointer" data-id="${row.id}" ${isChecked ? 'checked' : ''} onchange="toggleRowSelection('jagadita', ${row.id}, this)">
+      </td>
       <td class="py-3 px-3 font-semibold text-slate-800">
         <div>${escapeAdminHtml(row.session_time)}</div>
         <div class="text-[10px] text-slate-400">${escapeAdminHtml(row.court_room)}</div>
@@ -1481,7 +1768,9 @@ function renderAdminJagaditaTable(schedules = null) {
         <button onclick="deleteJagaditaItem(${row.id})" class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-800 rounded font-semibold text-[10px]">Hapus</button>
       </td>
     </tr>
-  `).join('');
+    `;
+  }).join('');
+  updateBulkBarUI('jagadita');
 }
 
 function getScheduleBadgeClass(status) {
@@ -1905,55 +2194,94 @@ function renderAdminSubmissions() {
   // Complaints Body
   const cBody = document.getElementById('inbox-complaints-body');
   if (cBody) {
-    cBody.innerHTML = adminData.complaints.map(item => `
-      <tr class="hover:bg-slate-50 transition-colors">
-        <td class="py-3 px-3 font-mono font-bold text-emerald-900">${item.ticket_code}</td>
-        <td class="py-3 px-3">${item.reporter_name} <br><span class="text-[10px] text-slate-400">${item.reporter_phone || '-'}</span></td>
-        <td class="py-3 px-3">
-          <div class="font-bold text-slate-900">${item.title}</div>
-          <div class="text-[11px] text-slate-500">${item.category}</div>
-        </td>
-        <td class="py-3 px-3">
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold ${getSubmissionStatusBadge(item.status)}">${item.status}</span>
-        </td>
-        <td class="py-3 px-3 text-slate-600 max-w-xs truncate">${item.admin_notes || '-'}</td>
-        <td class="py-3 px-3 text-right">
-          <button onclick="openSubmissionStatusModal('complaint', '${item.ticket_code}', '${item.status}', '${(item.admin_notes || '').replace(/'/g, "\\'")}')" class="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold rounded text-[11px]">
-            Tindak Lanjut
-          </button>
-        </td>
-      </tr>
-    `).join('');
+    if (adminData.complaints.length === 0) {
+      cBody.innerHTML = `
+        <tr>
+          <td colspan="7" class="py-8 text-center text-slate-400">
+            Belum ada tiket aduan warga MASADU yang masuk.
+          </td>
+        </tr>
+      `;
+    } else {
+      cBody.innerHTML = adminData.complaints.map(item => {
+        const isChecked = bulkSelectionState.complaints.has(item.id);
+        return `
+        <tr class="hover:bg-slate-50 transition-colors ${isChecked ? 'bg-emerald-50/70' : ''}">
+          <td class="py-3 px-3 w-10 text-center">
+            <input type="checkbox" class="complaints-row-check w-4 h-4 accent-emerald-800 rounded cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''} onchange="toggleRowSelection('complaints', ${item.id}, this)">
+          </td>
+          <td class="py-3 px-3 font-mono font-bold text-emerald-900">${item.ticket_code}</td>
+          <td class="py-3 px-3">${item.reporter_name} <br><span class="text-[10px] text-slate-400">${item.reporter_phone || '-'}</span></td>
+          <td class="py-3 px-3">
+            <div class="font-bold text-slate-900">${item.title}</div>
+            <div class="text-[11px] text-slate-500">${item.category}</div>
+          </td>
+          <td class="py-3 px-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${getSubmissionStatusBadge(item.status)}">${item.status}</span>
+          </td>
+          <td class="py-3 px-3 text-slate-600 max-w-xs truncate">${item.admin_notes || '-'}</td>
+          <td class="py-3 px-3 text-right whitespace-nowrap">
+            <button onclick="openSubmissionStatusModal('complaint', '${item.ticket_code}', '${item.status}', '${(item.admin_notes || '').replace(/'/g, "\\'")}')" class="px-2.5 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold rounded text-[11px]">
+              Tindak Lanjut
+            </button>
+            <button onclick="deleteSubmissionItem('complaints', ${item.id})" class="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-800 font-bold rounded text-[11px] ml-1">
+              Hapus
+            </button>
+          </td>
+        </tr>
+        `;
+      }).join('');
+    }
   }
 
   // Deliveries Body
   const dBody = document.getElementById('inbox-deliveries-body');
   if (dBody) {
-    dBody.innerHTML = adminData.deliveries.map(item => `
-      <tr class="hover:bg-slate-50 transition-colors">
-        <td class="py-3 px-3 font-mono font-bold text-amber-900">${item.ticket_code}</td>
-        <td class="py-3 px-3">
-          <div class="font-bold text-slate-900">${item.owner_name}</div>
-          <div class="text-[10px] text-slate-400">${item.case_number}</div>
-        </td>
-        <td class="py-3 px-3 font-medium text-slate-800">${item.item_description}</td>
-        <td class="py-3 px-3 text-slate-600">${item.district}</td>
-        <td class="py-3 px-3">
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold ${getSubmissionStatusBadge(item.status)}">${item.status}</span>
-        </td>
-        <td class="py-3 px-3 text-right whitespace-nowrap space-x-1.5">
-          <button onclick="openBa20Modal('${item.ticket_code}')" class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded text-[11px] shadow-sm transition-all" title="Buka & Cetak Berita Acara BA-20 Resmi">
-            <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-amber-300"></i>
-            <span>BA-20</span>
-          </button>
-          <button onclick="openSubmissionStatusModal('delivery', '${item.ticket_code}', '${item.status}', '${(item.admin_notes || '').replace(/'/g, "\\'")}')" class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded text-[11px]">
-            Tindak Lanjut
-          </button>
-        </td>
-      </tr>
-    `).join('');
+    if (adminData.deliveries.length === 0) {
+      dBody.innerHTML = `
+        <tr>
+          <td colspan="7" class="py-8 text-center text-slate-400">
+            Belum ada permohonan antar barang bukti SEMARA BAKTI yang masuk.
+          </td>
+        </tr>
+      `;
+    } else {
+      dBody.innerHTML = adminData.deliveries.map(item => {
+        const isChecked = bulkSelectionState.deliveries.has(item.id);
+        return `
+        <tr class="hover:bg-slate-50 transition-colors ${isChecked ? 'bg-emerald-50/70' : ''}">
+          <td class="py-3 px-3 w-10 text-center">
+            <input type="checkbox" class="deliveries-row-check w-4 h-4 accent-emerald-800 rounded cursor-pointer" data-id="${item.id}" ${isChecked ? 'checked' : ''} onchange="toggleRowSelection('deliveries', ${item.id}, this)">
+          </td>
+          <td class="py-3 px-3 font-mono font-bold text-amber-900">${item.ticket_code}</td>
+          <td class="py-3 px-3">
+            <div class="font-bold text-slate-900">${item.owner_name}</div>
+            <div class="text-[10px] text-slate-400">${item.case_number}</div>
+          </td>
+          <td class="py-3 px-3 font-medium text-slate-800">${item.item_description}</td>
+          <td class="py-3 px-3 text-slate-600">${item.district}</td>
+          <td class="py-3 px-3">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${getSubmissionStatusBadge(item.status)}">${item.status}</span>
+          </td>
+          <td class="py-3 px-3 text-right whitespace-nowrap space-x-1.5">
+            <button onclick="openBa20Modal('${item.ticket_code}')" class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-white font-bold rounded text-[11px] shadow-sm transition-all" title="Buka & Cetak Berita Acara BA-20 Resmi">
+              <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-amber-300"></i>
+              <span>BA-20</span>
+            </button>
+            <button onclick="openSubmissionStatusModal('delivery', '${item.ticket_code}', '${item.status}', '${(item.admin_notes || '').replace(/'/g, "\\'")}')" class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded text-[11px]">
+              Tindak Lanjut
+            </button>
+            <button onclick="deleteSubmissionItem('deliveries', ${item.id})" class="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-800 font-bold rounded text-[11px]">
+              Hapus
+            </button>
+          </td>
+        </tr>
+        `;
+      }).join('');
+    }
     if (window.lucide) lucide.createIcons();
   }
+  updateBulkBarUI(window.currentInboxSubtab || 'complaints');
 }
 
 function getSubmissionStatusBadge(status) {
@@ -1980,6 +2308,7 @@ function switchInboxSubtab(subtab) {
     document.getElementById('subtab-btn-complaints').className = 'px-4 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600';
     document.getElementById('subtab-btn-deliveries').className = 'px-4 py-1.5 rounded-lg text-xs font-bold bg-[#0B3B24] text-white';
   }
+  updateBulkBarUI(subtab);
 }
 
 function exportInboxData(type = 'all', format = 'xlsx', isTemplate = false) {
@@ -2930,12 +3259,13 @@ function renderOrgMembersTable() {
   if (list.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="py-8 text-center text-slate-400">
+        <td colspan="7" class="py-8 text-center text-slate-400">
           <i data-lucide="info" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
           Tidak ada data pegawai pada level ini.
         </td>
       </tr>
     `;
+    updateBulkBarUI('org');
     lucide.createIcons();
     return;
   }
@@ -2955,9 +3285,13 @@ function renderOrgMembersTable() {
     }
 
     const parentText = m.parent_name ? escapeHtml(m.parent_name) : '<span class="text-slate-400 italic">Pimpinan Tertinggi</span>';
+    const isChecked = bulkSelectionState.org.has(m.id);
 
     return `
-      <tr class="hover:bg-slate-50 transition-colors">
+      <tr class="hover:bg-slate-50 transition-colors ${isChecked ? 'bg-emerald-50/70' : ''}">
+        <td class="py-3 px-3 w-10 text-center">
+          <input type="checkbox" class="org-row-check w-4 h-4 accent-emerald-800 rounded cursor-pointer" data-id="${m.id}" ${isChecked ? 'checked' : ''} onchange="toggleRowSelection('org', ${m.id}, this)">
+        </td>
         <td class="py-3 px-3">
           <div class="flex items-center gap-2.5">
             <img src="${escapeAttr(m.photo_url || '/static/images/avatar-officer-male.svg')}" alt="Foto" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.onerror=null; this.src='/static/images/avatar-officer-male.svg';">
@@ -2992,6 +3326,7 @@ function renderOrgMembersTable() {
     `;
   }).join('');
 
+  updateBulkBarUI('org');
   lucide.createIcons();
 }
 
@@ -3839,12 +4174,13 @@ function renderAdminUsersTable() {
   if (adminUsersList.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6" class="py-8 text-center text-slate-400">
+        <td colspan="7" class="py-8 text-center text-slate-400">
           <i data-lucide="users" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
           Belum ada administrator lain yang terdaftar.
         </td>
       </tr>
     `;
+    updateBulkBarUI('users');
     lucide.createIcons();
     return;
   }
@@ -3863,9 +4199,13 @@ function renderAdminUsersTable() {
     if (u.mfa_provider === 'MICROSOFT') provLabel = 'Microsoft Authenticator';
 
     const mfaBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-200"><i data-lucide="smartphone" class="w-3 h-3 text-emerald-600"></i> ${provLabel}</span>`;
+    const isChecked = bulkSelectionState.users.has(u.id);
 
     return `
-      <tr class="hover:bg-slate-50 transition-colors">
+      <tr class="hover:bg-slate-50 transition-colors ${isChecked ? 'bg-emerald-50/70' : ''}">
+        <td class="py-3 px-3 w-10 text-center">
+          <input type="checkbox" class="users-row-check w-4 h-4 accent-emerald-800 rounded cursor-pointer" data-id="${u.id}" ${isChecked ? 'checked' : ''} onchange="toggleRowSelection('users', ${u.id}, this)">
+        </td>
         <td class="py-3 px-3">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-800 to-emerald-950 text-amber-300 font-extrabold flex items-center justify-center text-xs shadow-sm">
@@ -3905,6 +4245,7 @@ function renderAdminUsersTable() {
     `;
   }).join('');
 
+  updateBulkBarUI('users');
   lucide.createIcons();
 }
 
@@ -4172,12 +4513,13 @@ function renderAccountabilityTable(docs = null) {
   if (list.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="9" class="py-10 text-center text-slate-400">
+        <td colspan="10" class="py-10 text-center text-slate-400">
           <i data-lucide="file-question" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
           <div>Tidak ada dokumen SAKIP yang cocok dengan filter.</div>
         </td>
       </tr>
     `;
+    updateBulkBarUI('sakip');
     lucide.createIcons();
     return;
   }
@@ -4202,8 +4544,13 @@ function renderAccountabilityTable(docs = null) {
       ? '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Publik</span>'
       : '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded font-bold text-[10px] bg-slate-100 text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Draft</span>';
 
+    const isChecked = bulkSelectionState.sakip.has(doc.id);
+
     return `
-      <tr class="hover:bg-slate-50 transition-colors">
+      <tr class="hover:bg-slate-50 transition-colors ${isChecked ? 'bg-emerald-50/70' : ''}">
+        <td class="py-3 px-3 w-10 text-center">
+          <input type="checkbox" class="sakip-row-check w-4 h-4 accent-emerald-800 rounded cursor-pointer" data-id="${doc.id}" ${isChecked ? 'checked' : ''} onchange="toggleRowSelection('sakip', ${doc.id}, this)">
+        </td>
         <td class="py-3 px-3 text-center font-bold text-slate-500">${doc.order_num || 1}</td>
         <td class="py-3 px-3">${catBadge}</td>
         <td class="py-3 px-3">
@@ -4236,6 +4583,7 @@ function renderAccountabilityTable(docs = null) {
     `;
   }).join('');
 
+  updateBulkBarUI('sakip');
   lucide.createIcons();
 }
 

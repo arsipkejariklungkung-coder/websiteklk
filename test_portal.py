@@ -2580,6 +2580,208 @@ class TestKertagosaPortal(unittest.TestCase):
         conn.commit()
         conn.close()
 
+    def test_38_select_file_and_select_all_bulk_actions(self):
+        """Verify Select File & Select All with Bulk Actions across all 6 core admin CMS tables."""
+        # 1. Verify Admin Dashboard UI: Checkboxes & Bulk Action Bars
+        adm_h = MockHandler('GET', '/admin')
+        adm_h.do_GET()
+        adm_html = adm_h.wfile.getvalue().decode('utf-8')
+
+        # Check all Select All checkboxes
+        self.assertIn('id="news-select-all"', adm_html)
+        self.assertIn('id="jagadita-select-all"', adm_html)
+        self.assertIn('id="complaints-select-all"', adm_html)
+        self.assertIn('id="deliveries-select-all"', adm_html)
+        self.assertIn('id="org-select-all"', adm_html)
+        self.assertIn('id="sakip-select-all"', adm_html)
+        self.assertIn('id="users-select-all"', adm_html)
+
+        # Check all Bulk Action Bars
+        self.assertIn('id="news-bulk-bar"', adm_html)
+        self.assertIn('id="jagadita-bulk-bar"', adm_html)
+        self.assertIn('id="inbox-bulk-bar"', adm_html)
+        self.assertIn('id="org-bulk-bar"', adm_html)
+        self.assertIn('id="sakip-bulk-bar"', adm_html)
+        self.assertIn('id="users-bulk-bar"', adm_html)
+
+        # 2. Verify static/js/admin.js functions and classes
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'admin.js'), 'r', encoding='utf-8') as f:
+            admin_js = f.read()
+
+        self.assertIn('bulkSelectionState', admin_js)
+        self.assertIn('function toggleRowSelection', admin_js)
+        self.assertIn('function toggleSelectAll', admin_js)
+        self.assertIn('function clearSelection', admin_js)
+        self.assertIn('function updateBulkBarUI', admin_js)
+        self.assertIn('async function executeBulkDelete', admin_js)
+        self.assertIn('async function executeBulkStatusChange', admin_js)
+        self.assertIn('news-row-check', admin_js)
+        self.assertIn('jagadita-row-check', admin_js)
+        self.assertIn('complaints-row-check', admin_js)
+        self.assertIn('deliveries-row-check', admin_js)
+        self.assertIn('org-row-check', admin_js)
+        self.assertIn('sakip-row-check', admin_js)
+        self.assertIn('users-row-check', admin_js)
+
+        # 3. Test Bulk Delete for News (posts)
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO posts (title, slug, excerpt, content, category, badge_label, thumbnail_url, layout_type) VALUES ('Bulk Test Post 1', 'bulk-test-1', 'Ex 1', 'Content 1', 'Kegiatan Kejari', 'TEST', '/static/images/news-featured.jpg', 'FEATURED_SIDE')")
+        post1_id = cursor.lastrowid
+        cursor.execute("INSERT INTO posts (title, slug, excerpt, content, category, badge_label, thumbnail_url, layout_type) VALUES ('Bulk Test Post 2', 'bulk-test-2', 'Ex 2', 'Content 2', 'Kegiatan Kejari', 'TEST', '/static/images/news-featured.jpg', 'FEATURED_SIDE')")
+        post2_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        del_payload = {'entity': 'news', 'ids': [post1_id, post2_id]}
+        del_body = json.dumps(del_payload).encode('utf-8')
+        del_h = MockHandler('POST', '/api/admin/bulk-delete', {
+            'Content-Length': str(len(del_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, del_body)
+        del_h.do_POST()
+        self.assertEqual(del_h.response_code, 200)
+        self.assertTrue(del_h.get_response_json()['success'])
+        self.assertEqual(del_h.get_response_json()['count'], 2)
+
+        # Verify posts deleted
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) as c FROM posts WHERE id IN (?, ?)", (post1_id, post2_id))
+        self.assertEqual(cursor.fetchone()['c'], 0)
+        conn.close()
+
+        # 4. Test Bulk Delete for JAGADITA (court_schedules)
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO court_schedules (session_time, court_room, case_number, defendant_name, case_type, agenda, prosecutor, status) VALUES ('09:00 WITA', 'Ruang Cakra', 'BULK-TEST-1/Pid.B/2026/PN Kp', 'Def 1', 'PIDUM', 'Saksi', 'JPU 1', 'TERJADWAL')")
+        sched1_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        del_sched = {'ids': [sched1_id]}
+        del_sched_body = json.dumps(del_sched).encode('utf-8')
+        del_sched_h = MockHandler('POST', '/api/admin/jagadita/bulk-delete', {
+            'Content-Length': str(len(del_sched_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, del_sched_body)
+        del_sched_h.do_POST()
+        self.assertEqual(del_sched_h.response_code, 200)
+        self.assertTrue(del_sched_h.get_response_json()['success'])
+
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) as c FROM court_schedules WHERE id = ?", (sched1_id,))
+        self.assertEqual(cursor.fetchone()['c'], 0)
+        conn.close()
+
+        # 5. Test Bulk Status and Bulk Delete for Submissions (MASADU & SEMARA BAKTI)
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO complaints (ticket_code, reporter_name, category, title, chronology, status) VALUES ('TRK-TEST-BULK1', 'Pelapor 1', 'Pungli', 'Aduan Bulk Test', 'Kronologi 1', 'TERKIRIM')")
+        comp1_id = cursor.lastrowid
+        cursor.execute("INSERT INTO bb_deliveries (ticket_code, case_number, owner_name, id_card_number, item_description, delivery_address, district, phone_number, status) VALUES ('TRK-TEST-DEL1', '01/Pid.B/2026', 'Pemilik 1', '510501', 'Motor Honda', 'Semarapura', 'Klungkung', '08123', 'TERKIRIM')")
+        deliv1_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        # Bulk status update
+        stat_payload = {'ids': [comp1_id], 'status': 'DIVERIFIKASI', 'sub_type': 'complaints'}
+        stat_body = json.dumps(stat_payload).encode('utf-8')
+        stat_h = MockHandler('POST', '/api/admin/submissions/bulk-status', {
+            'Content-Length': str(len(stat_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, stat_body)
+        stat_h.do_POST()
+        self.assertEqual(stat_h.response_code, 200)
+
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM complaints WHERE id = ?", (comp1_id,))
+        self.assertEqual(cursor.fetchone()['status'], 'DIVERIFIKASI')
+        conn.close()
+
+        # Bulk delete complaints
+        del_comp = {'ids': [comp1_id], 'sub_type': 'complaints'}
+        del_comp_body = json.dumps(del_comp).encode('utf-8')
+        del_comp_h = MockHandler('POST', '/api/admin/submissions/bulk-delete', {
+            'Content-Length': str(len(del_comp_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, del_comp_body)
+        del_comp_h.do_POST()
+        self.assertEqual(del_comp_h.response_code, 200)
+
+        # Single delete deliveries via DELETE /api/admin/submissions/deliveries/<id>
+        single_del_h = MockHandler('DELETE', f'/api/admin/submissions/deliveries/{deliv1_id}', {
+            'Authorization': f'Bearer {self.token}'
+        })
+        single_del_h.do_DELETE()
+        self.assertEqual(single_del_h.response_code, 200)
+
+        # 6. Test Bulk Delete for Organization Members
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO organization_members (name, position, level, order_num) VALUES ('Pegawai Bulk Test', 'Staf TU', 5, 99)")
+        org_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        del_org = {'entity': 'organization', 'ids': [org_id]}
+        del_org_body = json.dumps(del_org).encode('utf-8')
+        del_org_h = MockHandler('POST', '/api/admin/bulk-delete', {
+            'Content-Length': str(len(del_org_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, del_org_body)
+        del_org_h.do_POST()
+        self.assertEqual(del_org_h.response_code, 200)
+
+        # 7. Test Bulk Delete for SAKIP Accountability Docs
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO accountability_docs (title, category, period_year, doc_url) VALUES ('SAKIP Bulk Test Doc', 'RENJA', '2026', 'https://drive.google.com/test')")
+        sakip_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        del_sakip = {'ids': [sakip_id]}
+        del_sakip_body = json.dumps(del_sakip).encode('utf-8')
+        del_sakip_h = MockHandler('POST', '/api/admin/accountability/bulk-delete', {
+            'Content-Length': str(len(del_sakip_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, del_sakip_body)
+        del_sakip_h.do_POST()
+        self.assertEqual(del_sakip_h.response_code, 200)
+
+        # 8. Test Bulk Delete for Users & Active User Protection
+        # Try deleting currently logged in admin -> must fail with 400
+        del_self = {'entity': 'users', 'ids': [1]}
+        del_self_body = json.dumps(del_self).encode('utf-8')
+        del_self_h = MockHandler('POST', '/api/admin/bulk-delete', {
+            'Content-Length': str(len(del_self_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, del_self_body)
+        del_self_h.do_POST()
+        self.assertEqual(del_self_h.response_code, 400)
+        self.assertIn('aktif', del_self_h.get_response_json()['error'])
+
+        # Create secondary test user and delete it
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO users (username, password_hash, full_name, email, role) VALUES ('tempuser_bulk', 'hash123', 'Temp User', 'temp@kejariklungkung.go.id', 'EDITOR')")
+        temp_user_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        del_temp = {'ids': [temp_user_id]}
+        del_temp_body = json.dumps(del_temp).encode('utf-8')
+        del_temp_h = MockHandler('POST', '/api/admin/users/bulk-delete', {
+            'Content-Length': str(len(del_temp_body)),
+            'Authorization': f'Bearer {self.token}'
+        }, del_temp_body)
+        del_temp_h.do_POST()
+        self.assertEqual(del_temp_h.response_code, 200)
+        self.assertEqual(del_temp_h.get_response_json()['count'], 1)
+
 
 
 if __name__ == '__main__':
