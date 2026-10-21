@@ -31,6 +31,7 @@ class MockHandler(KertagosaHandler):
         self.path = path
         self.request_version = "HTTP/1.1"
         self.headers = headers or {}
+        self.client_address = ('127.0.0.1', 8000)
         self.rfile = io.BytesIO(body)
         self.wfile = io.BytesIO()
         self.response_code = None
@@ -1524,6 +1525,150 @@ class TestKertagosaPortal(unittest.TestCase):
         with open(os.path.join(BASE_DIR, 'static', 'css', 'styles.css'), 'r', encoding='utf-8') as f:
             styles_css = f.read()
         self.assertIn('@import url(\'accessibility.css\');', styles_css)
+
+    def test_26_comprehensive_six_user_features(self):
+        """Verify the 6 user requested features:
+        1. Auto Translate IND/ENG toggle in header top-right.
+        2. TTS silenced and hidden when 'Hilangkan' is clicked.
+        3. High security headers, rate limiting, traversal & sensitive file protection.
+        4. Custom 404 page with 5-second countdown auto-redirect.
+        5. Pelaksana position & 330x450 photo cropper modal.
+        6. Organization Excel template export & bulk import.
+        """
+        # Feature 1: i18n & Top-Right Language Switcher Toggle
+        with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
+            index_content = f.read()
+        self.assertIn('id="lang-switch-toggle"', index_content)
+        self.assertIn('setLanguage(\'id\')', index_content)
+        self.assertIn('setLanguage(\'en\')', index_content)
+        self.assertIn('static/js/i18n.js', index_content)
+
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'i18n.js'), 'r', encoding='utf-8') as f:
+            i18n_content = f.read()
+        self.assertIn('I18N_TRANSLATIONS', i18n_content)
+        self.assertIn('nav_home', i18n_content)
+        self.assertIn('service_semara_title', i18n_content)
+        self.assertIn('service_masadu_title', i18n_content)
+
+        # Feature 2: Accessibility Silencing & TTS Reset on Hide
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'accessibility.js'), 'r', encoding='utf-8') as f:
+            a11y_content = f.read()
+        self.assertIn('stopSpeech()', a11y_content)
+        self.assertIn('state.tts_active = false', a11y_content)
+        self.assertIn('state.widget_hidden', a11y_content)
+
+        # Feature 3: High Security Protections & Headers
+        # 3a. Traversal attack blocked
+        trav_h = MockHandler('GET', '/../../etc/passwd')
+        trav_h.do_GET()
+        self.assertIn(trav_h.response_code, [400, 403, 404])
+
+        # 3b. Direct sensitive DB file blocked
+        db_h = MockHandler('GET', '/data/kertagosa.db')
+        db_h.do_GET()
+        self.assertEqual(db_h.response_code, 403)
+
+        # 3c. Direct backend source file blocked
+        py_h = MockHandler('GET', '/server.py')
+        py_h.do_GET()
+        self.assertEqual(py_h.response_code, 403)
+
+        # 3d. Rate Limiting protection on auth
+        test_ip = "198.51.100.99"
+        for _ in range(5):
+            h_login = MockHandler('POST', '/api/auth/login', headers={'x-forwarded-for': test_ip}, body=b'{"username":"wrong","password":"bad"}')
+            h_login.do_POST()
+        # 6th attempt must be throttled with HTTP 429
+        h_blocked = MockHandler('POST', '/api/auth/login', headers={'x-forwarded-for': test_ip}, body=b'{"username":"wrong","password":"bad"}')
+        h_blocked.do_POST()
+        self.assertEqual(h_blocked.response_code, 429)
+
+        # 3e. vercel.json security headers
+        with open(os.path.join(BASE_DIR, 'vercel.json'), 'r', encoding='utf-8') as f:
+            v_json = json.load(f)
+        self.assertIn('headers', v_json)
+        hdr_keys = [h['key'] for h in v_json['headers'][0]['headers']]
+        self.assertIn('X-Content-Type-Options', hdr_keys)
+        self.assertIn('X-Frame-Options', hdr_keys)
+        self.assertIn('Strict-Transport-Security', hdr_keys)
+
+        # Feature 4: Custom 404 with 5s Redirect
+        with open(os.path.join(BASE_DIR, '404.html'), 'r', encoding='utf-8') as f:
+            html_404 = f.read()
+        self.assertIn('404', html_404)
+        self.assertIn('countdown-timer', html_404)
+        self.assertIn('window.location.href = \'/\'', html_404)
+
+        not_found_h = MockHandler('GET', '/halaman-random-pasti-tidak-ada-12345')
+        not_found_h.do_GET()
+        self.assertEqual(not_found_h.response_code, 404)
+        self.assertIn(b'404', not_found_h.wfile.getvalue())
+
+        # Feature 5: Pelaksana Positions & 330x450 Photo Cropper
+        with open(os.path.join(BASE_DIR, 'admin.html'), 'r', encoding='utf-8') as f:
+            admin_content = f.read()
+        self.assertIn('Level 5: Pelaksana', admin_content)
+        self.assertIn('id="modal-crop-photo"', admin_content)
+        self.assertIn('330', admin_content)
+        self.assertIn('450', admin_content)
+        self.assertIn('id="modal-org-excel-import"', admin_content)
+
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'admin.js'), 'r', encoding='utf-8') as f:
+            admin_js = f.read()
+        self.assertIn('startPhotoCropper', admin_js)
+        self.assertIn('applyCroppedPhoto', admin_js)
+        self.assertIn('TARGET_WIDTH = 330', admin_js)
+        self.assertIn('TARGET_HEIGHT = 450', admin_js)
+        self.assertIn('setPresetPosition', admin_js)
+        self.assertIn('openOrgExcelModal', admin_js)
+        self.assertIn('submitOrgExcelImport', admin_js)
+
+        # Feature 6: Org Excel Template Download & Import API
+        # 6a. Template Download
+        tpl_h = MockHandler('GET', '/api/admin/organization/template', headers={'Authorization': f'Bearer {self.token}'})
+        tpl_h.do_GET()
+        self.assertEqual(tpl_h.response_code, 200)
+        self.assertEqual(tpl_h.response_headers.get('Content-Type'), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        tpl_bytes = tpl_h.wfile.getvalue()
+        # Verify it is a valid Zip/OpenXML Excel
+        self.assertEqual(tpl_bytes[:4], b'PK\x03\x04')
+
+        # 6b. Bulk Import API
+        import_body = json.dumps({
+            'items': [
+                {
+                    'name': 'Test Pelaksana Unit',
+                    'position': 'Pelaksana Tata Usaha & IT',
+                    'level': 5,
+                    'nip': '19991231 202401 1 001',
+                    'rank': 'Pengatur Muda (II/a)',
+                    'order_num': 99
+                }
+            ],
+            'replace_all': False
+        }).encode('utf-8')
+        imp_h = MockHandler(
+            'POST',
+            '/api/admin/organization/import',
+            headers={
+                'Content-Type': 'application/json',
+                'Content-Length': str(len(import_body)),
+                'Authorization': f'Bearer {self.token}'
+            },
+            body=import_body
+        )
+        imp_h.do_POST()
+        self.assertEqual(imp_h.response_code, 200)
+        resp_data = imp_h.get_response_json()
+        self.assertTrue(resp_data.get('success'))
+        self.assertEqual(resp_data.get('imported_count'), 1)
+
+        # Cleanup test member
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM organization_members WHERE name = 'Test Pelaksana Unit'")
+        conn.commit()
+        conn.close()
 
 
 if __name__ == '__main__':

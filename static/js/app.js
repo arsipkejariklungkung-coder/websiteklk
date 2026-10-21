@@ -305,6 +305,10 @@ function renderAllSections() {
   renderOfficeAndMap();
   renderFooter();
 
+  if (window.setLanguage && window.currentLanguage === 'en') {
+    window.setLanguage('en');
+  }
+
   if (state.currentUser && state.currentUser.role === 'ADMIN') {
     renderAdminFloatingBar();
   }

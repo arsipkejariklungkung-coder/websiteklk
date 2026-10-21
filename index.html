@@ -87,9 +87,15 @@
             <span id="ptsp-live-status-badge" class="px-1.5 py-0.5 rounded bg-emerald-800 text-white text-[9px] uppercase tracking-wider">PTSP AKTIF</span>
           </div>
 
+          <!-- Language Switcher Toggle (IND / ENG) -->
+          <div id="lang-switch-toggle" class="flex items-center bg-slate-200/80 p-0.5 rounded-lg border border-slate-300 shadow-xs text-xs font-bold" title="Pilih Bahasa / Switch Language">
+            <button type="button" id="btn-lang-id" onclick="setLanguage('id')" class="px-2 py-0.5 rounded-md text-[11px] font-extrabold transition-all bg-[#0B3B24] text-white shadow-xs" title="Bahasa Indonesia">ID</button>
+            <button type="button" id="btn-lang-en" onclick="setLanguage('en')" class="px-2 py-0.5 rounded-md text-[11px] font-extrabold transition-all text-slate-600 hover:text-slate-900" title="English">EN</button>
+          </div>
+
           <button onclick="openModal('modal-ticket-tracker')" id="header-cta-text" class="px-3.5 py-1.5 rounded-lg bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-colors">
             <i data-lucide="search" class="w-3.5 h-3.5 text-amber-400"></i>
-            <span>Lacak Tiket Layanan</span>
+            <span data-i18n="lacak_tiket">Lacak Tiket Layanan</span>
           </button>
 
           <!-- Admin Login Trigger -->
@@ -116,34 +122,34 @@
       <div class="hidden lg:flex items-center gap-1 text-sm font-semibold text-slate-700">
         <a href="#beranda" class="px-4 py-2 rounded-full bg-[#0B3B24] text-white shadow-sm flex items-center gap-1.5">
           <i data-lucide="home" class="w-4 h-4 text-amber-400"></i>
-          Beranda
+          <span data-i18n="nav_home">Beranda</span>
         </a>
 
         <!-- Profil Dropdown -->
         <div class="relative group">
           <button class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center gap-1 transition-colors">
-            Profil <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
+            <span data-i18n="nav_profile">Profil</span> <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
           </button>
           <div class="absolute left-0 mt-1 w-60 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
             <a href="/profil/struktur-organisasi" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
               <i data-lucide="network" class="w-3.5 h-3.5 text-emerald-700"></i>
-              <span>Struktur Organisasi</span>
+              <span data-i18n="nav_structure">Struktur Organisasi</span>
             </a>
             <a href="/profil/visi-misi" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
               <i data-lucide="compass" class="w-3.5 h-3.5 text-emerald-700"></i>
-              <span>Visi dan Misi</span>
+              <span data-i18n="nav_vision">Visi dan Misi</span>
             </a>
             <a href="/profil/sejarah" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
               <i data-lucide="landmark" class="w-3.5 h-3.5 text-emerald-700"></i>
-              <span>Sejarah</span>
+              <span data-i18n="nav_history">Sejarah</span>
             </a>
             <a href="/profil/logo-makna" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
               <i data-lucide="shield" class="w-3.5 h-3.5 text-emerald-700"></i>
-              <span>Logo dan Maknanya</span>
+              <span data-i18n="nav_logo">Logo dan Maknanya</span>
             </a>
             <a href="/profil/tugas-wewenang" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
               <i data-lucide="scale" class="w-3.5 h-3.5 text-emerald-700"></i>
-              <span>Tugas dan Wewenang</span>
+              <span data-i18n="nav_duties">Tugas dan Wewenang</span>
             </a>
           </div>
         </div>
@@ -151,24 +157,24 @@
         <!-- Informasi Dropdown -->
         <div class="relative group">
           <button class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center gap-1 transition-colors">
-            Informasi <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
+            <span data-i18n="nav_news">Informasi</span> <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
           </button>
           <div class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
             <a href="/informasi/berita" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
               <i data-lucide="newspaper" class="w-3.5 h-3.5 text-emerald-700"></i>
-              <span>Berita &amp; Publikasi Hukum</span>
+              <span data-i18n="news_title">Berita &amp; Publikasi Hukum</span>
             </a>
             <a href="/informasi/pengumuman" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
               <i data-lucide="bell" class="w-3.5 h-3.5 text-amber-600"></i>
-              <span>Pengumuman Resmi</span>
+              <span data-i18n="ticker_badge">Pengumuman Resmi</span>
             </a>
             <a href="/informasi/jadwal-sidang" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
               <i data-lucide="gavel" class="w-3.5 h-3.5 text-emerald-700"></i>
-              <span>Jadwal Sidang JAGADITA</span>
+              <span data-i18n="nav_jadwal_sidang">Jadwal Sidang JAGADITA</span>
             </a>
             <a href="/informasi/skm" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-emerald-50 hover:text-emerald-900 transition-colors flex items-center gap-2">
               <i data-lucide="award" class="w-3.5 h-3.5 text-emerald-700"></i>
-              <span>Indeks Kepuasan (SKM)</span>
+              <span data-i18n="nav_ikm">Indeks Kepuasan (SKM)</span>
             </a>
           </div>
         </div>
@@ -176,7 +182,7 @@
         <!-- Pelayanan Dropdown -->
         <div class="relative group">
           <button class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 flex items-center gap-1 transition-colors">
-            Pelayanan <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
+            <span data-i18n="nav_services">Pelayanan</span> <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-hover:rotate-180 transition-transform"></i>
           </button>
           <div class="absolute left-0 mt-1 w-64 bg-white rounded-xl shadow-xl border border-slate-200/80 p-2 hidden group-hover:block z-50">
             <a href="javascript:void(0)" onclick="handleServiceBtnAction('OPEN_COMPLAINT_MODAL', 'MASADU')" class="block px-3 py-2 text-xs font-medium text-slate-700 rounded-lg hover:bg-red-50 hover:text-red-900">MASADU (Aduan Warga)</a>
@@ -199,9 +205,9 @@
           </div>
         </div>
 
-        <a href="#layanan-digital" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Layanan Digital</a>
-        <a href="/akuntabilitas-kinerja" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Akuntabilitas Kinerja</a>
-        <a href="#kantor-peta" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Kontak</a>
+        <a href="#layanan-digital" data-i18n="digital_title" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Layanan Digital</a>
+        <a href="/akuntabilitas-kinerja" data-i18n="nav_accountability" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Akuntabilitas Kinerja</a>
+        <a href="#kantor-peta" data-i18n="nav_contact" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Kontak</a>
       </div>
 
       <!-- Right Golden Hotline Badge -->
@@ -215,6 +221,18 @@
 
     <!-- Collapsible Categorized Mobile Navigation Drawer -->
     <div id="mobile-nav-drawer" class="hidden lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-4 shadow-2xl">
+      <!-- Mobile Language Switcher -->
+      <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+          <i data-lucide="languages" class="w-4 h-4 text-emerald-800"></i>
+          <span>Pilih Bahasa / Language:</span>
+        </span>
+        <div class="flex items-center bg-white p-0.5 rounded-lg border border-slate-200 shadow-xs">
+          <button type="button" id="mob-btn-lang-id" onclick="setLanguage('id')" class="px-3 py-1 rounded-md text-xs font-bold bg-[#0B3B24] text-white">ID</button>
+          <button type="button" id="mob-btn-lang-en" onclick="setLanguage('en')" class="px-3 py-1 rounded-md text-xs font-bold text-slate-600">EN</button>
+        </div>
+      </div>
+
       <!-- Section 1: Navigasi Utama -->
       <div>
         <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Navigasi Utama</div>
@@ -2027,6 +2045,8 @@
     </div>
   </div>
 
+  <!-- Multi-Language Bilingual Engine (IND / ENG) -->
+  <script src="/static/js/i18n.js?v=1.0"></script>
   <!-- Client Application Engine -->
   <script src="/static/js/app.js?v=2.9"></script>
   <!-- Floating Accessibility Widget for Disabilities (Bottom-Left) -->

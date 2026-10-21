@@ -70,6 +70,7 @@
   const synth = window.speechSynthesis;
 
   function speakText(text, customRate) {
+    if (state.widget_hidden) return;
     if (!synth) {
       alert('Browser Anda tidak mendukung Web Speech API (Text-to-Speech).');
       return;
@@ -80,15 +81,17 @@
     // Cancel any current speaking
     synth.cancel();
 
+    const isEng = (window.currentLanguage === 'en');
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'id-ID';
+    utterance.lang = isEng ? 'en-US' : 'id-ID';
     utterance.rate = customRate || state.tts_rate || 1.0;
     utterance.pitch = 1.0;
 
-    // Pick an Indonesian voice if available
+    // Pick appropriate voice if available
     const voices = synth.getVoices ? synth.getVoices() : [];
-    const idVoice = voices.find(v => v.lang && (v.lang.includes('id') || v.lang.includes('ID')));
-    if (idVoice) utterance.voice = idVoice;
+    const targetTag = isEng ? 'en' : 'id';
+    const pickedVoice = voices.find(v => v.lang && v.lang.toLowerCase().includes(targetTag));
+    if (pickedVoice) utterance.voice = pickedVoice;
 
     utterance.onstart = () => {
       isSpeaking = true;
@@ -141,7 +144,7 @@
 
   // Auto-read on user selection
   function handleUserSelection() {
-    if (!state.tts_active) return;
+    if (state.widget_hidden || !state.tts_active) return;
     const selection = window.getSelection();
     if (!selection) return;
     const text = selection.toString().trim();
@@ -157,7 +160,7 @@
 
   // Click-to-read handler
   function handleDocumentClickToRead(e) {
-    if (!state.tts_active || !state.tts_click_mode) return;
+    if (state.widget_hidden || !state.tts_active || !state.tts_click_mode) return;
     const target = e.target;
     if (target.closest('#a11y-widget-root') || target.closest('#a11y-tts-indicator') || target.closest('#a11y-restore-pill')) return;
 
@@ -321,6 +324,25 @@
   // 4. Reset & Hide Functions
   // =========================================================================
   function hideWidget() {
+    // 1. Matikan dan hentikan sepenuhnya seluruh Text-to-Speech / Pembaca Suara
+    stopSpeech();
+    state.tts_active = false;
+    state.tts_click_mode = false;
+    clearSpeakingHighlights();
+    hideTTSIndicator();
+
+    // 2. Sinkronkan kontrol saklar TTS agar dalam posisi MATI (OFF)
+    const ttsSwitch = document.getElementById('a11y-tts-switch');
+    if (ttsSwitch) ttsSwitch.checked = false;
+    const clickSwitch = document.getElementById('a11y-tts-click-mode');
+    if (clickSwitch) clickSwitch.checked = false;
+    const ttsStatusLabel = document.getElementById('a11y-tts-status-label');
+    if (ttsStatusLabel) {
+      ttsStatusLabel.textContent = 'MATI (OFF)';
+      ttsStatusLabel.className = 'text-[10px] font-bold text-slate-500';
+    }
+
+    // 3. Simpan status sembunyikan widget
     state.widget_hidden = true;
     saveState();
 
@@ -332,7 +354,7 @@
     const pill = document.getElementById('a11y-restore-pill');
     if (pill) pill.classList.remove('hidden');
 
-    showA11yToast('Tombol disembunyikan. Klik "Buka Aksesibilitas" di pojok kiri bawah atau tekan Alt + A untuk memunculkan kembali.');
+    showA11yToast('Tombol widget dan Pembaca Teks (TTS) berhasil dimatikan & disembunyikan.');
   }
 
   function showWidget() {

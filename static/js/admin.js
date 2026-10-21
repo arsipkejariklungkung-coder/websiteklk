@@ -1556,6 +1556,7 @@ async function loadOrgAdminData() {
     const l2Count = orgAdminData.members.filter(m => m.level === 2).length;
     const l3Count = orgAdminData.members.filter(m => m.level === 3).length;
     const l4Count = orgAdminData.members.filter(m => m.level === 4).length;
+    const l5Count = orgAdminData.members.filter(m => m.level === 5).length;
 
     const bTotal = document.getElementById('org-total-count-badge');
     const bAll = document.getElementById('count-level-all');
@@ -1563,6 +1564,7 @@ async function loadOrgAdminData() {
     const b2 = document.getElementById('count-level-2');
     const b3 = document.getElementById('count-level-3');
     const b4 = document.getElementById('count-level-4');
+    const b5 = document.getElementById('count-level-5');
 
     if (bTotal) bTotal.textContent = totalCount;
     if (bAll) bAll.textContent = totalCount;
@@ -1570,6 +1572,7 @@ async function loadOrgAdminData() {
     if (b2) b2.textContent = l2Count;
     if (b3) b3.textContent = l3Count;
     if (b4) b4.textContent = l4Count;
+    if (b5) b5.textContent = l5Count;
 
     // 2. Populate Settings Form
     const s = orgAdminData.settings;
@@ -1970,6 +1973,8 @@ function renderOrgMembersTable() {
       levelBadge = '<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-900 border border-emerald-300">Level 2: Kasi / Kabag</span>';
     } else if (m.level === 3) {
       levelBadge = '<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-900 border border-blue-200">Level 3: Sub-bagian</span>';
+    } else if (m.level === 5) {
+      levelBadge = '<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-teal-100 text-teal-900 border border-teal-300">Level 5: Pelaksana</span>';
     } else {
       levelBadge = '<span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200">Level 4: Fungsional</span>';
     }
@@ -2064,9 +2069,477 @@ function handleLevelChange(level) {
   } else if (level === 3) {
     const firstL2 = orgAdminData.members.find(m => m.level === 2);
     populateOrgParentDropdown(firstL2 ? firstL2.id : null);
+  } else if (level === 5) {
+    // Pelaksana / Staf Teknis: Atasan langsung Kasi (level 2) atau Kasubsi/Kaur (level 3)
+    const firstL2orL3 = orgAdminData.members.find(m => m.level === 2 || m.level === 3);
+    populateOrgParentDropdown(firstL2orL3 ? firstL2orL3.id : null);
   } else {
     const kajari = orgAdminData.members.find(m => m.level === 1);
     populateOrgParentDropdown(kajari ? kajari.id : null);
+  }
+}
+
+function setPresetPosition(posName, level = 5) {
+  const inputPos = document.getElementById('org-member-position');
+  const selectLevel = document.getElementById('org-member-level');
+  if (inputPos) inputPos.value = posName;
+  if (selectLevel) {
+    selectLevel.value = String(level);
+    handleLevelChange(level);
+  }
+}
+
+function showAdminToast(msg) {
+  let toast = document.getElementById('admin-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'admin-toast';
+    toast.className = 'fixed top-16 right-5 z-[9999] px-4 py-2.5 rounded-xl bg-slate-900/95 text-white text-xs font-bold shadow-2xl border border-slate-700 backdrop-blur-sm transition-all duration-300 pointer-events-none transform translate-y-0 opacity-100 flex items-center gap-2';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> <span>${msg}</span>`;
+  toast.classList.remove('opacity-0', 'pointer-events-none');
+  toast.classList.add('opacity-100');
+  clearTimeout(window._adminToastTimer);
+  window._adminToastTimer = setTimeout(() => {
+    toast.classList.remove('opacity-100');
+    toast.classList.add('opacity-0', 'pointer-events-none');
+  }, 3000);
+}
+
+// =========================================================================
+// PHOTO CROPPER CONTROLLER (STRICT 330 x 450 px PASFOTO RATIO)
+// =========================================================================
+
+let cropperState = {
+  img: null,
+  fileName: 'pasfoto_330x450.jpg',
+  zoom: 1.0,
+  rotation: 0,
+  offsetX: 0,
+  offsetY: 0,
+  isDragging: false,
+  dragStartX: 0,
+  dragStartY: 0
+};
+
+function startPhotoCropper(e) {
+  const file = e.target.files ? e.target.files[0] : null;
+  if (!file) return;
+
+  cropperState.fileName = file.name || 'pasfoto_330x450.jpg';
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const img = new Image();
+    img.onload = function() {
+      cropperState.img = img;
+      cropperState.zoom = 1.0;
+      cropperState.rotation = 0;
+      cropperState.offsetX = 0;
+      cropperState.offsetY = 0;
+
+      // Calculate initial zoom so image covers the 220x300 guide box
+      const frameW = 220;
+      const frameH = 300;
+      const scaleX = frameW / img.width;
+      const scaleY = frameH / img.height;
+      cropperState.zoom = Math.max(scaleX, scaleY, 0.4);
+
+      const zoomSlider = document.getElementById('crop-zoom-slider');
+      if (zoomSlider) {
+        zoomSlider.value = cropperState.zoom;
+        const zoomValEl = document.getElementById('crop-zoom-val');
+        if (zoomValEl) zoomValEl.textContent = `${Math.round(cropperState.zoom * 100)}%`;
+      }
+
+      openModal('modal-crop-photo');
+      initCropperCanvas();
+    };
+    img.src = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = ''; // Reset input
+}
+
+function initCropperCanvas() {
+  const canvas = document.getElementById('crop-canvas');
+  const viewport = document.getElementById('cropper-viewport');
+  if (!canvas || !viewport) return;
+
+  canvas.width = viewport.clientWidth || 460;
+  canvas.height = viewport.clientHeight || 320;
+
+  drawCropperScene();
+  setupCropperEvents();
+}
+
+function drawCropperScene() {
+  const canvas = document.getElementById('crop-canvas');
+  if (!canvas || !cropperState.img) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const cx = canvas.width / 2 + cropperState.offsetX;
+  const cy = canvas.height / 2 + cropperState.offsetY;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate((cropperState.rotation * Math.PI) / 180);
+  ctx.scale(cropperState.zoom, cropperState.zoom);
+
+  const iw = cropperState.img.width;
+  const ih = cropperState.img.height;
+  ctx.drawImage(cropperState.img, -iw / 2, -ih / 2, iw, ih);
+  ctx.restore();
+}
+
+let cropperEventsAttached = false;
+function setupCropperEvents() {
+  const viewport = document.getElementById('cropper-viewport');
+  if (!viewport || cropperEventsAttached) return;
+  cropperEventsAttached = true;
+
+  // Mouse Dragging
+  viewport.addEventListener('mousedown', function(e) {
+    cropperState.isDragging = true;
+    cropperState.dragStartX = e.clientX - cropperState.offsetX;
+    cropperState.dragStartY = e.clientY - cropperState.offsetY;
+  });
+
+  window.addEventListener('mousemove', function(e) {
+    if (!cropperState.isDragging) return;
+    cropperState.offsetX = e.clientX - cropperState.dragStartX;
+    cropperState.offsetY = e.clientY - cropperState.dragStartY;
+    drawCropperScene();
+  });
+
+  window.addEventListener('mouseup', function() {
+    cropperState.isDragging = false;
+  });
+
+  // Touch Dragging
+  viewport.addEventListener('touchstart', function(e) {
+    if (e.touches.length === 1) {
+      cropperState.isDragging = true;
+      cropperState.dragStartX = e.touches[0].clientX - cropperState.offsetX;
+      cropperState.dragStartY = e.touches[0].clientY - cropperState.offsetY;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchmove', function(e) {
+    if (!cropperState.isDragging || e.touches.length !== 1) return;
+    cropperState.offsetX = e.touches[0].clientX - cropperState.dragStartX;
+    cropperState.offsetY = e.touches[0].clientY - cropperState.dragStartY;
+    drawCropperScene();
+  }, { passive: true });
+
+  window.addEventListener('touchend', function() {
+    cropperState.isDragging = false;
+  });
+
+  // Wheel to Zoom
+  viewport.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.05 : -0.05;
+    adjustCropperZoom(delta);
+  }, { passive: false });
+}
+
+function adjustCropperZoom(delta) {
+  const newZoom = Math.min(Math.max(0.1, cropperState.zoom + delta), 4.0);
+  setCropperZoom(newZoom);
+}
+
+function setCropperZoom(val) {
+  cropperState.zoom = parseFloat(val.toFixed(2));
+  const zoomSlider = document.getElementById('crop-zoom-slider');
+  if (zoomSlider) zoomSlider.value = cropperState.zoom;
+  const zoomValEl = document.getElementById('crop-zoom-val');
+  if (zoomValEl) zoomValEl.textContent = `${Math.round(cropperState.zoom * 100)}%`;
+  drawCropperScene();
+}
+
+function rotateCropper(deg) {
+  cropperState.rotation = (cropperState.rotation + deg) % 360;
+  drawCropperScene();
+}
+
+function resetCropperTransform() {
+  cropperState.offsetX = 0;
+  cropperState.offsetY = 0;
+  cropperState.rotation = 0;
+  const frameW = 220;
+  const frameH = 300;
+  if (cropperState.img) {
+    const scaleX = frameW / cropperState.img.width;
+    const scaleY = frameH / cropperState.img.height;
+    cropperState.zoom = Math.max(scaleX, scaleY, 0.4);
+  } else {
+    cropperState.zoom = 1.0;
+  }
+  const zoomSlider = document.getElementById('crop-zoom-slider');
+  if (zoomSlider) zoomSlider.value = cropperState.zoom;
+  const zoomValEl = document.getElementById('crop-zoom-val');
+  if (zoomValEl) zoomValEl.textContent = `${Math.round(cropperState.zoom * 100)}%`;
+  drawCropperScene();
+}
+
+async function applyCroppedPhoto() {
+  if (!cropperState.img) return;
+
+  const btn = document.getElementById('btn-apply-crop');
+  const origBtnHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Menyimpan Pasfoto 330×450...';
+  }
+
+  try {
+    const TARGET_WIDTH = 330;
+    const TARGET_HEIGHT = 450;
+    const UI_FRAME_WIDTH = 220;
+    const UI_FRAME_HEIGHT = 300;
+    const scaleFactor = TARGET_WIDTH / UI_FRAME_WIDTH;
+
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = TARGET_WIDTH;
+    offCanvas.height = TARGET_HEIGHT;
+    const ctx = offCanvas.getContext('2d');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    const outCenterX = TARGET_WIDTH / 2;
+    const outCenterY = TARGET_HEIGHT / 2;
+
+    ctx.save();
+    ctx.translate(outCenterX + cropperState.offsetX * scaleFactor, outCenterY + cropperState.offsetY * scaleFactor);
+    ctx.rotate((cropperState.rotation * Math.PI) / 180);
+    ctx.scale(cropperState.zoom * scaleFactor, cropperState.zoom * scaleFactor);
+
+    const iw = cropperState.img.width;
+    const ih = cropperState.img.height;
+    ctx.drawImage(cropperState.img, -iw / 2, -ih / 2, iw, ih);
+    ctx.restore();
+
+    const croppedDataUrl = offCanvas.toDataURL('image/jpeg', 0.94);
+
+    const res = await fetch('/api/admin/upload-media', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: `pasfoto_330x450_${Date.now()}.jpg`,
+        data: croppedDataUrl
+      })
+    });
+
+    const data = await res.json();
+    if (data && data.success && data.url) {
+      document.getElementById('org-member-photo-url').value = data.url;
+      document.getElementById('preview-org-member-photo').src = data.url;
+      closeModal('modal-crop-photo');
+      showAdminToast('Pasfoto resmi berhasil dicrop (330 × 450 px) dan disimpan!');
+    } else {
+      document.getElementById('org-member-photo-url').value = croppedDataUrl;
+      document.getElementById('preview-org-member-photo').src = croppedDataUrl;
+      closeModal('modal-crop-photo');
+      showAdminToast('Pasfoto berhasil dicrop 330 × 450 px!');
+    }
+  } catch (err) {
+    console.error('Cropper error:', err);
+    alert('Gagal memproses pasfoto.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origBtnHtml;
+    }
+  }
+}
+
+// =========================================================================
+// ORGANIZATION EXCEL IMPORT CONTROLLER (BULK IMPORT)
+// =========================================================================
+
+let orgExcelState = {
+  parsedRows: [],
+  fileBase64: '',
+  fileName: ''
+};
+
+function openOrgExcelModal() {
+  orgExcelState = { parsedRows: [], fileBase64: '', fileName: '' };
+  const fileInput = document.getElementById('org-excel-file-input');
+  if (fileInput) fileInput.value = '';
+  const nameLabel = document.getElementById('org-file-selected-name');
+  if (nameLabel) {
+    nameLabel.textContent = '';
+    nameLabel.classList.add('hidden');
+  }
+  const prevContainer = document.getElementById('org-preview-container');
+  if (prevContainer) prevContainer.classList.add('hidden');
+  const btnSubmit = document.getElementById('btn-submit-org-excel');
+  if (btnSubmit) {
+    btnSubmit.disabled = true;
+    btnSubmit.className = 'px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl shadow-md flex items-center gap-2 opacity-50 cursor-not-allowed transition-all';
+  }
+  openModal('modal-org-excel-import');
+}
+
+function handleOrgExcelFileSelected(e) {
+  const file = e.target.files ? e.target.files[0] : (e.dataTransfer ? e.dataTransfer.files[0] : null);
+  if (!file) return;
+
+  orgExcelState.fileName = file.name;
+
+  const nameLabel = document.getElementById('org-file-selected-name');
+  if (nameLabel) {
+    nameLabel.textContent = `📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    nameLabel.classList.remove('hidden');
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    orgExcelState.fileBase64 = evt.target.result;
+
+    if (window.XLSX && typeof XLSX.read === 'function') {
+      try {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+        if (rows && rows.length >= 2) {
+          const records = [];
+          for (let i = 1; i < rows.length; i++) {
+            const r = rows[i];
+            if (!r || r.length === 0 || !r.some(c => String(c || '').trim() !== '')) continue;
+
+            const name = String(r[1] || r[0] || '').trim();
+            const position = String(r[2] || r[1] || '').trim();
+            const level = parseInt(r[3] || 5) || 5;
+            const nip = String(r[4] || '').trim();
+            const rank = String(r[5] || '').trim();
+            const parentName = String(r[6] || '').trim();
+
+            if (name && position) {
+              records.push({
+                name: name,
+                position: position,
+                level: level,
+                nip: nip,
+                rank: rank,
+                parent_name: parentName,
+                order_num: records.length + 1
+              });
+            }
+          }
+
+          orgExcelState.parsedRows = records;
+          renderOrgExcelPreview(records);
+          return;
+        }
+      } catch (err) {
+        console.warn('Client Excel parse fallback to backend:', err);
+      }
+    }
+
+    const btnSubmit = document.getElementById('btn-submit-org-excel');
+    if (btnSubmit) {
+      btnSubmit.disabled = false;
+      btnSubmit.className = 'px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer';
+    }
+  };
+
+  if (window.XLSX) {
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.readAsDataURL(file);
+  }
+}
+
+function renderOrgExcelPreview(records) {
+  const container = document.getElementById('org-preview-container');
+  const countEl = document.getElementById('org-preview-count');
+  const tbody = document.getElementById('org-preview-tbody');
+  const btnSubmit = document.getElementById('btn-submit-org-excel');
+
+  if (countEl) countEl.textContent = records.length;
+  if (container) container.classList.remove('hidden');
+
+  if (tbody) {
+    tbody.innerHTML = records.map(r => `
+      <tr class="hover:bg-slate-50">
+        <td class="py-2 px-2.5 font-bold text-slate-900">${escapeHtml(r.name)}</td>
+        <td class="py-2 px-2.5 text-slate-700">${escapeHtml(r.position)}</td>
+        <td class="py-2 px-2.5">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.level === 5 ? 'bg-teal-100 text-teal-900' : 'bg-slate-100 text-slate-700'}">
+            Level ${r.level}
+          </span>
+        </td>
+        <td class="py-2 px-2.5 font-mono text-slate-600">${escapeHtml(r.nip || '-')}</td>
+        <td class="py-2 px-2.5 text-slate-600">${escapeHtml(r.rank || '-')}</td>
+        <td class="py-2 px-2.5 text-slate-600">${escapeHtml(r.parent_name || '-')}</td>
+      </tr>
+    `).join('');
+  }
+
+  if (btnSubmit) {
+    btnSubmit.disabled = false;
+    btnSubmit.className = 'px-5 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold rounded-xl shadow-md flex items-center gap-2 transition-all cursor-pointer';
+  }
+}
+
+async function submitOrgExcelImport() {
+  const btn = document.getElementById('btn-submit-org-excel');
+  const origText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Mengimpor Pegawai...';
+  }
+
+  try {
+    const isReplaceAll = document.getElementById('org-replace-all') ? document.getElementById('org-replace-all').checked : false;
+
+    let fileB64 = orgExcelState.fileBase64;
+    if (fileB64 && fileB64 instanceof ArrayBuffer) {
+      let binary = '';
+      const bytes = new Uint8Array(fileB64);
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      fileB64 = btoa(binary);
+    }
+
+    const payload = {
+      items: orgExcelState.parsedRows,
+      file_data: fileB64,
+      filename: orgExcelState.fileName || 'pegawai.xlsx',
+      replace_all: isReplaceAll
+    };
+
+    const res = await fetch('/api/admin/organization/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (res.ok && data.success) {
+      closeModal('modal-org-excel-import');
+      alert(`Berhasil: ${data.message}`);
+      loadAdminOrganization();
+    } else {
+      alert(`Gagal: ${data.error || 'Terjadi kesalahan saat mengimpor Excel.'}`);
+    }
+  } catch (err) {
+    console.error('Import error:', err);
+    alert('Terjadi kesalahan koneksi saat mengimpor file Excel.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origText;
+    }
   }
 }
 

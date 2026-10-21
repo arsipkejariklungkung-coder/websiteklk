@@ -1094,20 +1094,28 @@
         }
       }
 
-      // 3. Render Level 4 (Jabatan Fungsional)
-      if (hierarchy.level_4 && hierarchy.level_4.length > 0) {
+      // 3. Render Level 4 (Jabatan Fungsional) & Level 5 (Pelaksana)
+      const fungsionalAndPelaksana = [
+        ...(hierarchy.level_4 || []),
+        ...(hierarchy.level_5 || [])
+      ];
+      if (fungsionalAndPelaksana.length > 0) {
         const containerL4 = document.getElementById('container-level-4');
         if (containerL4) {
-          containerL4.innerHTML = hierarchy.level_4.map(f => {
+          containerL4.innerHTML = fungsionalAndPelaksana.map(f => {
+            const isPelaksana = (f.level === 5);
+            const badgeClass = isPelaksana ? 'text-teal-800 bg-teal-100 border-teal-300' : 'text-slate-700 bg-slate-100 border-slate-200';
+            const badgeText = isPelaksana ? 'PELAKSANA' : 'FUNGSIONAL';
+            const borderTop = isPelaksana ? 'border-t-teal-500' : 'border-t-amber-400';
             const nipLevel4Html = (publicOrgData.is_admin && f.nip) ? `
               <div class="text-[8.5px] text-amber-900 font-mono font-bold truncate mt-0.5">NIP. ${escapeHtml(f.nip)}</div>
             ` : '';
 
             return `
-              <div onclick="openMemberDetail(${f.id})" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 border-t-amber-400 hover:shadow-md p-3 flex items-center gap-2.5">
+              <div onclick="openMemberDetail(${f.id})" class="org-node-card cursor-pointer bg-white rounded-xl shadow-sm border border-slate-200 border-t-4 ${borderTop} hover:shadow-md p-3 flex items-center gap-2.5">
                 <img src="${escapeAttr(f.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(f.name)}" class="w-10 h-10 rounded-lg object-cover border border-slate-200 shrink-0">
                 <div class="flex-1 min-w-0">
-                  <span class="text-[8.5px] font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">FUNGSIONAL</span>
+                  <span class="text-[8.5px] font-bold px-1.5 py-0.5 rounded border ${badgeClass}">${badgeText}</span>
                   <div class="font-heading font-bold text-xs text-slate-900 truncate mt-0.5">${escapeHtml(f.name)}</div>
                   <div class="text-[9.5px] text-slate-500 truncate">${escapeHtml(f.position)}</div>
                   ${nipLevel4Html}
@@ -1144,6 +1152,7 @@
       if (member.level === 2) lvlBadge = 'LEVEL 2: KEPALA SEKSI / BAGIAN';
       else if (member.level === 3) lvlBadge = 'LEVEL 3: SUB-BAGIAN / URUSAN';
       else if (member.level === 4) lvlBadge = 'LEVEL 4: JABATAN FUNGSIONAL';
+      else if (member.level === 5) lvlBadge = 'LEVEL 5: PELAKSANA / STAF TEKNIS';
       document.getElementById('detail-level-badge').textContent = lvlBadge;
 
       openModal('modal-member-detail');

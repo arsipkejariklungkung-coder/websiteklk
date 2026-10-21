@@ -72,6 +72,8 @@ else:
 SESSIONS = {}
 # In-memory MFA challenges store (mfa_token -> challenge_dict)
 MFA_CHALLENGES = {}
+# In-memory IP-based high-security rate limiter store ((ip, category) -> [timestamps])
+IP_RATE_LIMIT_STORE = {}
 TOKEN_SECRET = b"k3rTaG0s4_s3rV3rL3sS_hMaC_2026_kLuNgKuNg"
 
 def create_signed_token(payload: dict) -> str:
@@ -764,6 +766,65 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         clean_query = urllib.parse.urlencode(qs, doseq=True)
         self.path = f"{path}?{clean_query}" if clean_query else path
 
+    def end_headers(self):
+        # Enterprise-Grade Security Headers
+        self.send_header('X-Content-Type-Options', 'nosniff')
+        self.send_header('X-Frame-Options', 'SAMEORIGIN')
+        self.send_header('X-XSS-Protection', '1; mode=block')
+        self.send_header('Referrer-Policy', 'strict-origin-when-cross-origin')
+        self.send_header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+        self.send_header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload')
+        super().end_headers()
+
+    def get_client_ip(self):
+        """Extract reliable client IP from headers or connection address."""
+        if hasattr(self, 'headers') and self.headers:
+            for hdr in ('x-forwarded-for', 'x-real-ip', 'cf-connecting-ip', 'fastly-client-ip'):
+                val = self.headers.get(hdr)
+                if val:
+                    return val.split(',')[0].strip()
+        if hasattr(self, 'client_address') and self.client_address:
+            return self.client_address[0]
+        return '127.0.0.1'
+
+    def check_rate_limit(self, category='default', limit=30, window_secs=60):
+        """In-memory rate limiting per IP and action category."""
+        client_ip = self.get_client_ip()
+        now = time.time()
+        key = (client_ip, category)
+        history = IP_RATE_LIMIT_STORE.get(key, [])
+        history = [ts for ts in history if now - ts < window_secs]
+        if len(history) >= limit:
+            IP_RATE_LIMIT_STORE[key] = history
+            return False
+        history.append(now)
+        IP_RATE_LIMIT_STORE[key] = history
+        return True
+
+    def send_error(self, code, message=None, explain=None):
+        if code == 404:
+            self.serve_404()
+            return
+        super().send_error(code, message, explain)
+
+    def serve_404(self):
+        not_found_path = os.path.join(BASE_DIR, '404.html')
+        if os.path.exists(not_found_path):
+            with open(not_found_path, 'rb') as f:
+                content = f.read()
+            self.send_response(404)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Content-Length', str(len(content)))
+            self.end_headers()
+            self.wfile.write(content)
+        else:
+            self.send_response(404)
+            self.send_header('Content-Type', 'text/plain; charset=utf-8')
+            msg = b"404 Halaman Tidak Ditemukan - Kejaksaan Negeri Klungkung"
+            self.send_header('Content-Length', str(len(msg)))
+            self.end_headers()
+            self.wfile.write(msg)
+
     def send_json(self, data, status_code=200):
         body = json.dumps(data, ensure_ascii=False).encode('utf-8')
         self.send_response(status_code)
@@ -787,6 +848,11 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
         query = urllib.parse.parse_qs(parsed.query)
+
+        # High-Security Check: Disallow directory traversal or null byte injection
+        if '../' in self.path or '..\\' in self.path or '%2e%2e' in self.path.lower() or '\0' in self.path:
+            self.send_error(400, "Bad Request")
+            return
 
         # 1. Route HTML entry points
         if path == '/' or path == '/index.html':
@@ -910,6 +976,15 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             is_tpl = (path == '/api/admin/news/template') or bool(query.get('template', [False])[0])
             self.handle_export_news(query, is_template=is_tpl)
             return
+        elif path == '/api/admin/organization/template' or path == '/api/admin/organization/export':
+            user = get_current_user(self)
+            if not user:
+                self.send_json({'error': 'Unauthorized'}, 401)
+                return
+            query = urllib.parse.parse_qs(parsed.query)
+            is_tpl = (path == '/api/admin/organization/template') or bool(query.get('template', [False])[0])
+            self.handle_export_organization(query, is_template=is_tpl)
+            return
         elif path == '/api/admin/profile-items':
             user = get_current_user(self)
             if not user:
@@ -974,31 +1049,69 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 self.serve_file(cand_file, ctype or 'application/octet-stream')
                 return
 
-        # 5. Fallback to static files
-        super().do_GET()
+        # 5. Secure Fallback for Static Files with High-Security Traversal Protection
+        clean_rel = path.lstrip('/')
+        cand_file = os.path.join(BASE_DIR, clean_rel)
+        real_base = os.path.realpath(BASE_DIR)
+        real_cand = os.path.realpath(cand_file)
+
+        # Disallow directory traversal outside BASE_DIR
+        if not real_cand.startswith(real_base):
+            self.send_error(403, "Akses Ditolak: Path traversal terdeteksi.")
+            return
+
+        # Disallow direct download of backend source code, SQLite databases, and hidden files
+        cand_ext = os.path.splitext(real_cand)[1].lower()
+        cand_name = os.path.basename(real_cand)
+        if cand_ext in ['.db', '.sqlite', '.sqlite3', '.py', '.env', '.log', '.git'] or (cand_name.startswith('.') and cand_name not in ['.well-known']):
+            self.send_error(403, "Akses Ditolak: Berkas internal dilindungi.")
+            return
+
+        if os.path.exists(real_cand) and os.path.isfile(real_cand):
+            ctype, _ = mimetypes.guess_type(real_cand)
+            self.serve_file(real_cand, ctype or 'application/octet-stream')
+            return
+
+        # 6. Fallback to custom 404 page (Page Not Found)
+        self.serve_404()
 
     def do_POST(self):
         self._normalize_request_path()
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path
 
-        # 1. Public Submissions
+        # 1. Public Submissions & Auth with High-Security Rate Limiting
         if path == '/api/auth/login':
+            if not self.check_rate_limit('auth_login', limit=5, window_secs=60):
+                self.send_json({'error': 'Terlalu banyak percobaan login demi keamanan sistem. Silakan tunggu 1 menit.'}, 429)
+                return
             self.handle_login()
             return
         elif path == '/api/auth/verify-mfa':
+            if not self.check_rate_limit('auth_mfa', limit=5, window_secs=60):
+                self.send_json({'error': 'Terlalu banyak percobaan kode verifikasi. Silakan tunggu 1 menit.'}, 429)
+                return
             self.handle_verify_mfa()
             return
         elif path == '/api/auth/logout':
             self.handle_logout()
             return
         elif path == '/api/public/complaints':
+            if not self.check_rate_limit('complaints', limit=15, window_secs=60):
+                self.send_json({'error': 'Terlalu banyak pengiriman aduan. Silakan tunggu beberapa saat.'}, 429)
+                return
             self.handle_submit_complaint()
             return
         elif path == '/api/public/bb-deliveries':
+            if not self.check_rate_limit('deliveries', limit=15, window_secs=60):
+                self.send_json({'error': 'Terlalu banyak pengiriman permohonan. Silakan tunggu beberapa saat.'}, 429)
+                return
             self.handle_submit_delivery()
             return
         elif path == '/api/public/surveys':
+            if not self.check_rate_limit('surveys', limit=15, window_secs=60):
+                self.send_json({'error': 'Terlalu banyak pengiriman survei. Silakan tunggu beberapa saat.'}, 429)
+                return
             self.handle_submit_survey()
             return
         elif path.startswith('/api/public/accountability/') and path.endswith('/view'):
@@ -1038,6 +1151,9 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             return
         elif path == '/api/admin/organization/members':
             self.handle_create_organization_member()
+            return
+        elif path == '/api/admin/organization/import':
+            self.handle_import_organization()
             return
         elif path == '/api/admin/organization/settings':
             self.handle_update_organization_settings()
@@ -2832,6 +2948,7 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         level_2 = [m for m in members if m['level'] == 2]
         level_3 = [m for m in members if m['level'] == 3]
         level_4 = [m for m in members if m['level'] == 4]
+        level_5 = [m for m in members if m['level'] == 5]
 
         for k in level_2:
             k['children'] = [s for s in level_3 if s.get('parent_id') == k['id']]
@@ -2845,7 +2962,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 'level_1': level_1,
                 'level_2': level_2,
                 'level_3': level_3,
-                'level_4': level_4
+                'level_4': level_4,
+                'level_5': level_5
             }
         })
 
@@ -2990,6 +3108,185 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         self.send_json({
             'success': True,
             'message': 'Struktur organisasi berhasil di-reset ke susunan resmi Kejaksaan Negeri Klungkung!'
+        })
+
+    def handle_export_organization(self, query, is_template=False):
+        """Export organization personnel data to Excel or generate official Excel template."""
+        headers = [
+            "No",
+            "Nama Lengkap & Gelar (Wajib)",
+            "Jabatan dalam Organisasi (Wajib)",
+            "Level Hierarki (1-5)",
+            "NIP (Opsional)",
+            "Pangkat / Golongan (Opsional)",
+            "Nama Atasan Langsung (Opsional)",
+            "Nomor Urutan Tampilan"
+        ]
+
+        if is_template:
+            rows = [
+                ["1", "I Wayan Sujana, S.H.", "Pelaksana Tata Usaha & Kepegawaian", "5", "19940512 201902 1 002", "Pengatur (II/c)", "Kepala Sub Bagian Pembinaan", "1"],
+                ["2", "Ni Kadek Aryani, A.Md.", "Petugas PTSP (Pelayanan Terpadu Satu Pintu)", "5", "19960824 202001 2 005", "Pengatur Muda (II/a)", "Kepala Sub Bagian Pembinaan", "2"],
+                ["3", "I Komang Darmawan", "Pengawal Tahanan / Pengemudi", "5", "19951110 202103 1 004", "Pengatur Muda (II/a)", "Kepala Seksi Tindak Pidana Umum", "3"],
+                ["4", "I Gede Putra Pratama", "Pengelola Barang Bukti", "5", "19930704 201801 1 001", "Pengatur (II/c)", "Kepala Seksi Pengelolaan Barang Bukti & Pemulihan Aset", "4"],
+                ["5", "Ni Putu Dewi Lestari, S.Kom.", "Operator Komputer & IT", "5", "19970218 202202 2 003", "Pengatur (II/c)", "Kepala Sub Bagian Pembinaan", "5"]
+            ]
+            sheet_title = "Template Pegawai Kejari"
+            filename = "template_data_pegawai_kejari_klungkung.xlsx"
+        else:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute("""
+            SELECT m.id, m.name, m.position, m.level, m.nip, m.rank, m.order_num, p.name as parent_name
+            FROM organization_members m
+            LEFT JOIN organization_members p ON m.parent_id = p.id
+            WHERE m.is_active = 1
+            ORDER BY m.level ASC, m.order_num ASC, m.id ASC
+            """)
+            db_rows = cursor.fetchall()
+            conn.close()
+            rows = []
+            for idx, r in enumerate(db_rows, start=1):
+                rows.append([
+                    str(idx),
+                    r['name'] or '',
+                    r['position'] or '',
+                    str(r['level'] or 4),
+                    r['nip'] or '',
+                    r['rank'] or '',
+                    r['parent_name'] or '',
+                    str(r['order_num'] or 1)
+                ])
+            sheet_title = "Data Pegawai"
+            filename = "data_pegawai_kejari_klungkung.xlsx"
+
+        sheet = {
+            "name": sheet_title,
+            "headers": headers,
+            "rows": rows
+        }
+
+        guide_sheet = {
+            "name": "Petunjuk Pengisian",
+            "headers": ["Kolom", "Keterangan", "Contoh Nilai"],
+            "rows": [
+                ["Nama Lengkap & Gelar", "Wajib diisi lengkap beserta gelar kehormatan / akademik", "R. Indra Senjaya, S.H., M.H."],
+                ["Jabatan dalam Organisasi", "Wajib diisi sesuai nama jabatan resmi atau seksi", "Pelaksana Tata Usaha & Kepegawaian"],
+                ["Level Hierarki", "1: Pimpinan (Kajari), 2: Kasi/Kabag, 3: Kasubsi/Kaur, 4: Fungsional, 5: Pelaksana / Staf Teknis", "5"],
+                ["NIP", "Opsional, format nomor induk pegawai resmi", "19750512 199903 1 002"],
+                ["Pangkat / Golongan", "Opsional, pangkat dan ruang dinas", "Pengatur / II-c"],
+                ["Nama Atasan Langsung", "Opsional, nama atasan atau nama jabatan atasan", "Kepala Sub Bagian Pembinaan"],
+                ["Nomor Urutan Tampilan", "Nomor urut posisi tampilan pada struktur (1, 2, 3...)", "1"]
+            ]
+        }
+
+        xlsx_payload = excel_io.build_xlsx_bytes([sheet, guide_sheet])
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
+        self.send_header('Content-Length', str(len(xlsx_payload)))
+        self.end_headers()
+        self.wfile.write(xlsx_payload)
+
+    def handle_import_organization(self):
+        """Bulk import organization personnel from parsed JSON rows or raw Excel/CSV file."""
+        data = self.read_json_body()
+        items = data.get('items', [])
+        file_data = data.get('file_data', '')
+        filename = data.get('filename', 'pegawai.xlsx')
+        replace_all = bool(data.get('replace_all', False))
+
+        if file_data and not items:
+            raw_b64 = file_data.split(',', 1)[1] if ',' in file_data else file_data
+            try:
+                file_bytes = base64.b64decode(raw_b64)
+                parsed_rows = excel_io.parse_excel_or_csv_bytes(file_bytes, filename)
+            except Exception as e:
+                self.send_json({'error': f'Gagal membaca file Excel/CSV: {str(e)}'}, 400)
+                return
+
+            for r in parsed_rows:
+                name = r.get('nama_lengkap_gelar_wajib') or r.get('nama_lengkap_gelar') or r.get('nama_lengkap') or r.get('nama') or r.get('name') or r.get('_col_1') or ''
+                position = r.get('jabatan_dalam_organisasi_wajib') or r.get('jabatan_dalam_organisasi') or r.get('jabatan') or r.get('position') or r.get('_col_2') or ''
+                level_str = r.get('level_hierarki_1_5') or r.get('level_hierarki') or r.get('level') or r.get('_col_3') or '5'
+                nip = r.get('nip_opsional') or r.get('nip') or r.get('_col_4') or ''
+                rank = r.get('pangkat_golongan_opsional') or r.get('pangkat_golongan') or r.get('pangkat') or r.get('rank') or r.get('_col_5') or ''
+                parent_name = r.get('nama_atasan_langsung_opsional') or r.get('nama_atasan_langsung') or r.get('atasan_langsung') or r.get('atasan') or r.get('_col_6') or ''
+                order_str = r.get('nomor_urutan_tampilan') or r.get('nomor_urutan') or r.get('urutan') or r.get('order_num') or r.get('_col_7') or '1'
+                photo_url = r.get('url_foto') or r.get('foto') or r.get('_col_8') or '/static/images/avatar-officer-male.svg'
+
+                if name and position:
+                    try:
+                        lvl = int(level_str)
+                    except:
+                        lvl = 5
+                    try:
+                        ord_num = int(order_str)
+                    except:
+                        ord_num = 1
+                    items.append({
+                        'name': name.strip(),
+                        'position': position.strip(),
+                        'level': lvl,
+                        'nip': nip.strip(),
+                        'rank': rank.strip(),
+                        'parent_name': parent_name.strip(),
+                        'order_num': ord_num,
+                        'photo_url': photo_url.strip() or '/static/images/avatar-officer-male.svg'
+                    })
+
+        if not items:
+            self.send_json({'error': 'File Excel/CSV tidak memiliki data pegawai yang valid (Kolom Nama dan Jabatan wajib diisi).'}, 400)
+            return
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # Build name and position map of existing members for parent lookup
+        cursor.execute("SELECT id, name, position FROM organization_members WHERE is_active = 1")
+        existing = cursor.fetchall()
+        name_to_id = {row['name'].lower().strip(): row['id'] for row in existing}
+        pos_to_id = {row['position'].lower().strip(): row['id'] for row in existing}
+
+        if replace_all:
+            cursor.execute("DELETE FROM organization_members")
+            name_to_id = {}
+            pos_to_id = {}
+
+        imported_count = 0
+        for it in items:
+            name = (it.get('name') or '').strip()
+            position = (it.get('position') or '').strip()
+            if not name or not position:
+                continue
+
+            level = int(it.get('level', 5))
+            nip = (it.get('nip') or '').strip()
+            rank = (it.get('rank') or '').strip()
+            order_num = int(it.get('order_num', 1))
+            photo_url = (it.get('photo_url') or '').strip() or '/static/images/avatar-officer-male.svg'
+
+            parent_id = it.get('parent_id')
+            if not parent_id and it.get('parent_name'):
+                p_query = it['parent_name'].lower().strip()
+                parent_id = name_to_id.get(p_query) or pos_to_id.get(p_query)
+
+            cursor.execute("""
+            INSERT INTO organization_members (name, position, level, parent_id, photo_url, nip, rank, order_num, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+            """, (name, position, level, parent_id, photo_url, nip, rank, order_num))
+            new_id = cursor.lastrowid
+            name_to_id[name.lower()] = new_id
+            pos_to_id[position.lower()] = new_id
+            imported_count += 1
+
+        conn.commit()
+        conn.close()
+
+        self.send_json({
+            'success': True,
+            'imported_count': imported_count,
+            'message': f'Berhasil mengimpor {imported_count} data pegawai ke dalam struktur organisasi!'
         })
 
     # ==============================================================
