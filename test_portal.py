@@ -1490,6 +1490,7 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('#a11y-reading-guide-line', css_text)
         self.assertIn('#a11y-reading-mask-top', css_text)
         self.assertIn('#a11y-widget-trigger', css_text)
+        self.assertIn('#a11y-restore-pill', css_text)
         self.assertIn('left: 24px', css_text)
         self.assertIn('bottom: 24px', css_text)
 
@@ -1506,6 +1507,11 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('a11y-tts-indicator', js_text)
         self.assertIn('setupDragAndDrop', js_text)
         self.assertIn('resetAll', js_text)
+        self.assertIn('hideWidget', js_text)
+        self.assertIn('showWidget', js_text)
+        self.assertIn('toggleHideWidget', js_text)
+        self.assertIn('a11y-restore-pill', js_text)
+        self.assertIn('a11y-toast', js_text)
         self.assertIn('window.A11Y', js_text)
 
         # 3. Test HTML inclusion of accessibility in index.html

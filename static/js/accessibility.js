@@ -1,7 +1,8 @@
 /**
  * KERTAGOSA - Master Floating Accessibility System (A11Y)
  * Widget Aksesibilitas Khusus Penyandang Disabilitas (Tunanetra, Low Vision, Disleksia)
- * Pojok Kiri Bawah (Bottom-Left) dengan Fitur Suara Web Speech API & Drag-and-Drop
+ * Pojok Kiri Bawah (Bottom-Left) dengan Fitur Suara Web Speech API, Drag-and-Drop,
+ * Toggle Menghilangkan / Sembunyikan, dan Tombol Reset Pengaturan Bawaan
  * Kejaksaan Negeri Klungkung
  */
 
@@ -13,6 +14,7 @@
 
   // Default Accessibility State
   const defaultState = {
+    widget_hidden: false,
     tts_active: false,
     tts_rate: 1.0,
     tts_click_mode: false,
@@ -45,6 +47,19 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {}
     updateBadge();
+  }
+
+  // Toast Notification Helper
+  function showA11yToast(msg) {
+    const toast = document.getElementById('a11y-toast');
+    const txt = document.getElementById('a11y-toast-text');
+    if (!toast || !txt) return;
+    txt.textContent = msg;
+    toast.classList.remove('hidden');
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 3200);
   }
 
   // =========================================================================
@@ -144,7 +159,7 @@
   function handleDocumentClickToRead(e) {
     if (!state.tts_active || !state.tts_click_mode) return;
     const target = e.target;
-    if (target.closest('#a11y-widget-root') || target.closest('#a11y-tts-indicator')) return;
+    if (target.closest('#a11y-widget-root') || target.closest('#a11y-tts-indicator') || target.closest('#a11y-restore-pill')) return;
 
     // Identify readable text
     const text = (target.innerText || target.textContent || '').trim();
@@ -199,6 +214,17 @@
     const body = document.body;
     const html = document.documentElement;
     if (!body || !html) return;
+
+    // 0. Hidden Toggle State
+    const trigger = document.getElementById('a11y-widget-trigger');
+    const pill = document.getElementById('a11y-restore-pill');
+    if (state.widget_hidden) {
+      if (trigger) trigger.classList.add('hidden');
+      if (pill) pill.classList.remove('hidden');
+    } else {
+      if (trigger) trigger.classList.remove('hidden');
+      if (pill) pill.classList.add('hidden');
+    }
 
     // 1. Contrast
     body.classList.remove('a11y-contrast-dark', 'a11y-contrast-light', 'a11y-contrast-invert');
@@ -291,17 +317,81 @@
     }
   }
 
+  // =========================================================================
+  // 4. Reset & Hide Functions
+  // =========================================================================
+  function hideWidget() {
+    state.widget_hidden = true;
+    saveState();
+
+    const trigger = document.getElementById('a11y-widget-trigger');
+    if (trigger) trigger.classList.add('hidden');
+
+    toggleMenu(false);
+
+    const pill = document.getElementById('a11y-restore-pill');
+    if (pill) pill.classList.remove('hidden');
+
+    showA11yToast('Tombol disembunyikan. Klik "Buka Aksesibilitas" di pojok kiri bawah atau tekan Alt + A untuk memunculkan kembali.');
+  }
+
+  function showWidget() {
+    state.widget_hidden = false;
+    saveState();
+
+    const trigger = document.getElementById('a11y-widget-trigger');
+    if (trigger) trigger.classList.remove('hidden');
+
+    const pill = document.getElementById('a11y-restore-pill');
+    if (pill) pill.classList.add('hidden');
+
+    showA11yToast('Tombol aksesibilitas berhasil dimunculkan kembali.');
+  }
+
+  function toggleHideWidget() {
+    if (state.widget_hidden) {
+      showWidget();
+    } else {
+      hideWidget();
+    }
+  }
+
   function resetAll() {
     stopSpeech();
     state = { ...defaultState };
+    state.widget_hidden = false;
     saveState();
+
+    // Ensure trigger button is visible & restore pill is hidden
+    const trigger = document.getElementById('a11y-widget-trigger');
+    if (trigger) trigger.classList.remove('hidden');
+
+    const pill = document.getElementById('a11y-restore-pill');
+    if (pill) pill.classList.add('hidden');
+
+    // Reset button position back to standard bottom-left
+    resetTriggerPosition();
+
+    // Apply clean default settings
     applyAllSettings();
+
+    showA11yToast('Seluruh pengaturan aksesibilitas telah direset ke standar normal.');
   }
 
   // =========================================================================
-  // 4. Update Controls in Menu Panel
+  // 5. Update Controls in Menu Panel
   // =========================================================================
   function updateMenuUI() {
+    // Active features count pill
+    const countBadge = document.getElementById('a11y-menu-active-count');
+    if (countBadge) {
+      const c = countActiveFeatures();
+      countBadge.textContent = c > 0 ? `${c} Pengaturan Aktif` : 'Bawaan Normal';
+      countBadge.className = c > 0
+        ? 'px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400 text-slate-950'
+        : 'px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300';
+    }
+
     // TTS Active Switch
     const ttsToggle = document.getElementById('a11y-tts-switch');
     if (ttsToggle) {
@@ -428,7 +518,7 @@
   }
 
   // =========================================================================
-  // 5. Injected HTML Template (Widget Markup)
+  // 6. Injected HTML Template (Widget Markup)
   // =========================================================================
   function injectWidgetDOM() {
     if (document.getElementById('a11y-widget-root')) return;
@@ -476,11 +566,19 @@
         </button>
       </div>
 
-      <!-- 5. Floating Accessibility Menu Panel -->
+      <!-- 5. Restore Pill (Muncul di Pojok Kiri Bawah saat Tombol Utama Dihilangkan) -->
+      <div id="a11y-restore-pill" class="hidden" style="position: fixed; bottom: 16px; left: 16px; z-index: 99999;">
+        <button type="button" onclick="window.A11Y.showWidget()" class="px-3 py-1.5 bg-slate-900/90 hover:bg-[#0B3B24] text-white text-[11px] font-bold rounded-full shadow-lg border border-amber-400 backdrop-blur flex items-center gap-1.5 hover:scale-105 transition-all" title="Klik untuk memunculkan kembali tombol aksesibilitas (atau tekan Alt + A)">
+          <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="4.5" r="2.5"/><path d="M4 8.5h16"/><path d="M12 8.5V14"/><path d="m9 20 3-6 3 6"/></svg>
+          <span>Buka Aksesibilitas</span>
+        </button>
+      </div>
+
+      <!-- 6. Floating Accessibility Menu Panel -->
       <div id="a11y-widget-menu" class="hidden" role="dialog" aria-modal="true" aria-labelledby="a11y-menu-title">
         
         <!-- Header -->
-        <div class="p-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
+        <div class="p-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800 shrink-0">
           <div class="flex items-center gap-2.5">
             <div class="w-8 h-8 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.4">
@@ -491,12 +589,38 @@
               </svg>
             </div>
             <div>
-              <h2 id="a11y-menu-title" class="font-heading font-black text-sm text-white">Menu Aksesibilitas</h2>
+              <div class="flex items-center gap-2">
+                <h2 id="a11y-menu-title" class="font-heading font-black text-sm text-white">Menu Aksesibilitas</h2>
+                <span id="a11y-menu-active-count" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-slate-300">Bawaan</span>
+              </div>
               <p class="text-[10px] text-slate-400">Penyandang Disabilitas &bull; Ramah Tunanetra</p>
             </div>
           </div>
-          <button type="button" id="a11y-btn-close" aria-label="Tutup Menu Aksesibilitas" class="text-slate-400 hover:text-white p-1 rounded-lg">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          
+          <div class="flex items-center gap-1.5">
+            <!-- Tombol Cepat Hilangkan Widget -->
+            <button type="button" onclick="window.A11Y.hideWidget()" class="px-2.5 py-1 text-[11px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg flex items-center gap-1 border border-slate-700 transition-all" title="Hilangkan tombol widget dari layar">
+              <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              <span>Hilangkan</span>
+            </button>
+            <!-- Tombol Tutup -->
+            <button type="button" id="a11y-btn-close" aria-label="Tutup Menu Aksesibilitas" class="text-slate-400 hover:text-white p-1 rounded-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bar Aksi Cepat: RESET & HILANGKAN WIDGET -->
+        <div class="px-3.5 py-2.5 bg-amber-50 border-b border-amber-200 flex items-center justify-between gap-2 shrink-0">
+          <!-- Tombol Reset Seluruh Pengaturan -->
+          <button type="button" onclick="window.A11Y.resetAll()" class="flex-1 py-1.5 px-3 bg-white hover:bg-red-50 text-slate-800 hover:text-red-700 border border-slate-300 hover:border-red-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-all" title="Kembalikan semua kontras, huruf, suara, dan mode baca ke pengaturan normal">
+            <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <span>Reset Semua (Normal)</span>
+          </button>
+          <!-- Tombol Hilangkan Widget -->
+          <button type="button" onclick="window.A11Y.hideWidget()" class="py-1.5 px-3 bg-white hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-xl font-bold text-xs flex items-center gap-1 shadow-sm transition-all" title="Sembunyikan tombol terapung dari layar">
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            <span>Hilangkan Widget</span>
           </button>
         </div>
 
@@ -670,12 +794,12 @@
           </div>
 
           <!-- ===============================================================
-               CATEGORY 4: NAVIGASI TAMBAHAN (GARIS BANTU, MASKER, DRAG & DROP)
+               CATEGORY 4: NAVIGASI, TOGGLE HILANGKAN & RESET PENGATURAN
                =============================================================== -->
           <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
             <div class="flex items-center gap-1.5">
               <span class="text-base">🧭</span>
-              <span class="font-bold text-slate-900 text-[11px] uppercase tracking-wider">4. Navigasi &amp; Garis Bantu</span>
+              <span class="font-bold text-slate-900 text-[11px] uppercase tracking-wider">4. Navigasi &amp; Kontrol Widget</span>
             </div>
 
             <!-- Garis Bantu Baca -->
@@ -696,8 +820,39 @@
               <span class="font-bold text-[10px] uppercase">Toggle</span>
             </button>
 
+            <!-- KOTAK KONTROL HILANGKAN & RESET WIDGET -->
+            <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-3 shadow-sm">
+              <!-- Hilangkan Tombol Widget -->
+              <div class="flex items-center justify-between gap-2">
+                <div>
+                  <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    <span>Hilangkan Tombol Widget</span>
+                  </div>
+                  <div class="text-[10px] text-slate-500">Sembunyikan tombol mengapung jika mengganggu layar. Tekan Alt + A untuk memunculkannya kembali.</div>
+                </div>
+                <button type="button" onclick="window.A11Y.hideWidget()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-lg text-xs whitespace-nowrap transition-all shadow-sm">
+                  Hilangkan
+                </button>
+              </div>
+
+              <!-- Reset Seluruh Pengaturan -->
+              <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                <div>
+                  <div class="font-bold text-slate-900 flex items-center gap-1.5">
+                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    <span>Reset Semua Pengaturan</span>
+                  </div>
+                  <div class="text-[10px] text-slate-500">Kembalikan warna, suara, huruf, dan posisi ke standar normal.</div>
+                </div>
+                <button type="button" onclick="window.A11Y.resetAll()" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-900 font-bold rounded-lg text-xs whitespace-nowrap transition-all shadow-sm">
+                  Reset Normal
+                </button>
+              </div>
+            </div>
+
             <!-- Reset Posisi Tombol Drag & Drop -->
-            <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+            <div class="pt-1 flex items-center justify-between text-[11px] text-slate-500">
               <span>Posisi Tombol: <strong>Pojok Kiri Bawah</strong></span>
               <button type="button" onclick="window.A11Y.resetTriggerPosition()" class="text-emerald-800 font-bold hover:underline">
                 Reset Posisi
@@ -712,15 +867,26 @@
 
         <!-- Footer Actions -->
         <div class="p-3 bg-slate-100 border-t border-slate-200 flex items-center justify-between gap-2 shrink-0">
-          <button type="button" onclick="window.A11Y.resetAll()" class="px-3 py-2 text-slate-700 hover:text-slate-900 hover:bg-slate-200 rounded-xl font-bold text-xs flex items-center gap-1 transition-all">
-            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <button type="button" onclick="window.A11Y.resetAll()" class="px-3 py-2 bg-white hover:bg-red-50 text-slate-700 hover:text-red-700 border border-slate-300 rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all">
+            <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
             <span>Reset Normal</span>
           </button>
-          <button type="button" onclick="window.A11Y.toggleMenu(false)" class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white rounded-xl font-bold text-xs shadow-sm transition-all">
-            Tutup
-          </button>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="window.A11Y.hideWidget()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-xs transition-all flex items-center gap-1">
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              <span>Hilangkan</span>
+            </button>
+            <button type="button" onclick="window.A11Y.toggleMenu(false)" class="px-4 py-2 bg-[#0B3B24] hover:bg-[#072A19] text-white rounded-xl font-bold text-xs shadow-sm transition-all">
+              Tutup
+            </button>
+          </div>
         </div>
 
+      </div>
+
+      <!-- 7. Notifikasi Toast Aksesibilitas -->
+      <div id="a11y-toast" class="hidden" role="status" aria-live="polite">
+        <span id="a11y-toast-text">Notifikasi</span>
       </div>
     `;
 
@@ -732,7 +898,7 @@
   }
 
   // =========================================================================
-  // 6. Drag & Drop Engine for Floating Trigger Button
+  // 7. Drag & Drop Engine for Floating Trigger Button
   // =========================================================================
   function setupDragAndDrop() {
     const trigger = document.getElementById('a11y-widget-trigger');
@@ -887,7 +1053,7 @@
   }
 
   // =========================================================================
-  // 7. Toggle Menu Dialog
+  // 8. Toggle Menu Dialog
   // =========================================================================
   function toggleMenu(forceOpen) {
     const menu = document.getElementById('a11y-widget-menu');
@@ -915,18 +1081,32 @@
   }
 
   // =========================================================================
-  // 8. Event Binding
+  // 9. Event Binding
   // =========================================================================
   function bindDOMEvents() {
     // Close button
     const closeBtn = document.getElementById('a11y-btn-close');
     if (closeBtn) closeBtn.onclick = () => toggleMenu(false);
 
-    // Escape key closes menu & stops speech
+    // Escape key closes menu & stops speech; Alt + A toggles widget
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') {
         stopSpeech();
         toggleMenu(false);
+      }
+      if (e.altKey && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault();
+        if (state.widget_hidden) {
+          showWidget();
+          toggleMenu(true);
+        } else {
+          const menu = document.getElementById('a11y-widget-menu');
+          if (menu && !menu.classList.contains('hidden')) {
+            toggleMenu(false);
+          } else {
+            toggleMenu(true);
+          }
+        }
       }
     });
 
@@ -934,8 +1114,9 @@
     document.addEventListener('click', e => {
       const menu = document.getElementById('a11y-widget-menu');
       const trigger = document.getElementById('a11y-widget-trigger');
+      const pill = document.getElementById('a11y-restore-pill');
       if (menu && !menu.classList.contains('hidden')) {
-        if (!menu.contains(e.target) && !trigger.contains(e.target)) {
+        if (!menu.contains(e.target) && !trigger.contains(e.target) && (!pill || !pill.contains(e.target))) {
           toggleMenu(false);
         }
       }
@@ -960,13 +1141,17 @@
   }
 
   // =========================================================================
-  // 9. Public API Exposed to Window
+  // 10. Public API Exposed to Window
   // =========================================================================
   window.A11Y = {
     toggleMenu,
     speakText,
     stopSpeech,
     readEntirePage,
+    hideWidget,
+    showWidget,
+    toggleHideWidget,
+    resetAll,
 
     toggleTTS: function (checked) {
       state.tts_active = Boolean(checked);
@@ -1061,10 +1246,7 @@
 
     resetTriggerPosition: function () {
       resetTriggerPosition();
-    },
-
-    resetAll: function () {
-      resetAll();
+      showA11yToast('Posisi tombol dikembalikan ke pojok kiri bawah.');
     },
 
     getState: function () {
