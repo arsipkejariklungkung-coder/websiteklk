@@ -274,7 +274,7 @@ def sync_all_media_to_blob(uploads_dir, get_db_fn, token=None, limit=100):
             cursor.execute("UPDATE organization_members SET photo_url = ? WHERE photo_url = ?", (blob_url, local_ref))
             cursor.execute("UPDATE posts SET thumbnail_url = ? WHERE thumbnail_url = ?", (blob_url, local_ref))
             cursor.execute("UPDATE announcements SET image_url = ? WHERE image_url = ?", (blob_url, local_ref))
-            cursor.execute("UPDATE accountability_docs SET file_url = ? WHERE file_url = ?", (blob_url, local_ref))
+            cursor.execute("UPDATE accountability_docs SET doc_url = ? WHERE doc_url = ?", (blob_url, local_ref))
             cursor.execute("UPDATE complaints SET attachment_url = ? WHERE attachment_url = ?", (blob_url, local_ref))
         except Exception as e:
             print(f"[Blob Sync DB Warning] {e}")
