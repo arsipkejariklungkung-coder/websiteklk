@@ -1972,6 +1972,42 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertIn('updateOverviewStats()', admin_js)
         self.assertIn('showAdminToast', admin_js)
 
+    def test_31_admin_script_integrity_and_button_responsiveness(self):
+        """Verify admin dashboard script integrity: no syntax errors / unmatched braces,
+        bottom script placement before </body>, and core navigation functions presence."""
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'admin.js'), 'r', encoding='utf-8') as f:
+            admin_js = f.read()
+
+        # 1. Verify curly brace depth balance
+        depth = 0
+        neg_depths = 0
+        for idx, line in enumerate(admin_js.splitlines(), 1):
+            for ch in line:
+                if ch == '{':
+                    depth += 1
+                elif ch == '}':
+                    depth -= 1
+                    if depth < 0:
+                        neg_depths += 1
+        self.assertEqual(neg_depths, 0, "admin.js has stray closing braces resulting in negative depth")
+        self.assertEqual(depth, 0, "admin.js curly brace depth must balance to exactly 0")
+
+        # 2. Verify all core tab & navigation functions exist
+        for fn in ['function switchTab(', 'function toggleAdminMobileSidebar(', 'function openModal(', 'function closeModal(', 'function updateOverviewStats(', 'function populateTickerForm(']:
+            self.assertIn(fn, admin_js, f"Missing core function {fn} in admin.js")
+
+        # 3. Check admin.html for bottom script placement
+        with open(os.path.join(BASE_DIR, 'admin.html'), 'r', encoding='utf-8') as f:
+            admin_html = f.read()
+
+        self.assertIn('<script src="/static/js/admin.js?v=3.1"></script>', admin_html)
+        script_idx = admin_html.find('<script src="/static/js/admin.js?v=3.1"></script>')
+        body_close_idx = admin_html.find('</body>')
+        self.assertTrue(script_idx != -1 and body_close_idx != -1 and script_idx < body_close_idx)
+        # Ensure it is after all modals (e.g. modal-ba20)
+        ba20_idx = admin_html.find('id="modal-ba20"')
+        self.assertTrue(ba20_idx < script_idx, "admin.js script must be loaded after all modal definitions")
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -14,9 +14,14 @@ let adminData = {
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
-  await verifyAdminSession();
-  await loadAllDashboardData();
-  lucide.createIcons();
+  try {
+    await verifyAdminSession();
+    await loadAllDashboardData();
+  } catch (e) {
+    console.error('Initialization error in admin dashboard:', e);
+  } finally {
+    if (window.lucide) lucide.createIcons();
+  }
 });
 
 async function verifyAdminSession() {
@@ -134,7 +139,8 @@ function switchTab(tabId) {
     'tab-announcements': 'Manajemen Pengumuman & Maklumat Resmi',
     'tab-admins': 'Manajemen Akun Administrator & Hak Akses'
   };
-  document.getElementById('dashboard-header-title').textContent = titleMap[tabId] || 'Master CMS Dashboard';
+  const titleEl = document.getElementById('dashboard-header-title');
+  if (titleEl) titleEl.textContent = titleMap[tabId] || 'Master CMS Dashboard';
   if (tabId === 'tab-org') {
     loadOrgAdminData();
   } else if (tabId === 'tab-admins') {
@@ -152,15 +158,19 @@ function switchTab(tabId) {
   } else if (tabId === 'tab-inbox') {
     renderAdminSubmissions();
   }
-  lucide.createIcons();
+  if (window.lucide) lucide.createIcons();
 }
 
 // 1. Overview Tab
 function updateOverviewStats() {
-  document.getElementById('stat-schedules-count').textContent = adminData.schedules.length;
-  document.getElementById('stat-news-count').textContent = adminData.news.length;
-  document.getElementById('stat-skm-score').textContent = adminData.skm.main_score || '88.31';
-  document.getElementById('stat-complaints-count').textContent = adminData.complaints.length;
+  const schedEl = document.getElementById('stat-schedules-count');
+  if (schedEl) schedEl.textContent = (adminData.schedules || []).length;
+  const newsEl = document.getElementById('stat-news-count');
+  if (newsEl) newsEl.textContent = (adminData.news || []).length;
+  const skmEl = document.getElementById('stat-skm-score');
+  if (skmEl) skmEl.textContent = (adminData.skm && adminData.skm.main_score) || '88.31';
+  const compEl = document.getElementById('stat-complaints-count');
+  if (compEl) compEl.textContent = (adminData.complaints || []).length;
 }
 
 // 2. General Contents Tab
@@ -370,6 +380,7 @@ function setPresetHeroKajariPhoto(url) {
 
 async function saveBatchContents(formId) {
   const form = document.getElementById(formId);
+  if (!form) return;
   const items = {};
   form.querySelectorAll('[data-key]').forEach(input => {
     items[input.getAttribute('data-key')] = input.value.trim();
@@ -382,20 +393,24 @@ async function saveBatchContents(formId) {
       body: JSON.stringify({ items })
     });
     const data = await res.json();
-    if (data.success) {
-      alert(data.message);
+    if (data && data.success) {
+      showAdminToast(data.message || 'Perubahan berhasil disimpan!');
       loadAllDashboardData();
+    } else {
+      alert((data && data.error) || 'Gagal menyimpan perubahan');
     }
   } catch (err) {
-    alert('Gagal menyimpan perubahan');
+    alert('Gagal menyimpan perubahan: Kesalahan jaringan.');
   }
 }
 
 // 4. News & Ticker Tab
 function populateTickerForm() {
-  const c = adminData.contents;
-  if (c.ticker_badge_label) document.getElementById('admin-ticker-badge').value = c.ticker_badge_label.value;
-  if (c.ticker_text) document.getElementById('admin-ticker-text').value = c.ticker_text.value;
+  const c = adminData.contents || {};
+  const badgeEl = document.getElementById('admin-ticker-badge');
+  const textEl = document.getElementById('admin-ticker-text');
+  if (c.ticker_badge_label && badgeEl) badgeEl.value = c.ticker_badge_label.value;
+  if (c.ticker_text && textEl) textEl.value = c.ticker_text.value;
 }
 
 async function saveTickerContent() {
@@ -2747,10 +2762,6 @@ function initCropperCanvas() {
 
   canvas.width = w;
   canvas.height = h;
-
-  drawCropperScene();
-  setupCropperEvents();
-}
 
   drawCropperScene();
   setupCropperEvents();
