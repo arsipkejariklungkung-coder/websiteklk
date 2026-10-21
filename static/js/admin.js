@@ -783,6 +783,8 @@ async function loadGeminiAiStatus() {
     const res = await fetch('/api/admin/ai/status');
     const data = await res.json();
     
+    const activeModel = data.model || 'gemini-2.5-flash';
+
     if (data.configured) {
       if (headerPill) headerPill.className = 'hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-950 border border-emerald-300 hover:bg-emerald-200 transition-all cursor-pointer shadow-xs';
       if (headerText) headerText.textContent = 'Gemini AI: Aktif';
@@ -792,7 +794,7 @@ async function loadGeminiAiStatus() {
       }
       if (cardBadge) {
         cardBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
-        cardBadge.textContent = 'Aktif & Terhubung (gemini-1.5-flash)';
+        cardBadge.textContent = `Aktif & Terhubung (${activeModel})`;
       }
     } else {
       if (headerPill) headerPill.className = 'hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100 transition-all cursor-pointer shadow-xs';
@@ -807,7 +809,14 @@ async function loadGeminiAiStatus() {
       }
     }
 
-    if (modelEl) modelEl.textContent = data.model || 'gemini-1.5-flash';
+    if (modelEl) modelEl.textContent = activeModel;
+    const cardActiveModel = document.getElementById('gemini-card-active-model');
+    if (cardActiveModel) cardActiveModel.textContent = activeModel;
+    const copilotBadge = document.getElementById('gemini-copilot-model-badge');
+    if (copilotBadge) copilotBadge.textContent = activeModel;
+    const modelSelect = document.getElementById('gemini-model-select');
+    if (modelSelect && activeModel) modelSelect.value = activeModel;
+
     if (sourceEl) {
       if (data.source === 'env') sourceEl.textContent = 'Environment Variable (.env)';
       else if (data.source === 'db') sourceEl.textContent = 'Database CMS (page_contents)';
@@ -843,6 +852,9 @@ async function testGeminiApiKeyConnection() {
 
   const apiKey = input ? input.value.trim() : '';
 
+  const modelSelect = document.getElementById('gemini-model-select');
+  const selectedModel = modelSelect ? modelSelect.value : 'gemini-2.5-flash';
+
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) {
     btn.disabled = true;
@@ -853,7 +865,7 @@ async function testGeminiApiKeyConnection() {
     const res = await fetch('/api/admin/ai/test', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: apiKey })
+      body: JSON.stringify({ api_key: apiKey, model: selectedModel })
     });
     const result = await res.json();
 
@@ -885,13 +897,9 @@ async function testGeminiApiKeyConnection() {
 async function saveGeminiApiKeySettings() {
   const input = document.getElementById('gemini-api-key-input');
   const apiKey = input ? input.value.trim() : '';
+  const modelSelect = document.getElementById('gemini-model-select');
+  const selectedModel = modelSelect ? modelSelect.value : 'gemini-2.5-flash';
   const btn = document.getElementById('btn-save-gemini-api');
-
-  if (!apiKey) {
-    alert('Harap masukkan kunci API Google Gemini terlebih dahulu.');
-    if (input) input.focus();
-    return;
-  }
 
   const origHtml = btn ? btn.innerHTML : '';
   if (btn) {
@@ -903,19 +911,19 @@ async function saveGeminiApiKeySettings() {
     const res = await fetch('/api/admin/ai/save-key', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: apiKey })
+      body: JSON.stringify({ api_key: apiKey, model: selectedModel })
     });
     const result = await res.json();
     if (result.success) {
-      showAdminToast(result.message || 'Kunci API Gemini berhasil disimpan!');
+      showAdminToast(result.message || 'Pengaturan Gemini AI berhasil disimpan!');
       if (input) input.value = '';
       await loadGeminiAiStatus();
       closeModal('modal-gemini-settings');
     } else {
-      alert('Gagal menyimpan kunci API: ' + (result.error || 'Terjadi kesalahan'));
+      alert('Gagal menyimpan pengaturan: ' + (result.error || 'Terjadi kesalahan'));
     }
   } catch (err) {
-    alert('Gagal menyimpan kunci API: Gangguan jaringan.');
+    alert('Gagal menyimpan pengaturan: Gangguan jaringan.');
   } finally {
     if (btn) {
       btn.disabled = false;

@@ -15,9 +15,10 @@ import urllib.parse
 import datetime
 import sqlite3
 
-DEFAULT_MODEL = "gemini-1.5-flash"
+DEFAULT_MODEL = "gemini-2.5-flash"
+FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]
 GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
-DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible; KertagosaGeminiAssistant/2.0; +https://kejari-klungkung.go.id)"
+DEFAULT_USER_AGENT = "Mozilla/5.0 (compatible; KertagosaGeminiAssistant/2.5; +https://kejari-klungkung.go.id)"
 
 
 def get_db_path():
@@ -27,6 +28,59 @@ def get_db_path():
     if os.path.exists(data_dir):
         return os.path.join(data_dir, "kertagosa.db")
     return os.path.join(base_dir, "kertagosa.db")
+
+
+def get_gemini_model(explicit_model: str = None) -> str:
+    """
+    Retrieve active Gemini model with precedence:
+    1. Explicit model passed in call
+    2. Environment variable: GEMINI_MODEL or GOOGLE_MODEL
+    3. Database page_contents table: content_key = 'gemini_model'
+    4. DEFAULT_MODEL (gemini-2.5-flash)
+    """
+    if explicit_model and str(explicit_model).strip():
+        return str(explicit_model).strip()
+
+    env_model = os.environ.get("GEMINI_MODEL") or os.environ.get("GOOGLE_MODEL")
+    if env_model and str(env_model).strip():
+        return str(env_model).strip()
+
+    try:
+        db_path = get_db_path()
+        if os.path.exists(db_path):
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT content_value FROM page_contents WHERE content_key = 'gemini_model'")
+            row = cursor.fetchone()
+            conn.close()
+            if row and row[0] and str(row[0]).strip():
+                return str(row[0]).strip()
+    except Exception as e:
+        print(f"[Gemini Service DB Warning] Could not check gemini_model in page_contents: {e}")
+
+    return DEFAULT_MODEL
+
+
+def save_gemini_model(model_name: str) -> bool:
+    """Save selected Gemini model to page_contents in database."""
+    model_name = (model_name or DEFAULT_MODEL).strip()
+    try:
+        db_path = get_db_path()
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("""
+        INSERT INTO page_contents (content_key, section_name, content_type, content_value, label, updated_at)
+        VALUES ('gemini_model', 'system_settings', 'text', ?, 'Google Gemini Active Model', CURRENT_TIMESTAMP)
+        ON CONFLICT(content_key) DO UPDATE SET
+            content_value = excluded.content_value,
+            updated_at = CURRENT_TIMESTAMP
+        """, (model_name,))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"[Gemini Service Save Model Error] {e}")
+        return False
 
 
 def get_gemini_api_key(explicit_key: str = None) -> tuple[str, str]:
@@ -82,17 +136,23 @@ def save_gemini_api_key(api_key: str) -> bool:
         return False
 
 
-def get_ai_status(explicit_key: str = None) -> dict:
+def get_ai_status(explicit_key: str = None, explicit_model: str = None) -> dict:
     """Return status of Gemini AI configuration."""
     key, source = get_gemini_api_key(explicit_key)
     has_key = bool(key and len(key) >= 8)
     masked = f"{key[:4]}...{key[-4:]}" if has_key and len(key) >= 10 else ("***" if has_key else "")
+    active_model = get_gemini_model(explicit_model)
     return {
         "configured": has_key,
         "has_key": has_key,
         "masked_key": masked,
         "source": source if has_key else "none",
-        "model": DEFAULT_MODEL,
+        "model": active_model,
+        "available_models": [
+            {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash (Standar Terbaru & Paling Cerdas)", "badge": "TERBARU", "is_default": True},
+            {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash (Multimodal Cepat)", "badge": "STABIL", "is_default": False},
+            {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash (Generasi Sebelumnya)", "badge": "LEGACY", "is_default": False}
+        ],
         "features": [
             {"id": "draft_news", "label": "Bantu Tulis Artikel Berita (5W+1H)"},
             {"id": "draft_announcement", "label": "Buat Draf Pengumuman Resmi"},
@@ -104,16 +164,20 @@ def get_ai_status(explicit_key: str = None) -> dict:
     }
 
 
-def call_gemini_api(prompt: str, system_instruction: str = "", api_key: str = None, json_mode: bool = False, temperature: float = 0.3) -> str:
+def call_gemini_api(prompt: str, system_instruction: str = "", api_key: str = None, json_mode: bool = False, temperature: float = 0.3, model: str = None) -> str:
     """
-    Invoke Google Gemini 1.5 Flash via REST API.
+    Invoke Google Gemini REST API (defaults to Gemini 2.5 Flash with graceful fallback to 2.0/1.5).
     Raises RuntimeError or ValueError on failure.
     """
     active_key, _ = get_gemini_api_key(api_key)
     if not active_key:
         raise ValueError("Kunci API Gemini (GEMINI_API_KEY) belum dikonfigurasi.")
 
-    url = f"{GEMINI_BASE_URL}/{DEFAULT_MODEL}:generateContent?key={active_key}"
+    target_model = get_gemini_model(model)
+    models_to_try = [target_model]
+    for m in FALLBACK_MODELS:
+        if m not in models_to_try:
+            models_to_try.append(m)
 
     full_prompt = prompt
     if system_instruction:
@@ -134,56 +198,70 @@ def call_gemini_api(prompt: str, system_instruction: str = "", api_key: str = No
     }
 
     req_data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=req_data,
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": DEFAULT_USER_AGENT
-        },
-        method="POST"
-    )
+    last_error = None
 
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            if resp.status == 200:
-                res_json = json.loads(resp.read().decode("utf-8"))
-                candidates = res_json.get("candidates", [])
-                if candidates:
-                    raw_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                    raw_text = raw_text.strip()
-                    if json_mode:
-                        if raw_text.startswith("```"):
-                            raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
-                            raw_text = re.sub(r"\s*```$", "", raw_text)
-                    return raw_text
-                raise ValueError("Respons Gemini kosong.")
-            raise RuntimeError(f"HTTP Error dari Gemini API: status {resp.status}")
-    except urllib.error.HTTPError as e:
-        error_msg = ""
+    for m_name in models_to_try:
+        url = f"{GEMINI_BASE_URL}/{m_name}:generateContent?key={active_key}"
+        req = urllib.request.Request(
+            url,
+            data=req_data,
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": DEFAULT_USER_AGENT
+            },
+            method="POST"
+        )
+
         try:
-            err_data = json.loads(e.read().decode("utf-8"))
-            error_msg = err_data.get("error", {}).get("message", str(e))
-        except Exception:
-            error_msg = str(e)
-        raise RuntimeError(f"Gemini API Error ({e.code}): {error_msg}")
-    except urllib.error.URLError as e:
-        raise RuntimeError(f"Koneksi jaringan ke Gemini API gagal: {str(e.reason)}")
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status == 200:
+                    res_json = json.loads(resp.read().decode("utf-8"))
+                    candidates = res_json.get("candidates", [])
+                    if candidates:
+                        raw_text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                        raw_text = raw_text.strip()
+                        if json_mode:
+                            if raw_text.startswith("```"):
+                                raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
+                                raw_text = re.sub(r"\s*```$", "", raw_text)
+                        return raw_text
+                    raise ValueError("Respons Gemini kosong.")
+                raise RuntimeError(f"HTTP Error dari Gemini API: status {resp.status}")
+        except urllib.error.HTTPError as e:
+            error_msg = ""
+            try:
+                err_data = json.loads(e.read().decode("utf-8"))
+                error_msg = err_data.get("error", {}).get("message", str(e))
+            except Exception:
+                error_msg = str(e)
+            last_error = RuntimeError(f"Gemini API Error ({e.code}) [{m_name}]: {error_msg}")
+            # If model not found (404), try next model in fallback list
+            if e.code == 404:
+                continue
+            raise last_error
+        except urllib.error.URLError as e:
+            raise RuntimeError(f"Koneksi jaringan ke Gemini API gagal: {str(e.reason)}")
+
+    if last_error:
+        raise last_error
+    raise RuntimeError("Gagal memanggil model Gemini.")
 
 
-def test_gemini_connection(api_key: str = None) -> dict:
+def test_gemini_connection(api_key: str = None, model: str = None) -> dict:
     """Test connection to Gemini API and measure response latency."""
+    active_model = get_gemini_model(model)
     start_time = time.time()
     try:
         reply = call_gemini_api(
             prompt="Katakan: 'Koneksi Berhasil. Asisten Gemini Siap.' dalam satu kalimat singkat.",
             api_key=api_key,
+            model=active_model,
             temperature=0.1
         )
         latency = round((time.time() - start_time) * 1000)
         return {
             "success": True,
-            "model": DEFAULT_MODEL,
+            "model": active_model,
             "latency_ms": latency,
             "message": reply.strip(),
             "timestamp": datetime.datetime.now().isoformat()
@@ -192,7 +270,7 @@ def test_gemini_connection(api_key: str = None) -> dict:
         return {
             "success": False,
             "error": str(e),
-            "model": DEFAULT_MODEL,
+            "model": active_model,
             "latency_ms": round((time.time() - start_time) * 1000)
         }
 

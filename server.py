@@ -2216,22 +2216,32 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         """Test connection to Gemini AI."""
         data = self.read_json_body() if (self.headers.get('Content-Length') and int(self.headers.get('Content-Length', 0)) > 0) else {}
         api_key = data.get('api_key')
-        res = ai_assistant.test_gemini_connection(api_key=api_key)
+        model = data.get('model')
+        res = ai_assistant.test_gemini_connection(api_key=api_key, model=model)
         self.send_json(res)
 
     def handle_ai_save_key(self):
-        """Save Gemini API Key to database."""
+        """Save Gemini API Key & Model to database."""
         data = self.read_json_body()
         api_key = (data.get('api_key') or '').strip()
-        success = ai_assistant.save_gemini_api_key(api_key)
-        if success:
+        model = (data.get('model') or '').strip()
+        
+        saved_key = True
+        if api_key:
+            saved_key = ai_assistant.save_gemini_api_key(api_key)
+        
+        saved_model = True
+        if model:
+            saved_model = ai_assistant.save_gemini_model(model)
+
+        if saved_key and saved_model:
             self.send_json({
                 'success': True,
-                'message': 'Kunci API Google Gemini berhasil disimpan di pengaturan sistem!',
+                'message': 'Pengaturan Google Gemini AI & Model berhasil disimpan di sistem!',
                 'status': ai_assistant.get_ai_status()
             })
         else:
-            self.send_json({'error': 'Gagal menyimpan kunci API ke database.'}, 500)
+            self.send_json({'error': 'Gagal menyimpan pengaturan Gemini ke database.'}, 500)
 
     def handle_ai_assist(self):
         """Dispatch AI input assistance actions across CMS."""

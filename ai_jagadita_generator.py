@@ -136,12 +136,19 @@ def sanitize_court_schedule_item(item: dict, target_date: str = None) -> dict:
     }
 
 
-def generate_with_gemini_api(api_key: str, text_content: str, target_date: str = None, model: str = "gemini-1.5-flash") -> list:
+def generate_with_gemini_api(api_key: str, text_content: str, target_date: str = None, model: str = None) -> list:
     """
     Call Google Gemini Generative Language REST API to parse and structure court schedules.
     """
     if not target_date:
         target_date = datetime.date.today().isoformat()
+
+    if not model:
+        try:
+            import ai_assistant
+            model = ai_assistant.get_gemini_model()
+        except Exception:
+            model = "gemini-2.5-flash"
 
     api_endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
 
