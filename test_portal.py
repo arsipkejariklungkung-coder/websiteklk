@@ -1474,6 +1474,51 @@ class TestKertagosaPortal(unittest.TestCase):
         conn.commit()
         conn.close()
 
+    def test_25_floating_accessibility_widget(self):
+        """Verify floating accessibility widget assets, CSS styling, Web Speech API integration, and bottom-left placement."""
+        # 1. Test static serving of accessibility.css
+        css_h = MockHandler('GET', '/static/css/accessibility.css')
+        css_h.do_GET()
+        self.assertEqual(css_h.response_code, 200)
+        css_text = css_h.wfile.getvalue().decode('utf-8', errors='ignore')
+        self.assertIn('.a11y-contrast-dark', css_text)
+        self.assertIn('.a11y-contrast-light', css_text)
+        self.assertIn('.a11y-contrast-invert', css_text)
+        self.assertIn('.a11y-sat-mono', css_text)
+        self.assertIn('.a11y-highlight-links', css_text)
+        self.assertIn('.a11y-dyslexic', css_text)
+        self.assertIn('#a11y-reading-guide-line', css_text)
+        self.assertIn('#a11y-reading-mask-top', css_text)
+        self.assertIn('#a11y-widget-trigger', css_text)
+        self.assertIn('left: 24px', css_text)
+        self.assertIn('bottom: 24px', css_text)
+
+        # 2. Test static serving of accessibility.js
+        js_h = MockHandler('GET', '/static/js/accessibility.js')
+        js_h.do_GET()
+        self.assertEqual(js_h.response_code, 200)
+        js_text = js_h.wfile.getvalue().decode('utf-8', errors='ignore')
+        self.assertIn('SpeechSynthesisUtterance', js_text)
+        self.assertIn('id-ID', js_text)
+        self.assertIn('speakText', js_text)
+        self.assertIn('stopSpeech', js_text)
+        self.assertIn('handleUserSelection', js_text)
+        self.assertIn('a11y-tts-indicator', js_text)
+        self.assertIn('setupDragAndDrop', js_text)
+        self.assertIn('resetAll', js_text)
+        self.assertIn('window.A11Y', js_text)
+
+        # 3. Test HTML inclusion of accessibility in index.html
+        with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
+            index_html = f.read()
+        self.assertIn('accessibility.css', index_html)
+        self.assertIn('accessibility.js', index_html)
+
+        # 4. Verify styles.css imports accessibility.css
+        with open(os.path.join(BASE_DIR, 'static', 'css', 'styles.css'), 'r', encoding='utf-8') as f:
+            styles_css = f.read()
+        self.assertIn('@import url(\'accessibility.css\');', styles_css)
+
 
 if __name__ == '__main__':
     unittest.main()

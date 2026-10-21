@@ -1,0 +1,346 @@
+/* =============================================================================
+   KERTAGOSA - Comprehensive Floating Accessibility System (A11Y)
+   Fitur Aksesibilitas Khusus Penyandang Disabilitas (Tunanetra, Disleksia, Low Vision)
+   Kejaksaan Negeri Klungkung
+   ============================================================================= */
+
+/* 1. Dyslexia Friendly Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Comic+Neue:ital,wght@0,400;0,700;1,400&display=swap');
+
+/* 2. Dyslexia Mode */
+body.a11y-dyslexic,
+body.a11y-dyslexic * {
+  font-family: 'Atkinson Hyperlegible', 'Comic Neue', 'Comic Sans MS', sans-serif !important;
+  letter-spacing: 0.06em !important;
+  word-spacing: 0.12em !important;
+}
+
+/* 3. High Contrast Dark (Kuning/Sian di atas Hitam Pekat) */
+body.a11y-contrast-dark {
+  background-color: #000000 !important;
+  color: #FFFF00 !important;
+}
+body.a11y-contrast-dark *:not(#a11y-widget-root *):not(#a11y-tts-indicator *) {
+  background-color: #000000 !important;
+  color: #FFFF00 !important;
+  border-color: #FFFF00 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+body.a11y-contrast-dark h1,
+body.a11y-contrast-dark h2,
+body.a11y-contrast-dark h3,
+body.a11y-contrast-dark h4 {
+  color: #00FFFF !important;
+}
+body.a11y-contrast-dark a {
+  color: #00FF66 !important;
+  text-decoration: underline !important;
+}
+body.a11y-contrast-dark button:not(#a11y-widget-root *):not(#a11y-tts-indicator *) {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  border: 2px solid #FFFFFF !important;
+}
+body.a11y-contrast-dark img,
+body.a11y-contrast-dark svg {
+  filter: contrast(140%) brightness(95%);
+}
+
+/* 4. High Contrast Light (Hitam Pekat di atas Putih Bersih) */
+body.a11y-contrast-light {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+}
+body.a11y-contrast-light *:not(#a11y-widget-root *):not(#a11y-tts-indicator *) {
+  background-color: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+  box-shadow: none !important;
+}
+body.a11y-contrast-light a {
+  color: #0000CC !important;
+  text-decoration: underline 2px solid #0000CC !important;
+  font-weight: 700 !important;
+}
+body.a11y-contrast-light button:not(#a11y-widget-root *):not(#a11y-tts-indicator *) {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  border: 2px solid #000000 !important;
+}
+
+/* 5. Invert Colors (Kamera Klise) */
+body.a11y-contrast-invert {
+  filter: invert(100%) hue-rotate(180deg) !important;
+  background-color: #FFFFFF !important;
+}
+body.a11y-contrast-invert img,
+body.a11y-contrast-invert video,
+body.a11y-contrast-invert canvas,
+body.a11y-contrast-invert #a11y-widget-root,
+body.a11y-contrast-invert #a11y-tts-indicator {
+  filter: invert(100%) hue-rotate(180deg) !important;
+}
+
+/* 6. Saturation Controls */
+body.a11y-sat-mono {
+  filter: grayscale(100%) !important;
+}
+body.a11y-sat-low {
+  filter: saturate(40%) !important;
+}
+body.a11y-sat-high {
+  filter: saturate(220%) !important;
+}
+
+/* 7. Solo Tautan (Highlight Links) */
+body.a11y-highlight-links a:not(#a11y-widget-root *),
+body.a11y-highlight-links button[role="link"]:not(#a11y-widget-root *) {
+  background-color: #FFE600 !important;
+  color: #000000 !important;
+  text-decoration: underline 3px solid #000000 !important;
+  outline: 2px dashed #000000 !important;
+  outline-offset: 3px !important;
+  font-weight: 800 !important;
+  border-radius: 4px !important;
+  padding: 1px 4px !important;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* 8. Text Sizing Controls (Font Scale) */
+html.a11y-font-115 {
+  font-size: 115% !important;
+}
+html.a11y-font-130 {
+  font-size: 130% !important;
+}
+html.a11y-font-150 {
+  font-size: 150% !important;
+}
+
+/* 9. Letter Spacing Controls */
+body.a11y-spacing-wide,
+body.a11y-spacing-wide *:not(#a11y-widget-root *) {
+  letter-spacing: 0.12em !important;
+}
+body.a11y-spacing-extrawide,
+body.a11y-spacing-extrawide *:not(#a11y-widget-root *) {
+  letter-spacing: 0.22em !important;
+  word-spacing: 0.35em !important;
+}
+
+/* 10. Line Height Controls */
+body.a11y-line-18,
+body.a11y-line-18 *:not(#a11y-widget-root *) {
+  line-height: 1.85 !important;
+}
+body.a11y-line-22,
+body.a11y-line-22 *:not(#a11y-widget-root *) {
+  line-height: 2.3 !important;
+}
+
+/* 11. Text Alignment Controls */
+body.a11y-align-left p,
+body.a11y-align-left span,
+body.a11y-align-left div:not(#a11y-widget-root *) {
+  text-align: left !important;
+}
+body.a11y-align-justify p,
+body.a11y-align-justify span,
+body.a11y-align-justify div:not(#a11y-widget-root *) {
+  text-align: justify !important;
+}
+body.a11y-align-center p,
+body.a11y-align-center span,
+body.a11y-align-center div:not(#a11y-widget-root *) {
+  text-align: center !important;
+}
+
+/* 12. Garis Bantu Baca (Horizontal Reading Guide Line) */
+#a11y-reading-guide-line {
+  position: fixed;
+  left: 0;
+  width: 100vw;
+  height: 4px;
+  background: #FFE600;
+  box-shadow: 0 0 10px rgba(255, 230, 0, 0.9), 0 0 3px #000;
+  pointer-events: none;
+  z-index: 99998;
+  display: none;
+  transition: top 0.05s ease-out;
+}
+
+/* 13. Masker Bacaan (Reading Focus Mask) */
+#a11y-reading-mask-top,
+#a11y-reading-mask-bottom {
+  position: fixed;
+  left: 0;
+  width: 100vw;
+  background: rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+  z-index: 99997;
+  display: none;
+  transition: top 0.05s ease-out, height 0.05s ease-out;
+}
+
+/* 14. Floating Accessibility Trigger Button (Bottom-Left) */
+#a11y-widget-trigger {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 99999;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+#a11y-widget-trigger.is-dragging {
+  cursor: grabbing;
+}
+#a11y-btn-toggle {
+  width: 54px;
+  height: 54px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #072A19 0%, #0B3B24 100%);
+  border: 2.5px solid #FACC15;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px -3px rgba(11, 59, 36, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+  position: relative;
+}
+#a11y-btn-toggle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 14px 30px -4px rgba(11, 59, 36, 0.7), 0 0 15px rgba(250, 204, 21, 0.5);
+}
+#a11y-btn-toggle:active {
+  transform: scale(0.96);
+}
+#a11y-active-count-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #E11D48;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 800;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+/* 15. Floating Accessibility Menu Panel */
+#a11y-widget-menu {
+  position: fixed;
+  bottom: 86px;
+  left: 24px;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 120px);
+  background: #FFFFFF;
+  color: #0F172A;
+  border-radius: 20px;
+  border: 1.5px solid #CBD5E1;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: a11yFadeUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes a11yFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+#a11y-widget-menu.hidden {
+  display: none !important;
+}
+
+/* Custom Scrollbar for Menu */
+#a11y-menu-body::-webkit-scrollbar {
+  width: 6px;
+}
+#a11y-menu-body::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+#a11y-menu-body::-webkit-scrollbar-thumb {
+  background: #94A3B8;
+  border-radius: 4px;
+}
+
+/* 16. Sound Wave Active Speaking Indicator */
+#a11y-tts-indicator {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0F172A;
+  color: #FFFFFF;
+  padding: 10px 18px;
+  border-radius: 9999px;
+  border: 2px solid #FACC15;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 999999;
+  font-size: 12px;
+  font-weight: 700;
+  animation: a11yBounceIn 0.3s ease-out;
+}
+@keyframes a11yBounceIn {
+  from { opacity: 0; transform: translate(-50%, -15px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+.a11y-wave-bar {
+  width: 3.5px;
+  height: 14px;
+  background: #FACC15;
+  border-radius: 2px;
+  display: inline-block;
+  animation: a11yWave 1s infinite ease-in-out;
+}
+.a11y-wave-bar:nth-child(2) { animation-delay: 0.15s; }
+.a11y-wave-bar:nth-child(3) { animation-delay: 0.3s; }
+.a11y-wave-bar:nth-child(4) { animation-delay: 0.45s; }
+@keyframes a11yWave {
+  0%, 100% { height: 6px; }
+  50% { height: 18px; }
+}
+
+/* Hover-to-read active highlight on elements */
+.a11y-speaking-target {
+  outline: 3px solid #FACC15 !important;
+  outline-offset: 3px !important;
+  background-color: rgba(250, 204, 21, 0.15) !important;
+  border-radius: 4px !important;
+}
+
+/* Mobile Responsiveness for Bottom-Left Trigger */
+@media (max-width: 640px) {
+  #a11y-widget-trigger {
+    bottom: 76px; /* Sits above mobile bottom dock */
+    left: 16px;
+  }
+  #a11y-widget-menu {
+    bottom: 140px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: calc(100vh - 160px);
+  }
+}

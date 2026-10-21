@@ -965,6 +965,15 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 self.serve_file(target_file, ctype or 'application/octet-stream')
                 return
 
+        # 4b. Explicit static assets handler (/static/css/*, /static/js/*, /static/images/*)
+        if path.startswith('/static/'):
+            clean_rel = path.lstrip('/')
+            cand_file = os.path.join(BASE_DIR, clean_rel)
+            if os.path.exists(cand_file) and os.path.isfile(cand_file):
+                ctype, _ = mimetypes.guess_type(cand_file)
+                self.serve_file(cand_file, ctype or 'application/octet-stream')
+                return
+
         # 5. Fallback to static files
         super().do_GET()
 

@@ -4411,3 +4411,10 @@ async function openPublicBa20Modal(ticketCode) {
     showToast('Gagal memuat Berita Acara BA-20.', 'error');
   }
 }
+
+// 11. Auto-initialize Floating Accessibility Widget (Bottom-Left)
+if (typeof window.A11Y === 'undefined' && !document.getElementById('a11y-widget-root')) {
+  const a11yScript = document.createElement('script');
+  a11yScript.src = '/static/js/accessibility.js?v=3.0';
+  document.head.appendChild(a11yScript);
+}
