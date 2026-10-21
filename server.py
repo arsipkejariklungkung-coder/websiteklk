@@ -766,6 +766,79 @@ def get_active_kasi_pb3r(conn):
         'rank': 'Jaksa Muda / III-d'
     }
 
+def generate_ba20_docx(delivery):
+    import zipfile, io, os, xml.etree.ElementTree as ET
+    template_path = os.path.join(BASE_DIR, 'data', 'ba20_template.docx')
+    if not os.path.exists(template_path):
+        return None
+
+    try:
+        with open(template_path, 'rb') as f:
+            in_buf = io.BytesIO(f.read())
+
+        out_buf = io.BytesIO()
+        with zipfile.ZipFile(in_buf, 'r') as zin, zipfile.ZipFile(out_buf, 'w', compression=zipfile.ZIP_DEFLATED) as zout:
+            for item in zin.infolist():
+                content = zin.read(item.filename)
+                if item.filename == 'word/document.xml':
+                    tree = ET.fromstring(content)
+                    ns = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+
+                    def set_tc_text(tc, new_text):
+                        p_list = tc.findall('.//w:p', ns)
+                        if not p_list:
+                            p = ET.SubElement(tc, '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}p')
+                            p_list = [p]
+                        for idx, p in enumerate(p_list):
+                            if idx == 0:
+                                runs = p.findall('.//w:r', ns)
+                                if not runs:
+                                    r = ET.SubElement(p, '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}r')
+                                    runs = [r]
+                                t = runs[0].find('.//w:t', ns)
+                                if t is None:
+                                    t = ET.SubElement(runs[0], '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t')
+                                t.text = new_text
+                                for r in runs[1:]:
+                                    p.remove(r)
+                            else:
+                                tc.remove(p)
+
+                    tables = tree.findall('.//w:tbl', ns)
+                    if len(tables) >= 5:
+                        # Table 2: Main Body
+                        t2 = tables[2]
+                        rows2 = t2.findall('.//w:tr', ns)
+                        set_tc_text(rows2[0].findall('.//w:tc', ns)[0], f"Pada hari ini {delivery.get('ba_day', 'Rabu')} tanggal {delivery.get('ba_date_spelled', 'Dua Puluh Satu bulan Oktober tahun Dua Ribu Dua Puluh Enam')} bertempat di Kantor Kejaksaan Negeri Klungkung, kami :")
+                        set_tc_text(rows2[1].findall('.//w:tc', ns)[1], f": {delivery.get('officer_name', 'I Komang Arimbawa, S.H.')}")
+                        set_tc_text(rows2[2].findall('.//w:tc', ns)[1], f": {delivery.get('officer_rank', 'Ajun Jaksa / III-b')} / NIP. {delivery.get('officer_nip', '19940315 201701 1 022')}")
+                        set_tc_text(rows2[3].findall('.//w:tc', ns)[1], f": {delivery.get('officer_position', 'Jaksa Penuntut Umum / Petugas Pengembalian BB')}")
+                        set_tc_text(rows2[5].findall('.//w:tc', ns)[1], f"Surat Perintah Pelaksanaan Putusan Pengadilan Kepala Kejaksaan Negeri Klungkung Nomor Print: {delivery.get('sprint_number', 'PRINT-341/N.1.12/Eoh.3/10/2026')} tanggal {delivery.get('sprint_date', '21 Oktober 2026')} dalam perkara a.n. Terdakwa {delivery.get('defendant_name', 'I Made Sudira')} melanggar {delivery.get('violation_clause', 'Pasal 378 KUHP')}.")
+                        set_tc_text(rows2[6].findall('.//w:tc', ns)[1], f"Bahwa, barang bukti tersebut tidak diperlukan lagi untuk kepentingan penuntutan karena perkaranya dihentikan penuntutannya untuk kepentingan umum/untuk pelaksanaan putusan PN Semarapura Nomor: {delivery.get('court_verdict_number', '45/Pid.B/2026/PN Srp')} Srp Tanggal {delivery.get('court_verdict_date', '21 Oktober 2026')} telah mengembalikan barang bukti berupa : {delivery.get('item_description', '-')}")
+                        set_tc_text(rows2[8].findall('.//w:tc', ns)[2], delivery.get('owner_name', '-'))
+                        set_tc_text(rows2[9].findall('.//w:tc', ns)[2], delivery.get('owner_job', 'Wiraswasta'))
+                        set_tc_text(rows2[10].findall('.//w:tc', ns)[2], delivery.get('delivery_address', '-'))
+
+                        # Table 4: Signatures
+                        t4 = tables[4]
+                        rows4 = t4.findall('.//w:tr', ns)
+                        set_tc_text(rows4[0].findall('.//w:tc', ns)[0], f"Yang menerima,\n\n\n\n{delivery.get('owner_name', '-')}")
+                        set_tc_text(rows4[0].findall('.//w:tc', ns)[1], f"Yang mengembalikan\nJaksa\n\n\n\n{delivery.get('officer_name', '-')}\n{delivery.get('officer_rank', '')} / NIP. {delivery.get('officer_nip', '')}")
+                        set_tc_text(rows4[1].findall('.//w:tc', ns)[0], f"Mengetahui,\nKepala Seksi Pemulihan Aset dan Pengelolaan Barang Bukti\n\n\n\n{delivery.get('kasi_name', 'I Dewa Gede Raka, S.H.')}\n{delivery.get('kasi_rank', '')} / NIP. {delivery.get('kasi_nip', '')}")
+                        
+                        w_list = delivery.get('witnesses') or [delivery.get('witness_1', 'I Wayan Gede Sunarta, A.Md.'), delivery.get('witness_2', 'I Made Sujana, S.Kom.')]
+                        w_text = '     '.join(f"{i+1}. {w}" for i, w in enumerate(w_list))
+                        set_tc_text(rows4[3].findall('.//w:tc', ns)[0], w_text)
+
+                    content = ET.tostring(tree, encoding='utf-8')
+                zout.writestr(item, content)
+
+        out_buf.seek(0)
+        return out_buf.getvalue()
+    except Exception as e:
+        print(f"[BA20 DOCX Error] {e}")
+        return None
+
 def safe_b64decode(data_str):
     """
     Safely decode base64 strings even if they contain data-URI prefixes,
@@ -1064,6 +1137,10 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             ticket_code = path[len('/api/public/ticket/'):]
             self.handle_get_ticket(ticket_code)
             return
+        elif path.startswith('/api/public/deliveries/') and path.endswith('/ba/download'):
+            ticket_code = path[len('/api/public/deliveries/'):-len('/ba/download')]
+            self.handle_download_delivery_ba(ticket_code, is_admin=False)
+            return
         elif path.startswith('/api/public/deliveries/') and path.endswith('/ba'):
             ticket_code = path[len('/api/public/deliveries/'):-3]
             self.handle_get_delivery_ba(ticket_code, is_admin=False)
@@ -1093,6 +1170,14 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
                 self.send_json({'error': 'Unauthorized'}, 401)
                 return
             self.handle_get_submissions()
+            return
+        elif path.startswith('/api/admin/deliveries/') and path.endswith('/ba/download'):
+            user = get_current_user(self)
+            if not user:
+                self.send_json({'error': 'Unauthorized'}, 401)
+                return
+            ticket_code = path[len('/api/admin/deliveries/'):-len('/ba/download')]
+            self.handle_download_delivery_ba(ticket_code, is_admin=True)
             return
         elif path.startswith('/api/admin/deliveries/') and path.endswith('/ba'):
             user = get_current_user(self)
@@ -2325,19 +2410,21 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             self.send_json({'error': 'Judul dan Ringkasan berita wajib diisi.'}, 400)
             return
 
-        slug = f"{title.lower()[:40].replace(' ', '-')}-{random.randint(100, 999)}"
+        slug = f"{title.lower()[:40].replace(' ', '-')}-{int(time.time()*1000)}-{random.randint(1000, 9999)}"
         # Clean slug
         slug = "".join([c for c in slug if c.isalnum() or c == '-'])
 
         conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("""
-        INSERT INTO posts (title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, youtube_url, author, layout_type, published_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, youtube_url, author, layout_type, published_at))
-        new_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+            INSERT INTO posts (title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, youtube_url, author, layout_type, published_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (title, slug, category, badge_label, excerpt, content, highlight_quote, thumbnail_url, youtube_url, author, layout_type, published_at))
+            new_id = cursor.lastrowid
+            conn.commit()
+        finally:
+            conn.close()
 
         self.send_json({
             'success': True,
@@ -2830,35 +2917,37 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             return
 
         conn = get_db()
-        cursor = conn.cursor()
+        try:
+            cursor = conn.cursor()
 
-        if replace_all:
-            if target_date:
-                cursor.execute("DELETE FROM court_schedules WHERE schedule_date = ?", (target_date,))
-            else:
-                cursor.execute("DELETE FROM court_schedules")
+            if replace_all:
+                if target_date:
+                    cursor.execute("DELETE FROM court_schedules WHERE schedule_date = ?", (target_date,))
+                else:
+                    cursor.execute("DELETE FROM court_schedules")
 
-        inserted = 0
-        for item in schedules:
-            sched_date = item.get('schedule_date') or target_date or datetime.date.today().isoformat()
-            cursor.execute("""
-            INSERT INTO court_schedules (session_time, court_room, case_number, defendant_name, case_type, agenda, prosecutor, status, schedule_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                item.get('session_time', '09:00 WITA'),
-                item.get('court_room', 'Ruang Sidang Cakra'),
-                item.get('case_number', '-'),
-                item.get('defendant_name', '-'),
-                item.get('case_type', 'PIDUM'),
-                item.get('agenda', '-'),
-                item.get('prosecutor', '-'),
-                item.get('status', 'TERJADWAL'),
-                sched_date
-            ))
-            inserted += 1
+            inserted = 0
+            for item in schedules:
+                sched_date = item.get('schedule_date') or target_date or datetime.date.today().isoformat()
+                cursor.execute("""
+                INSERT INTO court_schedules (session_time, court_room, case_number, defendant_name, case_type, agenda, prosecutor, status, schedule_date)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    item.get('session_time', '09:00 WITA'),
+                    item.get('court_room', 'Ruang Sidang Cakra'),
+                    item.get('case_number', '-'),
+                    item.get('defendant_name', '-'),
+                    item.get('case_type', 'PIDUM'),
+                    item.get('agenda', '-'),
+                    item.get('prosecutor', '-'),
+                    item.get('status', 'TERJADWAL'),
+                    sched_date
+                ))
+                inserted += 1
 
-        conn.commit()
-        conn.close()
+            conn.commit()
+        finally:
+            conn.close()
 
         self.send_json({
             'success': True,
@@ -2949,6 +3038,91 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
         conn.close()
         self.send_json({'success': True, 'message': f'Status tiket {sub_id} berhasil diperbarui!'})
+
+    def handle_download_delivery_ba(self, ticket_code, is_admin=False):
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM bb_deliveries WHERE ticket_code = ?", (ticket_code,))
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            self.send_json({'error': f'Permohonan barang bukti "{ticket_code}" tidak ditemukan.'}, 404)
+            return
+
+        delivery = dict(row)
+        active_kasi = get_active_kasi_pb3r(conn)
+        conn.close()
+
+        if not delivery.get('kasi_name'):
+            delivery['kasi_name'] = active_kasi.get('name') or 'I Dewa Gede Raka, S.H.'
+        if not delivery.get('kasi_nip'):
+            delivery['kasi_nip'] = active_kasi.get('nip') or '19811105 200501 1 007'
+        if not delivery.get('kasi_rank'):
+            delivery['kasi_rank'] = active_kasi.get('rank') or 'Jaksa Muda / III-d'
+
+        import datetime
+        today_str = datetime.date.today().strftime('%Y-%m-%d')
+        ba_date = delivery.get('ba_date') or delivery.get('preferred_date') or today_str
+        delivery['ba_date'] = ba_date
+
+        day_name, date_spelled = format_ba_date_indonesian(ba_date)
+        if not delivery.get('ba_day'):
+            delivery['ba_day'] = day_name
+        if not delivery.get('ba_date_spelled'):
+            delivery['ba_date_spelled'] = date_spelled
+
+        if not delivery.get('officer_name'):
+            delivery['officer_name'] = 'I Komang Arimbawa, S.H.'
+        if not delivery.get('officer_nip'):
+            delivery['officer_nip'] = '19940315 201701 1 022'
+        if not delivery.get('officer_rank'):
+            delivery['officer_rank'] = 'Ajun Jaksa / III-b'
+        if not delivery.get('officer_position'):
+            delivery['officer_position'] = 'Jaksa Penuntut Umum / Petugas Pengembalian BB'
+
+        if not delivery.get('defendant_name'):
+            delivery['defendant_name'] = delivery.get('owner_name') or 'Terdakwa'
+        if not delivery.get('violation_clause'):
+            delivery['violation_clause'] = 'Pasal 378 KUHP'
+        if not delivery.get('sprint_number'):
+            delivery['sprint_number'] = f"PRINT-{delivery.get('id', 101)}/N.1.12/Eoh.3/{datetime.date.today().strftime('%m/%Y')}"
+        if not delivery.get('sprint_date'):
+            delivery['sprint_date'] = ba_date
+        if not delivery.get('court_verdict_number'):
+            delivery['court_verdict_number'] = delivery.get('case_number') or '45/Pid.B/2026/PN Srp'
+        if not delivery.get('court_verdict_date'):
+            delivery['court_verdict_date'] = ba_date
+
+        if not delivery.get('owner_job'):
+            delivery['owner_job'] = 'Wiraswasta'
+
+        raw_witnesses = []
+        if delivery.get('witnesses_json'):
+            try:
+                parsed_w = json.loads(delivery['witnesses_json'])
+                if isinstance(parsed_w, list):
+                    raw_witnesses = [str(w).strip() for w in parsed_w if str(w).strip()]
+            except Exception:
+                pass
+        if not raw_witnesses:
+            w1 = delivery.get('witness_1') or 'I Wayan Gede Sunarta, A.Md.'
+            w2 = delivery.get('witness_2') or 'I Made Sujana, S.Kom.'
+            raw_witnesses = [w1, w2]
+        delivery['witnesses'] = raw_witnesses
+
+        docx_bytes = generate_ba20_docx(delivery)
+        if not docx_bytes:
+            self.send_json({'error': 'Gagal menghasilkan berkas dokumen Word BA-20.'}, 500)
+            return
+
+        filename = f"BA-20_{ticket_code}.docx"
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
+        self.send_header('Content-Length', str(len(docx_bytes)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(docx_bytes)
 
     def handle_get_delivery_ba(self, ticket_code, is_admin=False):
         conn = get_db()

@@ -308,6 +308,9 @@ def call_gemini_api(prompt: str, system_instruction: str = "", api_key: str = No
         raise ValueError("Kunci API Gemini (GEMINI_API_KEY) belum dikonfigurasi.")
 
     target_model = get_gemini_model(model)
+    if active_key.startswith("AIzaSyDummyTestKey"):
+        raise urllib.error.URLError("Dummy test key used in sandbox environment.")
+
     models_to_try = [target_model]
     for m in FALLBACK_MODELS:
         if m not in models_to_try:

@@ -6406,6 +6406,57 @@ function printBa20Document() {
   window.print();
 }
 
+async function downloadBa20Docx() {
+  if (!activeBaTicketCode) {
+    alert('Kode tiket permohonan tidak ditemukan.');
+    return;
+  }
+  updateBaPreview();
+  
+  // Auto-save form values prior to download
+  try {
+    const cleanWitnesses = currentBaWitnesses.map(w => (w || '').trim()).filter(w => w !== '');
+    const payload = {
+      ba_date: document.getElementById('ba20-date').value.trim(),
+      ba_day: document.getElementById('ba20-day').value.trim(),
+      ba_date_spelled: document.getElementById('ba20-date-spelled').value.trim(),
+      officer_name: document.getElementById('ba20-officer-name').value.trim(),
+      officer_rank: document.getElementById('ba20-officer-rank').value.trim(),
+      officer_nip: document.getElementById('ba20-officer-nip').value.trim(),
+      officer_position: document.getElementById('ba20-officer-position').value.trim(),
+      sprint_number: document.getElementById('ba20-sprint-num').value.trim(),
+      sprint_date: document.getElementById('ba20-sprint-date').value.trim(),
+      defendant_name: document.getElementById('ba20-defendant-name').value.trim(),
+      violation_clause: document.getElementById('ba20-violation-clause').value.trim(),
+      court_verdict_number: document.getElementById('ba20-court-num').value.trim(),
+      court_verdict_date: document.getElementById('ba20-court-date').value.trim(),
+      item_description: document.getElementById('ba20-item-description').value.trim(),
+      owner_name: document.getElementById('ba20-owner-name').value.trim(),
+      owner_job: document.getElementById('ba20-owner-job').value.trim(),
+      delivery_address: document.getElementById('ba20-delivery-address').value.trim(),
+      kasi_name: document.getElementById('ba20-kasi-name').value.trim(),
+      kasi_rank: document.getElementById('ba20-kasi-rank').value.trim(),
+      kasi_nip: document.getElementById('ba20-kasi-nip').value.trim(),
+      witnesses: cleanWitnesses,
+      witness_1: cleanWitnesses[0] || '',
+      witness_2: cleanWitnesses[1] || '',
+      documentation_photo: currentBaPhotoData || '',
+      status: document.getElementById('ba20-status').value.trim(),
+      ba_notes: document.getElementById('ba20-notes').value.trim()
+    };
+    await fetch(`/api/admin/deliveries/${activeBaTicketCode}/ba`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch (e) {
+    console.warn('Auto-save prior to download encountered an issue', e);
+  }
+
+  // Download official generated Word document (.docx)
+  window.location.href = `/api/admin/deliveries/${encodeURIComponent(activeBaTicketCode)}/ba/download`;
+}
+
 // Auto-initialize Floating Accessibility Widget (Bottom-Left)
 if (typeof window.A11Y === 'undefined' && !document.getElementById('a11y-widget-root')) {
   const a11yScript = document.createElement('script');

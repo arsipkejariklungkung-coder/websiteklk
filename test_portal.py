@@ -1490,6 +1490,21 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertEqual(get_res['delivery']['witnesses'][2], 'Ni Ketut Suartini, S.H.')
         self.assertTrue(get_res['delivery']['documentation_photo'].startswith('data:image/png'))
 
+        # 9. Verify BA-20 Word DOCX download endpoint (Admin & Public)
+        dl_h = MockHandler('GET', f'/api/admin/deliveries/{ticket_code}/ba/download', {'Authorization': f'Bearer {self.token}'})
+        dl_h.do_GET()
+        self.assertEqual(dl_h.response_code, 200)
+        self.assertEqual(dl_h.response_headers.get('Content-Type'), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        self.assertIn('.docx', dl_h.response_headers.get('Content-Disposition', ''))
+        self.assertTrue(len(dl_h.wfile.getvalue()) > 5000)
+
+        pub_dl_h = MockHandler('GET', f'/api/public/deliveries/{ticket_code}/ba/download')
+        pub_dl_h.do_GET()
+        self.assertEqual(pub_dl_h.response_code, 200)
+        self.assertEqual(pub_dl_h.response_headers.get('Content-Type'), 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+        self.assertIn('.docx', pub_dl_h.response_headers.get('Content-Disposition', ''))
+        self.assertTrue(len(pub_dl_h.wfile.getvalue()) > 5000)
+
         # Clean up test delivery
         conn = get_db()
         cursor = conn.cursor()
@@ -2163,6 +2178,14 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertEqual(h_cors.response_code, 200)
         self.assertEqual(h_cors.response_headers.get('Access-Control-Allow-Origin'), '*')
 
+        # Clean up test post
+        if news_id:
+            conn = server.get_db()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM posts WHERE id = ?", (news_id,))
+            conn.commit()
+            conn.close()
+
         # 5. Verify admin.html announcement flyer upload UI
         with open(os.path.join(BASE_DIR, 'admin.html'), 'r', encoding='utf-8') as f:
             admin_html = f.read()
@@ -2257,6 +2280,13 @@ class TestKertagosaPortal(unittest.TestCase):
     def test_35_admin_mfa_enrolled_login_ui_and_persistence(self):
         """Verify MFA QR Code setup is hidden for already-enrolled users and only 6-digit OTP is shown."""
         import totp_mfa
+
+        # Cleanup any lingering test user
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM users WHERE username = 'admin_baru_uji' OR email = 'adminbaru@kejariklungkung.go.id'")
+        conn.commit()
+        conn.close()
 
         # 1. Existing enrolled admin login check
         login_body = json.dumps({'username': 'admin', 'password': 'admin123'}).encode('utf-8')
@@ -2649,6 +2679,7 @@ class TestKertagosaPortal(unittest.TestCase):
         # 3. Test Bulk Delete for News (posts)
         conn = get_db()
         cursor = conn.cursor()
+        cursor.execute("DELETE FROM posts WHERE slug IN ('bulk-test-1', 'bulk-test-2')")
         cursor.execute("INSERT INTO posts (title, slug, excerpt, content, category, badge_label, thumbnail_url, layout_type) VALUES ('Bulk Test Post 1', 'bulk-test-1', 'Ex 1', 'Content 1', 'Kegiatan Kejari', 'TEST', '/static/images/news-featured.jpg', 'FEATURED_SIDE')")
         post1_id = cursor.lastrowid
         cursor.execute("INSERT INTO posts (title, slug, excerpt, content, category, badge_label, thumbnail_url, layout_type) VALUES ('Bulk Test Post 2', 'bulk-test-2', 'Ex 2', 'Content 2', 'Kegiatan Kejari', 'TEST', '/static/images/news-featured.jpg', 'FEATURED_SIDE')")

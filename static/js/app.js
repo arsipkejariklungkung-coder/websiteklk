@@ -4909,8 +4909,20 @@ function toggleQuickAssist() {
   menu.classList.toggle('hidden');
 }
 
+let activePublicBaTicketCode = null;
+
+function downloadPublicBa20Docx() {
+  const ticketCode = activePublicBaTicketCode || document.getElementById('pub-pv-doc-ticket')?.textContent?.trim();
+  if (!ticketCode || ticketCode === '-' || ticketCode === 'TRK-BB-0000') {
+    showToast('Tiket permohonan tidak ditemukan.', 'warning');
+    return;
+  }
+  window.location.href = `/api/public/deliveries/${encodeURIComponent(ticketCode)}/ba/download`;
+}
+
 // 10. Public BA-20 (Berita Acara Pengembalian Barang Bukti) Modal Handler
 async function openPublicBa20Modal(ticketCode) {
+  activePublicBaTicketCode = ticketCode;
   try {
     const res = await fetch(`/api/public/deliveries/${encodeURIComponent(ticketCode)}/ba`);
     const data = await res.json();
