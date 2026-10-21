@@ -1828,6 +1828,71 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertTrue(t_res.get('success'))
         self.assertEqual(t_res.get('ticket', {}).get('ticket_code'), ticket_code)
 
+    def test_29_organization_member_photo_upload_and_display_fallbacks(self):
+        """Verify organization member photo upload endpoint, serving, and onerror fallbacks."""
+        import base64
+        # 1. Test uploading a member photo (1x1 PNG or sample photo base64)
+        sample_png_b64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+        upload_payload = json.dumps({
+            'filename': 'pasfoto_pegawai_330x450.png',
+            'data': sample_png_b64
+        }).encode('utf-8')
+        h_upload = MockHandler('POST', '/api/admin/upload-media', headers={
+            'Content-Type': 'application/json',
+            'Content-Length': str(len(upload_payload)),
+            'Authorization': f'Bearer {self.token}'
+        }, body=upload_payload)
+        h_upload.do_POST()
+        self.assertEqual(h_upload.response_code, 200)
+        up_res = h_upload.get_response_json()
+        self.assertTrue(up_res.get('success'))
+        photo_url = up_res.get('url')
+        self.assertTrue(photo_url.startswith('/static/uploads/'))
+
+        # 2. Verify uploaded photo is accessible via HTTP GET
+        h_file = MockHandler('GET', photo_url)
+        h_file.do_GET()
+        self.assertEqual(h_file.response_code, 200)
+        self.assertIn('image', h_file.response_headers.get('Content-Type', ''))
+
+        # 3. Update Member 2 (Kasubbag Pembinaan) with the new uploaded photo_url
+        member_update_payload = json.dumps({
+            'photo_url': photo_url
+        }).encode('utf-8')
+        h_mem_upd = MockHandler('PUT', '/api/admin/organization/members/2', headers={
+            'Content-Type': 'application/json',
+            'Content-Length': str(len(member_update_payload)),
+            'Authorization': f'Bearer {self.token}'
+        }, body=member_update_payload)
+        h_mem_upd.do_PUT()
+        self.assertEqual(h_mem_upd.response_code, 200)
+
+        # 4. Fetch public organization hierarchy and verify photo_url is updated
+        h_org = MockHandler('GET', '/api/public/organization')
+        h_org.do_GET()
+        self.assertEqual(h_org.response_code, 200)
+        org_data = h_org.get_response_json()
+        self.assertTrue(org_data.get('success'))
+        mem2 = next(m for m in org_data['members'] if m['id'] == 2)
+        self.assertEqual(mem2['photo_url'], photo_url)
+
+        # 5. Verify onerror fallback and cropper modal layering in HTML & JS files
+        with open(os.path.join(BASE_DIR, 'profil-struktur-organisasi.html'), 'r', encoding='utf-8') as f:
+            profil_html = f.read()
+        self.assertIn('onerror="this.onerror=null; this.src=\'/static/images/avatar-officer-male.svg\';"', profil_html)
+        self.assertIn('loadOrgCanvasImage', profil_html)
+
+        with open(os.path.join(BASE_DIR, 'admin.html'), 'r', encoding='utf-8') as f:
+            adm_html = f.read()
+        self.assertIn('id="modal-crop-photo"', adm_html)
+        self.assertIn('style="z-index: 100030 !important;"', adm_html)
+        self.assertIn('id="input-direct-file-member"', adm_html)
+
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'admin.js'), 'r', encoding='utf-8') as f:
+            adm_js = f.read()
+        self.assertIn('onerror="this.onerror=null; this.src=\'/static/images/avatar-officer-male.svg\';"', adm_js)
+        self.assertIn('resizeImageIfLarge', adm_js)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1653,7 +1653,7 @@ function renderAdminInteractiveTree() {
         title="Jatuhkan pegawai ke sini untuk menjadikan Kajari sebagai atasan langsungnya"
       >
         <div class="flex items-center gap-3.5">
-          <img src="${escapeAttr(kajari.photo_url || '/static/images/kajari-portrait.jpg')}" alt="${escapeAttr(kajari.name)}" class="w-16 h-16 rounded-xl object-cover border border-amber-300 shadow-sm shrink-0">
+          <img src="${escapeAttr(kajari.photo_url || '/static/images/kajari-portrait.jpg')}" alt="${escapeAttr(kajari.name)}" class="w-16 h-16 rounded-xl object-cover border border-amber-300 shadow-sm shrink-0" onerror="this.onerror=null; this.src='/static/images/kajari-portrait.jpg';">
           <div class="flex-1 min-w-0">
             <div class="flex items-center justify-between">
               <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">PIMPINAN UTAMA</span>
@@ -1713,7 +1713,7 @@ function renderAdminInteractiveTree() {
         title="Seret untuk memindahkan ke seksi/atasan lain"
       >
         <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-500 shrink-0"></i>
-        <img src="${escapeAttr(sub.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(sub.name)}" class="w-7 h-7 rounded-md object-cover border border-slate-200 shrink-0">
+        <img src="${escapeAttr(sub.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(sub.name)}" class="w-7 h-7 rounded-md object-cover border border-slate-200 shrink-0" onerror="this.onerror=null; this.src='/static/images/avatar-officer-male.svg';">
         <div class="flex-1 min-w-0">
           <div class="text-[9px] text-slate-500 font-medium truncate">${escapeHtml(sub.position)}</div>
           <div class="font-bold text-[10.5px] text-slate-900 leading-tight truncate">${escapeHtml(sub.name)}</div>
@@ -1746,7 +1746,7 @@ function renderAdminInteractiveTree() {
             <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-500"></i>
           </div>
           <div class="flex items-center gap-2">
-            <img src="${escapeAttr(kasi.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(kasi.name)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0">
+            <img src="${escapeAttr(kasi.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(kasi.name)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.onerror=null; this.src='/static/images/avatar-officer-male.svg';">
             <div class="flex-1 min-w-0">
               <div class="text-[9.5px] text-slate-500 font-semibold truncate leading-tight">${escapeHtml(kasi.position)}</div>
               <div class="font-heading font-bold text-[11px] text-slate-900 leading-snug truncate mt-0.5">${escapeHtml(kasi.name)}</div>
@@ -1809,7 +1809,7 @@ function renderAdminInteractiveTree() {
           <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-500"></i>
         </div>
         <div class="flex items-center gap-2">
-          <img src="${escapeAttr(f.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(f.name)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0">
+          <img src="${escapeAttr(f.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(f.name)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.onerror=null; this.src='/static/images/avatar-officer-male.svg';">
           <div class="flex-1 min-w-0">
             <div class="font-heading font-bold text-[11px] text-slate-900 truncate">${escapeHtml(f.name)}</div>
             <div class="text-[9.5px] text-slate-500 truncate">${escapeHtml(f.position)}</div>
@@ -1863,7 +1863,7 @@ function renderAdminInteractiveTree() {
           <i data-lucide="grip-vertical" class="w-3.5 h-3.5 text-slate-400 group-hover:text-amber-500"></i>
         </div>
         <div class="flex items-center gap-2">
-          <img src="${escapeAttr(p.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(p.name)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0">
+          <img src="${escapeAttr(p.photo_url || '/static/images/avatar-officer-male.svg')}" alt="${escapeAttr(p.name)}" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.onerror=null; this.src='/static/images/avatar-officer-male.svg';">
           <div class="flex-1 min-w-0">
             <div class="font-heading font-bold text-[11px] text-slate-900 truncate">${escapeHtml(p.name)}</div>
             <div class="text-[9.5px] text-slate-500 truncate">${escapeHtml(p.position)}</div>
@@ -2020,7 +2020,18 @@ function loadCanvasImage(src) {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
+    img.onerror = () => {
+      // Fallback if custom image fails to load or has CORS restrictions
+      if (src !== '/static/images/avatar-officer-male.svg') {
+        const fallback = new Image();
+        fallback.crossOrigin = 'anonymous';
+        fallback.onload = () => resolve(fallback);
+        fallback.onerror = () => resolve(null);
+        fallback.src = '/static/images/avatar-officer-male.svg';
+      } else {
+        resolve(null);
+      }
+    };
     img.src = src;
   });
 }
@@ -2358,7 +2369,7 @@ function renderOrgMembersTable() {
       <tr class="hover:bg-slate-50 transition-colors">
         <td class="py-3 px-3">
           <div class="flex items-center gap-2.5">
-            <img src="${escapeAttr(m.photo_url || '/static/images/avatar-officer-male.svg')}" alt="Foto" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0">
+            <img src="${escapeAttr(m.photo_url || '/static/images/avatar-officer-male.svg')}" alt="Foto" class="w-9 h-9 rounded-lg object-cover border border-slate-200 shrink-0" onerror="this.onerror=null; this.src='/static/images/avatar-officer-male.svg';">
             <div>
               <div class="font-bold text-slate-900 text-xs">${escapeHtml(m.name)}</div>
               <div class="text-[10px] text-slate-400">Urutan: #${m.order_num || 1}</div>
@@ -2411,7 +2422,14 @@ function openOrgMemberModal(id = null) {
     document.getElementById('org-member-position').value = member.position || '';
     document.getElementById('org-member-level').value = member.level || 4;
     document.getElementById('org-member-photo-url').value = member.photo_url || '';
-    document.getElementById('preview-org-member-photo').src = member.photo_url || '/static/images/avatar-officer-male.svg';
+    const prevEl = document.getElementById('preview-org-member-photo');
+    if (prevEl) {
+      prevEl.onerror = function() {
+        this.onerror = null;
+        this.src = '/static/images/avatar-officer-male.svg';
+      };
+      prevEl.src = member.photo_url || '/static/images/avatar-officer-male.svg';
+    }
     document.getElementById('org-member-nip').value = member.nip || '';
     document.getElementById('org-member-rank').value = member.rank || '';
     document.getElementById('org-member-order').value = member.order_num || 1;
@@ -2422,7 +2440,14 @@ function openOrgMemberModal(id = null) {
     btnSubmit.textContent = 'Tambahkan Pegawai';
     document.getElementById('org-member-form-id').value = '';
     document.getElementById('org-member-photo-url').value = '/static/images/avatar-officer-male.svg';
-    document.getElementById('preview-org-member-photo').src = '/static/images/avatar-officer-male.svg';
+    const prevEl = document.getElementById('preview-org-member-photo');
+    if (prevEl) {
+      prevEl.onerror = function() {
+        this.onerror = null;
+        this.src = '/static/images/avatar-officer-male.svg';
+      };
+      prevEl.src = '/static/images/avatar-officer-male.svg';
+    }
     document.getElementById('org-member-level').value = '2';
     document.getElementById('org-member-order').value = (orgAdminData.members.length + 1);
 
@@ -2527,7 +2552,9 @@ function startPhotoCropper(e) {
       }
 
       openModal('modal-crop-photo');
-      initCropperCanvas();
+      requestAnimationFrame(() => {
+        setTimeout(initCropperCanvas, 60);
+      });
     };
     img.src = evt.target.result;
   };
@@ -2540,8 +2567,16 @@ function initCropperCanvas() {
   const viewport = document.getElementById('cropper-viewport');
   if (!canvas || !viewport) return;
 
-  canvas.width = viewport.clientWidth || 460;
-  canvas.height = viewport.clientHeight || 320;
+  const rect = viewport.getBoundingClientRect();
+  const w = Math.round(rect.width) || viewport.clientWidth || 460;
+  const h = Math.round(rect.height) || viewport.clientHeight || 320;
+
+  canvas.width = w;
+  canvas.height = h;
+
+  drawCropperScene();
+  setupCropperEvents();
+}
 
   drawCropperScene();
   setupCropperEvents();
@@ -2617,6 +2652,19 @@ function setupCropperEvents() {
     const delta = e.deltaY < 0 ? 0.05 : -0.05;
     adjustCropperZoom(delta);
   }, { passive: false });
+
+  // Handle Window Resize
+  window.addEventListener('resize', function() {
+    const modal = document.getElementById('modal-crop-photo');
+    if (modal && !modal.classList.contains('hidden') && cropperState.img) {
+      const rect = viewport.getBoundingClientRect();
+      const w = Math.round(rect.width) || viewport.clientWidth || 460;
+      const h = Math.round(rect.height) || viewport.clientHeight || 320;
+      canvas.width = w;
+      canvas.height = h;
+      drawCropperScene();
+    }
+  });
 }
 
 function adjustCropperZoom(delta) {
@@ -2921,34 +2969,64 @@ function setPresetPhoto(url) {
   document.getElementById('preview-org-member-photo').src = url;
 }
 
+function resizeImageIfLarge(dataUrl, maxWidth = 1200, maxHeight = 1600) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = function() {
+      let w = img.width;
+      let h = img.height;
+      if (w <= maxWidth && h <= maxHeight) {
+        return resolve(dataUrl);
+      }
+      const ratio = Math.min(maxWidth / w, maxHeight / h);
+      w = Math.round(w * ratio);
+      h = Math.round(h * ratio);
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', 0.90));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 async function uploadMemberPhoto(e) {
-  const file = e.target.files[0];
+  const file = e.target.files ? e.target.files[0] : null;
   if (!file) return;
 
   const reader = new FileReader();
   reader.onload = async function(evt) {
-    const base64 = evt.target.result;
+    let base64 = evt.target.result;
     try {
+      showAdminToast('Mengoptimasi & mengunggah foto...');
+      base64 = await resizeImageIfLarge(base64, 1200, 1600);
       const res = await fetch('/api/admin/upload-media', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          filename: file.name,
+          filename: file.name || 'foto_pegawai.jpg',
           data: base64
         })
       });
       const data = await res.json();
-      if (data.success && data.url) {
+      if (data && data.success && data.url) {
         document.getElementById('org-member-photo-url').value = data.url;
         document.getElementById('preview-org-member-photo').src = data.url;
+        showAdminToast('Foto pegawai berhasil diunggah!');
       } else {
-        alert('Gagal mengunggah foto: ' + (data.error || 'Terjadi kesalahan'));
+        alert('Gagal mengunggah foto: ' + ((data && data.error) || 'Terjadi kesalahan'));
       }
     } catch (err) {
-      alert('Gagal mengunggah foto.');
+      alert('Gagal mengunggah foto: Terjadi kesalahan jaringan.');
     }
   };
   reader.readAsDataURL(file);
+  e.target.value = '';
 }
 
 async function uploadOrgImage(e, inputId, previewId) {

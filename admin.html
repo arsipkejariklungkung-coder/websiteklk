@@ -1932,10 +1932,10 @@
       <form id="admin-org-member-form" onsubmit="handleSaveOrgMember(event)" class="p-6 space-y-4 text-xs">
         <input type="hidden" id="org-member-form-id">
 
-        <!-- Foto Profil Resmi (330x450 px) dengan Cropper -->
+        <!-- Foto Profil Resmi (330x450 px) dengan Cropper & Upload Langsung -->
         <div class="flex items-center gap-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
           <div class="w-16 h-20 rounded-xl bg-white border border-slate-300 p-0.5 flex items-center justify-center shrink-0 shadow-sm overflow-hidden relative group">
-            <img id="preview-org-member-photo" src="/static/images/avatar-officer-male.svg" alt="Preview Foto 330x450" class="w-full h-full object-cover rounded-lg">
+            <img id="preview-org-member-photo" src="/static/images/avatar-officer-male.svg" alt="Preview Foto 330x450" class="w-full h-full object-cover rounded-lg" onerror="this.onerror=null; this.src='/static/images/avatar-officer-male.svg';">
             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer" onclick="document.getElementById('input-crop-file-member').click()" title="Klik untuk Crop Foto (330x450)">
               <i data-lucide="crop" class="w-4 h-4 text-white"></i>
             </div>
@@ -1945,17 +1945,22 @@
               <label class="block font-bold text-slate-800">Pasfoto Pegawai (330 × 450 px)</label>
               <span class="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">Rasio Resmi 330×450</span>
             </div>
-            <input type="text" id="org-member-photo-url" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono" placeholder="/static/images/avatar-officer-male.svg">
+            <input type="text" id="org-member-photo-url" oninput="document.getElementById('preview-org-member-photo').src = this.value || '/static/images/avatar-officer-male.svg'" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-mono" placeholder="/static/images/avatar-officer-male.svg">
             <div class="flex items-center gap-2 flex-wrap">
               <label class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#0B3B24] hover:bg-[#072A19] text-white rounded-lg cursor-pointer font-bold text-[11px] shadow-sm transition-colors">
                 <i data-lucide="crop" class="w-3.5 h-3.5 text-amber-400"></i>
-                <span>Upload &amp; Crop Foto (330×450)</span>
+                <span>Upload &amp; Crop (330×450)</span>
                 <input type="file" id="input-crop-file-member" accept="image/*" class="hidden" onchange="startPhotoCropper(event)">
+              </label>
+              <label class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 rounded-lg cursor-pointer font-bold text-[11px] shadow-xs transition-colors">
+                <i data-lucide="upload" class="w-3.5 h-3.5 text-emerald-700"></i>
+                <span>Upload Langsung</span>
+                <input type="file" id="input-direct-file-member" accept="image/*" class="hidden" onchange="uploadMemberPhoto(event)">
               </label>
               <button type="button" onclick="setPresetPhoto('/static/images/avatar-officer-male.svg')" class="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-[10px] font-semibold">Avatar Pria</button>
               <button type="button" onclick="setPresetPhoto('/static/images/avatar-officer-female.svg')" class="px-2 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded text-[10px] font-semibold">Avatar Wanita</button>
             </div>
-            <p class="text-[10px] text-slate-500">Pilih berkas foto untuk memotong (crop) dengan rasio pasfoto standar Kejaksaan 330 × 450 px.</p>
+            <p class="text-[10px] text-slate-500">Pilih berkas foto untuk memotong (crop) rasio pasfoto standar 330 × 450 px atau upload berkas foto langsung.</p>
           </div>
         </div>
 
@@ -2059,7 +2064,7 @@
   </div>
 
   <!-- Modal Photo Cropper (Strict 330 x 450 px Pasfoto Ratio) -->
-  <div id="modal-crop-photo" class="fixed inset-0 z-[60] modal-backdrop hidden items-center justify-center p-4 overflow-y-auto">
+  <div id="modal-crop-photo" class="fixed inset-0 modal-backdrop hidden items-center justify-center p-4 overflow-y-auto" style="z-index: 100030 !important;">
     <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 my-8">
       <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
         <div class="flex items-center gap-2">
@@ -2077,7 +2082,7 @@
       <div class="p-4 space-y-3">
         <!-- Canvas Viewport -->
         <div class="relative bg-slate-900 rounded-xl overflow-hidden flex items-center justify-center h-80 select-none cursor-grab active:cursor-grabbing border border-slate-800" id="cropper-viewport">
-          <canvas id="crop-canvas" class="max-h-full max-w-full touch-none"></canvas>
+          <canvas id="crop-canvas" class="w-full h-full block touch-none"></canvas>
           
           <!-- Pasfoto 330x450 Ratio Overlay Guide -->
           <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
