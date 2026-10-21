@@ -3764,6 +3764,8 @@ async function resetAdminMfaSecret() {
     const res = await fetch(`/api/admin/users/${userId}/mfa-reset`, { method: 'POST' });
     const data = await res.json();
     if (data.success) {
+      if (data.username) localStorage.removeItem('mfa_enrolled_' + data.username);
+      if (data.email) localStorage.removeItem('mfa_enrolled_' + data.email);
       activeAdminMfaState.rawSecret = data.totp_secret || '';
       const qrBox = document.getElementById('admin-mfa-qr-box');
       const secCode = document.getElementById('admin-mfa-secret-code');

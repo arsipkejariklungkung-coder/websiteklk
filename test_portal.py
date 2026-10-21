@@ -57,6 +57,10 @@ class MockHandler(KertagosaHandler):
 
 class TestKertagosaPortal(unittest.TestCase):
     def setUp(self):
+        # Clear rate limit store so tests never collide on IP throttle
+        from server import IP_RATE_LIMIT_STORE
+        IP_RATE_LIMIT_STORE.clear()
+
         # Seed test admin session
         self.token = "test-token-superadmin"
         SESSIONS[self.token] = {
@@ -2232,6 +2236,100 @@ class TestKertagosaPortal(unittest.TestCase):
             self.assertIn('id="mob-btn-lang-id"', content, f"Page {page} missing mobile ID button")
             self.assertIn('id="mob-btn-lang-en"', content, f"Page {page} missing mobile EN button")
             self.assertIn('static/js/i18n.js', content, f"Page {page} missing i18n.js script tag")
+
+    def test_35_admin_mfa_enrolled_login_ui_and_persistence(self):
+        """Verify MFA QR Code setup is hidden for already-enrolled users and only 6-digit OTP is shown."""
+        import totp_mfa
+
+        # 1. Existing enrolled admin login check
+        login_body = json.dumps({'username': 'admin', 'password': 'admin123'}).encode('utf-8')
+        h = MockHandler('POST', '/api/auth/login', {'Content-Length': str(len(login_body))}, login_body)
+        h.do_POST()
+        self.assertEqual(h.response_code, 200)
+        res = h.get_response_json()
+        self.assertTrue(res.get('require_mfa'))
+        self.assertTrue(res.get('mfa_enrolled'), "Default admin must be flagged as already enrolled")
+
+        # 2. Create a fresh admin user: must be mfa_enrolled = 0 initially
+        new_user_payload = json.dumps({
+            'username': 'admin_baru_uji',
+            'email': 'adminbaru@kejariklungkung.go.id',
+            'full_name': 'Admin Baru Uji',
+            'password': 'password123',
+            'role': 'ADMIN'
+        }).encode('utf-8')
+        create_h = MockHandler('POST', '/api/admin/users', {
+            'Content-Length': str(len(new_user_payload)),
+            'Authorization': f'Bearer {self.token}'
+        }, new_user_payload)
+        create_h.do_POST()
+        self.assertEqual(create_h.response_code, 200)
+        new_uid = create_h.get_response_json().get('id')
+
+        # 3. New user login: first time -> mfa_enrolled must be False
+        new_login_payload = json.dumps({'username': 'admin_baru_uji', 'password': 'password123'}).encode('utf-8')
+        new_login_h = MockHandler('POST', '/api/auth/login', {'Content-Length': str(len(new_login_payload))}, new_login_payload)
+        new_login_h.do_POST()
+        self.assertEqual(new_login_h.response_code, 200)
+        new_login_res = new_login_h.get_response_json()
+        self.assertFalse(new_login_res.get('mfa_enrolled'), "New user must NOT be enrolled until first OTP verification")
+        mfa_token = new_login_res['mfa_token']
+        totp_secret = new_login_res['totp_secret']
+
+        # 4. First OTP verification activates MFA and sets mfa_enrolled = 1
+        valid_otp = totp_mfa.generate_totp(totp_secret)
+        ver_payload = json.dumps({'mfa_token': mfa_token, 'otp_code': valid_otp}).encode('utf-8')
+        ver_h = MockHandler('POST', '/api/auth/verify-mfa', {'Content-Length': str(len(ver_payload))}, ver_payload)
+        ver_h.do_POST()
+        self.assertEqual(ver_h.response_code, 200)
+        self.assertTrue(ver_h.get_response_json().get('success'))
+
+        # Verify DB column updated
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT mfa_enrolled FROM users WHERE id = ?", (new_uid,))
+        row = cursor.fetchone()
+        conn.close()
+        self.assertEqual(row['mfa_enrolled'], 1)
+
+        # 5. Subsequent login: mfa_enrolled is now True!
+        sub_login_h = MockHandler('POST', '/api/auth/login', {'Content-Length': str(len(new_login_payload))}, new_login_payload)
+        sub_login_h.do_POST()
+        self.assertEqual(sub_login_h.response_code, 200)
+        sub_login_res = sub_login_h.get_response_json()
+        self.assertTrue(sub_login_res.get('mfa_enrolled'), "Subsequent login must flag user as already enrolled")
+
+        # 6. Admin resets MFA: mfa_enrolled resets to 0
+        reset_h = MockHandler('POST', f'/api/admin/users/{new_uid}/mfa-reset', headers={'Authorization': f'Bearer {self.token}'})
+        reset_h.do_POST()
+        self.assertEqual(reset_h.response_code, 200)
+        reset_res = reset_h.get_response_json()
+        self.assertFalse(reset_res.get('mfa_enrolled'))
+
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT mfa_enrolled FROM users WHERE id = ?", (new_uid,))
+        row = cursor.fetchone()
+        self.assertEqual(row['mfa_enrolled'], 0)
+        # Cleanup
+        cursor.execute("DELETE FROM users WHERE id = ?", (new_uid,))
+        conn.commit()
+        conn.close()
+
+        # 7. Verify index.html & static/js/app.js frontend UI logic
+        with open(os.path.join(BASE_DIR, 'index.html'), 'r', encoding='utf-8') as f:
+            index_html = f.read()
+        self.assertIn('id="mfa-tabs-switcher"', index_html)
+        self.assertIn('id="mfa-panel-verify"', index_html)
+        self.assertIn('id="mfa-panel-qr"', index_html)
+        self.assertIn('id="mfa-otp-input"', index_html)
+
+        with open(os.path.join(BASE_DIR, 'static', 'js', 'app.js'), 'r', encoding='utf-8') as f:
+            app_js = f.read()
+        self.assertIn('isEnrolled', app_js)
+        self.assertIn('tabsSwitcher.classList.add(\'hidden\')', app_js)
+        self.assertIn('qrPanel.classList.add(\'hidden\')', app_js)
+        self.assertIn('localStorage.setItem(\'mfa_enrolled_\'', app_js)
 
 
 if __name__ == '__main__':

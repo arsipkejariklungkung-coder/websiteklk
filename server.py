@@ -1694,9 +1694,12 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         else:
             masked_email = 'email terdaftar'
 
+        is_enrolled = bool(user_dict.get('mfa_enrolled'))
+
         self.send_json({
             'require_mfa': True,
             'mfa_token': mfa_token,
+            'mfa_enrolled': is_enrolled,
             'mfa_type': 'TOTP_AUTHENTICATOR',
             'mfa_provider': provider_val,
             'supported_apps': ['Google Authenticator', 'Microsoft Authenticator'],
@@ -1709,7 +1712,7 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
             'qr_svg': qr_svg,
             'totp_period': 30,
             'totp_remaining': totp_mfa.get_totp_remaining_seconds(30),
-            'message': 'Kredensial valid. Buka aplikasi Google Authenticator atau Microsoft Authenticator dan masukkan 6-digit kode TOTP.'
+            'message': 'Kredensial valid. Masukkan 6-digit kode OTP dari aplikasi Google / Microsoft Authenticator.' if is_enrolled else 'Kredensial valid. Silakan scan QR Code dan masukkan 6-digit kode OTP untuk mengaktifkan MFA.'
         })
 
     def handle_get_mfa_status(self, query):
@@ -1762,6 +1765,18 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
         # Verification successful! Issue full stateless & in-memory session token
         user_dict = challenge['user']
+        user_id = user_dict.get('id')
+        if user_id:
+            try:
+                conn = get_db()
+                cursor = conn.cursor()
+                cursor.execute("UPDATE users SET mfa_enrolled = 1 WHERE id = ?", (user_id,))
+                conn.commit()
+                conn.close()
+                user_dict['mfa_enrolled'] = 1
+            except Exception as e:
+                logger.error(f"Failed to update mfa_enrolled for user {user_id}: {e}")
+
         MFA_CHALLENGES.pop(mfa_token, None)
         token = create_signed_token({
             'type': 'session',
@@ -3605,7 +3620,7 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
 
         u = dict(row)
         new_secret = totp_mfa.generate_base32_secret(16)
-        cursor.execute("UPDATE users SET mfa_secret = ?, mfa_enabled = 1 WHERE id = ?", (new_secret, user_id))
+        cursor.execute("UPDATE users SET mfa_secret = ?, mfa_enabled = 1, mfa_enrolled = 0 WHERE id = ?", (new_secret, user_id))
         conn.commit()
         conn.close()
 
@@ -3616,6 +3631,9 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         self.send_json({
             'success': True,
             'user_id': u['id'],
+            'username': u['username'],
+            'email': u['email'],
+            'mfa_enrolled': False,
             'totp_secret': new_secret,
             'totp_secret_formatted': totp_mfa.format_secret_display(new_secret),
             'otpauth_uri': otpauth_uri,
@@ -3656,8 +3674,8 @@ class KertagosaHandler(SimpleHTTPRequestHandler):
         pwd_hash = hash_password(password)
         mfa_secret = totp_mfa.generate_base32_secret(16)
         cursor.execute("""
-        INSERT INTO users (username, email, password_hash, full_name, role, mfa_enabled, mfa_secret, mfa_provider)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO users (username, email, password_hash, full_name, role, mfa_enabled, mfa_secret, mfa_provider, mfa_enrolled)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
         """, (username, email, pwd_hash, full_name, role, mfa_enabled, mfa_secret, mfa_provider))
         new_id = cursor.lastrowid
         conn.commit()

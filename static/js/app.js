@@ -1311,15 +1311,15 @@ async function checkAuthSession() {
 async function handleAdminLogin(e) {
   e.preventDefault();
   const form = e.target;
-  const username = form.username.value.trim();
-  const password = form.password.value.trim();
+  const username = (form.username?.value || document.getElementById('login-input-username')?.value || document.getElementById('admin-input-username')?.value || '').trim();
+  const password = (form.password?.value || document.getElementById('login-input-password')?.value || document.getElementById('admin-input-password')?.value || '').trim();
 
   if (!username || !password) {
     showToast('Harap masukkan username dan kata sandi.', 'error');
     return;
   }
 
-  const btnStep1 = document.getElementById('btn-login-step1');
+  const btnStep1 = document.getElementById('btn-login-step1') || document.getElementById('btn-admin-login-step1');
   if (btnStep1) {
     btnStep1.disabled = true;
     btnStep1.innerHTML = '<span class="animate-spin">⏳</span> Memeriksa Kredensial...';
@@ -1337,16 +1337,23 @@ async function handleAdminLogin(e) {
       state.pendingMfaToken = data.mfa_token;
       state.pendingTotpSecret = data.totp_secret || '';
       state.pendingTotpFormatted = data.totp_secret_formatted || data.totp_secret || '';
+      state.pendingUsername = username;
 
-      const step1 = document.getElementById('form-login-step-credentials');
-      const step2 = document.getElementById('form-login-step-mfa');
+      // Determine enrollment status: server says enrolled, or local storage has record
+      const isEnrolled = !!(data.mfa_enrolled || localStorage.getItem('mfa_enrolled_' + username) === '1');
+      state.isMfaEnrolled = isEnrolled;
+
+      const step1 = document.getElementById('form-login-step-credentials') || document.getElementById('admin-login-step1-form');
+      const step2 = document.getElementById('form-login-step-mfa') || document.getElementById('admin-login-step2-mfa');
       const emailTarget = document.getElementById('mfa-target-email');
-      const otpInput = document.getElementById('mfa-otp-input');
+      const otpInput = document.getElementById('mfa-otp-input') || document.getElementById('admin-input-mfa-code');
       const qrContainer = document.getElementById('mfa-qr-container');
       const secretDisplay = document.getElementById('mfa-secret-display');
+      const tabsSwitcher = document.getElementById('mfa-tabs-switcher');
+      const qrPanel = document.getElementById('mfa-panel-qr');
+      const promptText = document.getElementById('mfa-prompt-text');
 
       if (emailTarget) emailTarget.textContent = data.account_name || data.masked_email;
-      if (qrContainer && data.qr_svg) qrContainer.innerHTML = data.qr_svg;
       if (secretDisplay) secretDisplay.textContent = state.pendingTotpFormatted;
 
       if (step1 && step2) {
@@ -1354,17 +1361,37 @@ async function handleAdminLogin(e) {
         step2.classList.remove('hidden');
       }
 
-      switchMfaLoginSubTab('verify');
+      if (isEnrolled) {
+        // Enrolled: strictly hide QR setup, hide tabs switcher, show only OTP code input
+        if (tabsSwitcher) tabsSwitcher.classList.add('hidden');
+        if (qrPanel) qrPanel.classList.add('hidden');
+        if (qrContainer) qrContainer.innerHTML = '';
+        if (promptText) {
+          promptText.innerHTML = 'Masukkan 6 digit kode yang tampil pada aplikasi <strong>Google Authenticator</strong> atau <strong>Microsoft Authenticator</strong> Anda.';
+        }
+        switchMfaLoginSubTab('verify');
+      } else {
+        // Not yet enrolled: show QR code setup so user can scan it first
+        if (qrContainer && data.qr_svg) qrContainer.innerHTML = data.qr_svg;
+        if (tabsSwitcher) tabsSwitcher.classList.remove('hidden');
+        if (promptText) {
+          promptText.innerHTML = 'Masukkan 6-digit kode dari aplikasi <strong>Google Authenticator</strong> atau <strong>Microsoft Authenticator</strong> Anda. Belum scan QR? Buka tab <button type="button" onclick="switchMfaLoginSubTab(\'qr\')" class="font-extrabold underline text-emerald-950 hover:text-amber-700">Scan QR Aplikasi</button>.';
+        }
+        switchMfaLoginSubTab('qr');
+      }
+
       selectMfaAppBadge(data.mfa_provider === 'MICROSOFT' ? 'MICROSOFT' : 'GOOGLE');
       startMfaTotpCountdown();
 
       if (otpInput) {
         otpInput.value = '';
-        setTimeout(() => otpInput.focus(), 150);
+        if (isEnrolled) {
+          setTimeout(() => otpInput.focus(), 150);
+        }
       }
 
       lucide.createIcons();
-      showToast('Buka Google / Microsoft Authenticator & masukkan 6-digit kode TOTP.', 'info');
+      showToast(isEnrolled ? 'Buka Google / Microsoft Authenticator & masukkan 6-digit kode TOTP.' : 'Pindai QR Code di aplikasi Authenticator untuk mengaktifkan 2FA.', 'info');
     } else if (data.success) {
       state.currentUser = data.user;
       closeModal('modal-admin-login');
@@ -1388,12 +1415,16 @@ async function handleAdminLogin(e) {
 }
 
 function switchMfaLoginSubTab(mode) {
+  // If user has already enrolled MFA, forbid switching to QR tab and force verification form
+  if (state.isMfaEnrolled && mode === 'qr') {
+    mode = 'verify';
+  }
   const panelVerify = document.getElementById('mfa-panel-verify');
   const panelQr = document.getElementById('mfa-panel-qr');
   const btnVerify = document.getElementById('mfa-subtab-btn-verify');
   const btnQr = document.getElementById('mfa-subtab-btn-qr');
 
-  if (mode === 'qr') {
+  if (mode === 'qr' && !state.isMfaEnrolled) {
     if (panelVerify) panelVerify.classList.add('hidden');
     if (panelQr) panelQr.classList.remove('hidden');
     if (btnQr) btnQr.className = 'py-1.5 px-2 rounded-lg font-bold text-[11px] bg-[#0B3B24] text-white shadow-sm flex items-center justify-center gap-1.5 transition-all';
@@ -1403,7 +1434,7 @@ function switchMfaLoginSubTab(mode) {
     if (panelVerify) panelVerify.classList.remove('hidden');
     if (btnVerify) btnVerify.className = 'py-1.5 px-2 rounded-lg font-bold text-[11px] bg-[#0B3B24] text-white shadow-sm flex items-center justify-center gap-1.5 transition-all';
     if (btnQr) btnQr.className = 'py-1.5 px-2 rounded-lg font-bold text-[11px] text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 transition-all';
-    const otpInput = document.getElementById('mfa-otp-input');
+    const otpInput = document.getElementById('mfa-otp-input') || document.getElementById('admin-input-mfa-code');
     if (otpInput) setTimeout(() => otpInput.focus(), 80);
   }
   lucide.createIcons();
@@ -1474,7 +1505,7 @@ function copyMfaSecretKey() {
 
 async function handleMfaVerify(e) {
   e.preventDefault();
-  const otpInput = document.getElementById('mfa-otp-input');
+  const otpInput = document.getElementById('mfa-otp-input') || document.getElementById('admin-input-mfa-code');
   const otpCode = otpInput ? otpInput.value.trim() : '';
 
   if (!otpCode || otpCode.length !== 6) {
@@ -1482,7 +1513,7 @@ async function handleMfaVerify(e) {
     return;
   }
 
-  const btnMfa = document.getElementById('btn-login-mfa');
+  const btnMfa = document.getElementById('btn-login-mfa') || document.getElementById('btn-admin-login-step2');
   if (btnMfa) {
     btnMfa.disabled = true;
     btnMfa.innerHTML = '<span class="animate-spin">⏳</span> Memverifikasi Kode Authenticator...';
@@ -1499,6 +1530,14 @@ async function handleMfaVerify(e) {
     });
     const data = await res.json();
     if (data.success) {
+      // Remember MFA enrolled status for this user in localStorage
+      if (state.pendingUsername) {
+        localStorage.setItem('mfa_enrolled_' + state.pendingUsername, '1');
+      }
+      if (data.user) {
+        if (data.user.username) localStorage.setItem('mfa_enrolled_' + data.user.username, '1');
+        if (data.user.email) localStorage.setItem('mfa_enrolled_' + data.user.email, '1');
+      }
       state.currentUser = data.user;
       closeModal('modal-admin-login');
       showToast(data.message, 'success');
@@ -1525,16 +1564,20 @@ function resetLoginModal() {
     clearInterval(state.mfaTimerInterval);
     state.mfaTimerInterval = null;
   }
-  const step1 = document.getElementById('form-login-step-credentials');
-  const step2 = document.getElementById('form-login-step-mfa');
+  const step1 = document.getElementById('form-login-step-credentials') || document.getElementById('admin-login-step1-form');
+  const step2 = document.getElementById('form-login-step-mfa') || document.getElementById('admin-login-step2-mfa');
   if (step1 && step2) {
-    step1.reset();
-    step2.reset();
+    if (typeof step1.reset === 'function') step1.reset();
+    if (typeof step2.reset === 'function') step2.reset();
     step1.classList.remove('hidden');
     step2.classList.add('hidden');
   }
+  const qrContainer = document.getElementById('mfa-qr-container');
+  if (qrContainer) qrContainer.innerHTML = '';
   state.pendingMfaToken = null;
   state.pendingTotpSecret = null;
+  state.pendingUsername = null;
+  state.isMfaEnrolled = false;
   lucide.createIcons();
 }
 
@@ -1787,6 +1830,14 @@ function setupEventListeners() {
       loadHomepageData();
     });
   }
+
+  // Auto-open admin login modal if ?login=admin in query
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('login') === 'admin') {
+      setTimeout(() => openModal('modal-admin-login'), 200);
+    }
+  } catch (_) {}
 }
 
 // Inline Content Edit Modal
@@ -1996,7 +2047,7 @@ function ensureCommonModals() {
               <i data-lucide="shield-check" class="w-5 h-5"></i>
             </div>
             <div>
-              <h3 class="font-heading font-extrabold text-sm text-white">Login Petugas &amp; Admin</h3>
+              <h3 class="font-heading font-extrabold text-sm text-white">Login Master Admin</h3>
               <span class="text-[10px] text-amber-300 font-semibold flex items-center gap-1">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Google &amp; Microsoft Authenticator (2FA)
               </span>
@@ -2007,50 +2058,110 @@ function ensureCommonModals() {
           </button>
         </div>
 
-        <form id="admin-login-step1-form" onsubmit="handleAdminLoginStep1(event)" class="p-6 space-y-4 text-xs">
+        <form id="form-login-step-credentials" onsubmit="handleAdminLogin(event)" class="p-6 space-y-4 text-xs">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Username / NIP Petugas</label>
+            <label class="block font-bold text-slate-700 mb-1">Email / NIP / Username *</label>
             <div class="relative">
-              <input type="text" id="admin-input-username" required placeholder="Masukkan username admin..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B3B24]">
+              <input type="text" id="login-input-username" name="username" required placeholder="Masukkan email atau username admin" class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B3B24]">
               <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
             </div>
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Kata Sandi</label>
+            <label class="block font-bold text-slate-700 mb-1">Password *</label>
             <div class="relative">
-              <input type="password" id="admin-input-password" required placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B3B24]">
+              <input type="password" id="login-input-password" name="password" required placeholder="Masukkan kata sandi" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B3B24]">
               <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
             </div>
           </div>
-          <div id="admin-login-error" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 font-semibold text-xs flex items-center gap-2">
-            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
-            <span id="admin-login-error-text">Kredensial tidak valid.</span>
-          </div>
-          <button type="submit" id="btn-admin-login-step1" class="w-full py-3 rounded-xl bg-[#0B3B24] hover:bg-[#072A19] text-white font-heading font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2">
-            <span>Lanjutkan Verifikasi (2FA)</span>
+          <button type="submit" id="btn-login-step1" class="w-full py-3 rounded-xl bg-[#0B3B24] hover:bg-[#072A19] text-white font-heading font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2">
+            <span>Lanjutkan ke Google / Microsoft MFA</span>
             <i data-lucide="arrow-right" class="w-4 h-4 text-amber-400"></i>
           </button>
         </form>
 
-        <form id="admin-login-step2-mfa" onsubmit="handleAdminLoginStep2Mfa(event)" class="hidden p-6 space-y-4 text-xs">
-          <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-2.5">
-            <i data-lucide="shield-alert" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
-            <div class="text-[11px] text-amber-900 leading-relaxed">
-              <span class="font-bold block">Autentikasi Dua Langkah (2FA) Diperlukan</span>
-              Masukkan 6 digit kode dari aplikasi <b>Google Authenticator</b> atau <b>Microsoft Authenticator</b> di perangkat Anda.
+        <form id="form-login-step-mfa" onsubmit="handleMfaVerify(event)" class="hidden p-5 sm:p-6 space-y-4 text-xs">
+          <!-- Supported Authenticator App Badges -->
+          <div class="flex items-center justify-center gap-2">
+            <button type="button" onclick="selectMfaAppBadge('GOOGLE')" id="mfa-badge-google" class="px-3 py-1.5 rounded-xl border border-emerald-600 bg-emerald-50 text-emerald-950 font-bold text-[11px] flex items-center gap-1.5 shadow-sm transition-all">
+              <span class="w-4 h-4 rounded-full bg-white border border-slate-200 flex items-center justify-center font-black text-[10px] text-blue-600">G</span>
+              <span>Google Authenticator</span>
+            </button>
+            <button type="button" onclick="selectMfaAppBadge('MICROSOFT')" id="mfa-badge-microsoft" class="px-3 py-1.5 rounded-xl border border-blue-200 bg-blue-50/70 text-blue-950 font-bold text-[11px] flex items-center gap-1.5 transition-all">
+              <span class="w-4 h-4 rounded bg-blue-600 text-white flex items-center justify-center font-black text-[9px]">M</span>
+              <span>Microsoft Authenticator</span>
+            </button>
+          </div>
+
+          <!-- Mode Switcher Tabs: Verify Code vs Scan QR Setup -->
+          <div id="mfa-tabs-switcher" class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
+            <button type="button" id="mfa-subtab-btn-verify" onclick="switchMfaLoginSubTab('verify')" class="py-1.5 px-2 rounded-lg font-bold text-[11px] bg-[#0B3B24] text-white shadow-sm flex items-center justify-center gap-1.5 transition-all">
+              <i data-lucide="key-round" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>Masukkan Kode</span>
+            </button>
+            <button type="button" id="mfa-subtab-btn-qr" onclick="switchMfaLoginSubTab('qr')" class="py-1.5 px-2 rounded-lg font-bold text-[11px] text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 transition-all">
+              <i data-lucide="qr-code" class="w-3.5 h-3.5 text-emerald-700"></i>
+              <span>Scan QR Aplikasi</span>
+            </button>
+          </div>
+
+          <!-- SUB-PANEL A: ENTER 6-DIGIT TOTP CODE -->
+          <div id="mfa-panel-verify" class="space-y-3.5">
+            <div class="text-center space-y-1">
+              <h4 id="mfa-selected-app-title" class="font-heading font-black text-sm text-slate-900">Otentikasi Dua Langkah (TOTP 6-Digit)</h4>
+              <p class="text-[11px] text-slate-500 leading-snug">
+                Buka aplikasi <strong id="mfa-selected-app-name" class="text-slate-800">Google / Microsoft Authenticator</strong> untuk akun:<br>
+                <strong id="mfa-target-email" class="text-emerald-900 font-bold"></strong>
+              </p>
             </div>
+
+            <div class="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl text-left space-y-1">
+              <p id="mfa-prompt-text" class="text-[11px] text-emerald-900/90 leading-relaxed">
+                Masukkan 6 digit kode yang tampil pada aplikasi <strong>Google Authenticator</strong> atau <strong>Microsoft Authenticator</strong> Anda.
+              </p>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 text-center mb-1.5">Masukkan 6-Digit Kode Authenticator</label>
+              <input type="text" id="mfa-otp-input" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" required placeholder="000000" class="w-full py-2.5 text-center font-mono font-black text-2xl tracking-[0.4em] border-2 border-emerald-800 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-700/20 text-slate-900 bg-emerald-50/30">
+            </div>
+
+            <button type="submit" id="btn-login-mfa" class="w-full py-2.5 rounded-xl bg-[#0B3B24] hover:bg-[#072A19] text-white font-bold transition-all shadow-md flex items-center justify-center gap-2">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-amber-400"></i>
+              <span>Verifikasi &amp; Masuk Dashboard</span>
+            </button>
           </div>
-          <div>
-            <label class="block font-bold text-slate-700 mb-1">Kode Enam Digit Authenticator</label>
-            <input type="text" id="admin-input-mfa-code" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="000000" class="w-full text-center text-xl font-mono font-black tracking-widest py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B3B24]">
+
+          <!-- SUB-PANEL B: SCAN QR CODE -->
+          <div id="mfa-panel-qr" class="hidden space-y-3">
+            <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-950 space-y-1">
+              <span class="font-extrabold flex items-center gap-1.5 text-emerald-900">
+                <i data-lucide="smartphone" class="w-4 h-4 text-emerald-700"></i>
+                <span id="mfa-qr-guide-title">Panduan Hubungkan Google / Microsoft Authenticator:</span>
+              </span>
+            </div>
+            <div class="flex flex-col items-center justify-center p-3 bg-white border-2 border-emerald-800/30 rounded-2xl shadow-inner">
+              <div id="mfa-qr-container" class="w-44 h-44 bg-white p-1.5 rounded-xl border border-slate-200 flex items-center justify-center"></div>
+              <span class="text-[10px] font-bold text-slate-500 mt-1.5">KERTAGOSA Kejari Klungkung • TOTP Standar</span>
+            </div>
+            <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <span class="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 block">Kunci Setup Manual (Base32):</span>
+                <code id="mfa-secret-display" class="font-mono font-bold text-xs text-slate-900 select-all truncate block">---- ---- ---- ----</code>
+              </div>
+              <button type="button" onclick="copyMfaSecretKey()" class="px-2.5 py-1.5 rounded-lg bg-white hover:bg-emerald-50 text-emerald-900 border border-slate-300 font-bold text-[10px] shrink-0 flex items-center gap-1">
+                <i data-lucide="copy" class="w-3 h-3"></i>
+                <span>Salin Kunci</span>
+              </button>
+            </div>
+            <button type="button" onclick="switchMfaLoginSubTab('verify')" class="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold transition-all shadow-sm flex items-center justify-center gap-1.5">
+              <i data-lucide="key-round" class="w-4 h-4"></i>
+              <span>Sudah Scan? Masukkan 6-Digit Kode →</span>
+            </button>
           </div>
-          <div id="admin-mfa-error" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 font-semibold text-xs flex items-center gap-2">
-            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
-            <span id="admin-mfa-error-text">Kode OTP salah atau telah kadaluarsa.</span>
-          </div>
-          <button type="submit" id="btn-admin-login-step2" class="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-heading font-black text-xs shadow-md transition-all flex items-center justify-center gap-2">
-            <i data-lucide="lock" class="w-4 h-4"></i>
-            <span>Verifikasi &amp; Masuk Dashboard Admin</span>
+
+          <button type="button" onclick="resetLoginModal()" class="w-full py-1.5 text-slate-500 hover:text-slate-800 font-semibold text-[11px] flex items-center justify-center gap-1 transition-colors">
+            <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+            <span>Kembali ke input email/kata sandi</span>
           </button>
         </form>
       </div>
@@ -4906,6 +5017,14 @@ window.previewQuickStars = previewQuickStars;
 window.resetQuickStars = resetQuickStars;
 window.handleQuickStarRate = handleQuickStarRate;
 window.copyToClipboard = copyToClipboard;
+window.handleAdminLogin = handleAdminLogin;
+window.handleMfaVerify = handleMfaVerify;
+window.handleAdminLoginStep1 = handleAdminLogin;
+window.handleAdminLoginStep2Mfa = handleMfaVerify;
+window.switchMfaLoginSubTab = switchMfaLoginSubTab;
+window.selectMfaAppBadge = selectMfaAppBadge;
+window.copyMfaSecretKey = copyMfaSecretKey;
+window.resetLoginModal = resetLoginModal;
 
 // 11. Auto-initialize Floating Accessibility Widget (Bottom-Left)
 if (typeof window.A11Y === 'undefined' && !document.getElementById('a11y-widget-root')) {

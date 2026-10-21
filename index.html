@@ -1709,7 +1709,7 @@
         </div>
 
         <!-- Mode Switcher Tabs: Verify Code vs Scan QR Setup -->
-        <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
+        <div id="mfa-tabs-switcher" class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
           <button type="button" id="mfa-subtab-btn-verify" onclick="switchMfaLoginSubTab('verify')" class="py-1.5 px-2 rounded-lg font-bold text-[11px] bg-[#0B3B24] text-white shadow-sm flex items-center justify-center gap-1.5 transition-all">
             <i data-lucide="key-round" class="w-3.5 h-3.5 text-amber-400"></i>
             <span>Masukkan Kode</span>
@@ -1753,8 +1753,8 @@
               </span>
               <span class="px-1.5 py-0.5 rounded bg-emerald-200/70 text-emerald-950 font-mono text-[9px]">SHA1 • 30s</span>
             </div>
-            <p class="text-[11px] text-emerald-900/90 leading-relaxed">
-              Masukkan 6-digit kode yang tampil pada aplikasi <strong>Google Authenticator</strong> atau <strong>Microsoft Authenticator</strong> Anda. Belum menautkan aplikasi? Klik tab <button type="button" onclick="switchMfaLoginSubTab('qr')" class="font-extrabold underline text-emerald-950 hover:text-amber-700">Scan QR Aplikasi</button>.
+            <p id="mfa-prompt-text" class="text-[11px] text-emerald-900/90 leading-relaxed">
+              Masukkan 6 digit kode yang tampil pada aplikasi <strong>Google Authenticator</strong> atau <strong>Microsoft Authenticator</strong> Anda.
             </p>
           </div>
 
