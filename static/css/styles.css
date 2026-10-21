@@ -144,6 +144,7 @@
   background-color: #0B3B24;
   color: #FDE047;
   letter-spacing: 0.04em;
+}
 
 /* 3. Base & Reset Enhancements */
 *, *::before, *::after {
@@ -978,3 +979,79 @@ textarea:focus {
     padding: 6px 10px !important;
   }
 }
+
+/* ==========================================================================
+   21. Interactive Micro-Interactions & Visual Polish (Adhyaksa Standard)
+   ========================================================================== */
+
+/* Quick Star Interactive Widget */
+.quick-star-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: #CBD5E1;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease, filter 0.2s ease;
+}
+.quick-star-btn:hover,
+.quick-star-btn.active {
+  color: #F59E0B;
+  transform: scale(1.22);
+  filter: drop-shadow(0 2px 8px rgba(245, 158, 11, 0.45));
+}
+.quick-star-btn:active {
+  transform: scale(0.95);
+}
+
+/* Counter Shimmer & Glow */
+.counter-animate {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s ease;
+}
+.counter-animate.counting {
+  color: #FEF08A;
+  text-shadow: 0 0 16px rgba(234, 179, 8, 0.5);
+}
+
+/* Copy-to-Clipboard Interactive Feedback */
+.btn-copy-interactive {
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+.btn-copy-interactive:hover {
+  transform: translateY(-1px);
+}
+.btn-copy-interactive:active {
+  transform: translateY(1px);
+}
+
+/* Card Hover Elevation with Gold Accent Glow */
+.card-adhyaksa-hover {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.card-adhyaksa-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -8px rgba(11, 59, 36, 0.12), 0 6px 12px -4px rgba(0, 0, 0, 0.05);
+  border-color: rgba(234, 179, 8, 0.45);
+}
+
+/* Subpage Breadcrumb Bar */
+.subpage-breadcrumb-bar {
+  background: linear-gradient(135deg, #072A19 0%, #0B3B24 50%, #0A1A33 100%);
+  border-bottom: 2px solid #EAB308;
+}
+
+/* Back to Top Floating Button Active Glow */
+#btn-back-to-top {
+  box-shadow: 0 8px 24px -4px rgba(11, 59, 36, 0.35);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#btn-back-to-top:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 28px -4px rgba(234, 179, 8, 0.45);
+  border-color: #EAB308;
+}
+

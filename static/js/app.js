@@ -237,6 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Render default sections immediately so UI is never blank
   renderAllSections();
   await checkAuthSession();
+  ensureCommonModals();
   ensureCmsModals();
   await Promise.all([
     loadHomepageData(),
@@ -411,18 +412,28 @@ function renderHero() {
   // 3 Glassmorphism Stat Cards
   const s1Val = document.getElementById('hero-stat-1-value');
   const s1Lbl = document.getElementById('hero-stat-1-label');
-  if (s1Val && c.hero_stat_1_value) s1Val.textContent = c.hero_stat_1_value.value;
+  if (s1Val && c.hero_stat_1_value) {
+    s1Val.dataset.targetVal = c.hero_stat_1_value.value;
+    s1Val.textContent = c.hero_stat_1_value.value;
+  }
   if (s1Lbl && c.hero_stat_1_label) s1Lbl.textContent = c.hero_stat_1_label.value;
 
   const s2Val = document.getElementById('hero-stat-2-value');
   const s2Lbl = document.getElementById('hero-stat-2-label');
-  if (s2Val && c.hero_stat_2_value) s2Val.textContent = c.hero_stat_2_value.value;
+  if (s2Val && c.hero_stat_2_value) {
+    s2Val.dataset.targetVal = c.hero_stat_2_value.value;
+    s2Val.textContent = c.hero_stat_2_value.value;
+  }
   if (s2Lbl && c.hero_stat_2_label) s2Lbl.textContent = c.hero_stat_2_label.value;
 
   const s3Val = document.getElementById('hero-stat-3-value');
   const s3Lbl = document.getElementById('hero-stat-3-label');
   if (s3Val && c.hero_stat_3_value) s3Val.textContent = c.hero_stat_3_value.value;
   if (s3Lbl && c.hero_stat_3_label) s3Lbl.textContent = c.hero_stat_3_label.value;
+
+  if (typeof initNumberCounters === 'function') {
+    initNumberCounters();
+  }
 
   // Kajari Photo & Info
   const kajariPhoto = document.getElementById('kajari-photo');
@@ -879,13 +890,23 @@ function renderControlBoard() {
   if (periodBadge) periodBadge.textContent = skm.period_badge || 'TRIWULAN III';
 
   const scoreEl = document.getElementById('skm-main-score');
-  if (scoreEl) scoreEl.textContent = skm.main_score || '88.31';
+  if (scoreEl) {
+    scoreEl.dataset.targetVal = skm.main_score || '88.31';
+    scoreEl.textContent = skm.main_score || '88.31';
+  }
 
   const predicateEl = document.getElementById('skm-predicate-text');
   if (predicateEl) predicateEl.textContent = skm.predicate || 'Mutu Pelayanan: A (Sangat Baik)';
 
   const respCountEl = document.getElementById('skm-respondents-count');
-  if (respCountEl) respCountEl.textContent = skm.respondents_count || '412';
+  if (respCountEl) {
+    respCountEl.dataset.targetVal = skm.respondents_count || '412';
+    respCountEl.textContent = skm.respondents_count || '412';
+  }
+
+  if (typeof initNumberCounters === 'function') {
+    initNumberCounters();
+  }
 
   // Render 4 Progress Bars
   const metricsContainer = document.getElementById('skm-metrics-container');
@@ -1811,6 +1832,175 @@ function getInformationPageType() {
   if (p.includes('informasi-jadwal-sidang') || p === '/informasi/jadwal-sidang') return 'INFO_SIDANG';
   if (p.includes('informasi-skm') || p === '/informasi/skm' || p.includes('ikm')) return 'INFO_SKM';
   return null;
+}
+
+function ensureCommonModals() {
+  // 1. Ticket Tracker Modal (PTSP)
+  if (!document.getElementById('modal-ticket-tracker')) {
+    const trackerDiv = document.createElement('div');
+    trackerDiv.id = 'modal-ticket-tracker';
+    trackerDiv.className = 'fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4';
+    trackerDiv.innerHTML = `
+      <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <h3 class="font-heading font-bold text-base text-slate-900 flex items-center gap-2">
+            <i data-lucide="search" class="w-4 h-4 text-emerald-800"></i>
+            <span>Lacak Tiket Layanan PTSP</span>
+          </h3>
+          <button type="button" onclick="closeModal('modal-ticket-tracker')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div class="p-6">
+          <p class="text-xs text-slate-600 mb-4">
+            Masukkan nomor tiket yang Anda dapatkan saat mengirim aduan (MASADU) atau mengajukan pengantaran barang bukti (SEMARA BAKTI).
+          </p>
+          <div class="flex gap-2 mb-4">
+            <input type="text" id="tracker-input-code" placeholder="Contoh: TRK-MASADU-8821 atau TRK-BB-4102" class="flex-1 text-xs px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-700 uppercase font-mono">
+            <button type="button" onclick="lookupTicketCode()" class="px-4 py-2.5 rounded-xl bg-[#0B3B24] text-white text-xs font-bold hover:bg-[#072A19] shadow-sm">
+              Cari
+            </button>
+          </div>
+          <div id="tracker-result-box" class="hidden p-4 rounded-xl border text-xs"></div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(trackerDiv);
+  }
+
+  // 2. Admin Login Modal (Dual-Factor MFA)
+  if (!document.getElementById('modal-admin-login')) {
+    const adminDiv = document.createElement('div');
+    adminDiv.id = 'modal-admin-login';
+    adminDiv.className = 'fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4';
+    adminDiv.innerHTML = `
+      <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in">
+        <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-emerald-950 via-[#0B3B24] to-[#072A19] text-white">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center text-amber-400">
+              <i data-lucide="shield-check" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <h3 class="font-heading font-extrabold text-sm text-white">Login Petugas &amp; Admin</h3>
+              <span class="text-[10px] text-amber-300 font-semibold flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Google &amp; Microsoft Authenticator (2FA)
+              </span>
+            </div>
+          </div>
+          <button type="button" onclick="closeModal('modal-admin-login')" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <form id="admin-login-step1-form" onsubmit="handleAdminLoginStep1(event)" class="p-6 space-y-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Username / NIP Petugas</label>
+            <div class="relative">
+              <input type="text" id="admin-input-username" required placeholder="Masukkan username admin..." class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B3B24]">
+              <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Kata Sandi</label>
+            <div class="relative">
+              <input type="password" id="admin-input-password" required placeholder="••••••••" class="w-full pl-9 pr-10 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B3B24]">
+              <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+            </div>
+          </div>
+          <div id="admin-login-error" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 font-semibold text-xs flex items-center gap-2">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
+            <span id="admin-login-error-text">Kredensial tidak valid.</span>
+          </div>
+          <button type="submit" id="btn-admin-login-step1" class="w-full py-3 rounded-xl bg-[#0B3B24] hover:bg-[#072A19] text-white font-heading font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2">
+            <span>Lanjutkan Verifikasi (2FA)</span>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-amber-400"></i>
+          </button>
+        </form>
+
+        <form id="admin-login-step2-mfa" onsubmit="handleAdminLoginStep2Mfa(event)" class="hidden p-6 space-y-4 text-xs">
+          <div class="p-3 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-2.5">
+            <i data-lucide="shield-alert" class="w-5 h-5 text-amber-600 shrink-0 mt-0.5"></i>
+            <div class="text-[11px] text-amber-900 leading-relaxed">
+              <span class="font-bold block">Autentikasi Dua Langkah (2FA) Diperlukan</span>
+              Masukkan 6 digit kode dari aplikasi <b>Google Authenticator</b> atau <b>Microsoft Authenticator</b> di perangkat Anda.
+            </div>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Kode Enam Digit Authenticator</label>
+            <input type="text" id="admin-input-mfa-code" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="000000" class="w-full text-center text-xl font-mono font-black tracking-widest py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0B3B24]">
+          </div>
+          <div id="admin-mfa-error" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 font-semibold text-xs flex items-center gap-2">
+            <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
+            <span id="admin-mfa-error-text">Kode OTP salah atau telah kadaluarsa.</span>
+          </div>
+          <button type="submit" id="btn-admin-login-step2" class="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-heading font-black text-xs shadow-md transition-all flex items-center justify-center gap-2">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+            <span>Verifikasi &amp; Masuk Dashboard Admin</span>
+          </button>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(adminDiv);
+  }
+
+  // 3. Mobile Navigation Drawer (if not present)
+  if (!document.getElementById('mobile-nav-drawer')) {
+    const navDrawer = document.createElement('div');
+    navDrawer.id = 'mobile-nav-drawer';
+    navDrawer.className = 'hidden lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-4 shadow-2xl';
+    navDrawer.innerHTML = `
+      <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+          <i data-lucide="languages" class="w-4 h-4 text-emerald-800"></i>
+          <span>Pilih Bahasa / Language:</span>
+        </span>
+        <div class="flex items-center bg-white p-0.5 rounded-lg border border-slate-200 shadow-xs">
+          <button type="button" onclick="setLanguage('id')" class="px-3 py-1 rounded-md text-xs font-bold bg-[#0B3B24] text-white">ID</button>
+          <button type="button" onclick="setLanguage('en')" class="px-3 py-1 rounded-md text-xs font-bold text-slate-600">EN</button>
+        </div>
+      </div>
+      <div>
+        <div class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2 px-1">Navigasi Utama</div>
+        <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+          <a href="/" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 flex items-center gap-2">
+            <i data-lucide="home" class="w-4 h-4 text-[#0B3B24]"></i> Beranda
+          </a>
+          <a href="/informasi/jadwal-sidang" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4 text-[#0B3B24]"></i> Jadwal Sidang
+          </a>
+          <a href="/profil/struktur-organisasi" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 flex items-center gap-2">
+            <i data-lucide="network" class="w-4 h-4 text-[#0B3B24]"></i> Struktur
+          </a>
+          <a href="/profil/visi-misi" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 flex items-center gap-2">
+            <i data-lucide="compass" class="w-4 h-4 text-[#0B3B24]"></i> Visi &amp; Misi
+          </a>
+          <a href="/profil/sejarah" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 flex items-center gap-2">
+            <i data-lucide="landmark" class="w-4 h-4 text-[#0B3B24]"></i> Sejarah
+          </a>
+          <a href="/profil/logo-makna" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 flex items-center gap-2">
+            <i data-lucide="shield" class="w-4 h-4 text-[#0B3B24]"></i> Logo &amp; Makna
+          </a>
+          <a href="/informasi/berita" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 flex items-center gap-2">
+            <i data-lucide="newspaper" class="w-4 h-4 text-[#0B3B24]"></i> Berita
+          </a>
+          <a href="/informasi/skm" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 flex items-center gap-2">
+            <i data-lucide="award" class="w-4 h-4 text-[#0B3B24]"></i> Indeks SKM
+          </a>
+          <a href="/akuntabilitas-kinerja" class="col-span-2 p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 text-slate-800 flex items-center gap-2">
+            <i data-lucide="file-check" class="w-4 h-4 text-[#0B3B24]"></i> Akuntabilitas Kinerja (SAKIP)
+          </a>
+        </div>
+      </div>
+    `;
+    const header = document.querySelector('header');
+    if (header) {
+      header.appendChild(navDrawer);
+    } else {
+      document.body.prepend(navDrawer);
+    }
+  }
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
 }
 
 function ensureCmsModals() {
@@ -4026,6 +4216,15 @@ function handleHomeNewsSearch(query) {
   renderNewsSection();
 }
 
+function clearHomeNewsSearch() {
+  const inp = document.getElementById('home-news-search');
+  if (inp) {
+    inp.value = '';
+    inp.focus();
+  }
+  handleHomeNewsSearch('');
+}
+
 // 5. Interactive JAGADITA Court Schedule Detail Modal
 function openScheduleDetailModal(scheduleId) {
   const item = state.schedules.find(s => Number(s.id) === Number(scheduleId));
@@ -4415,6 +4614,181 @@ async function openPublicBa20Modal(ticketCode) {
     showToast('Gagal memuat Berita Acara BA-20.', 'error');
   }
 }
+
+// ============================================================================
+// 12. DYNAMIC INTERACTIVE NUMBER COUNT-UP ANIMATION (ON SCROLL)
+// ============================================================================
+function animateNumberCountUp(el, targetVal, duration = 1200, decimals = 0, prefix = '', suffix = '') {
+  if (!el) return;
+  const startTime = performance.now();
+  const startVal = 0;
+  el.classList.add('counter-animate', 'counting');
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function frame(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = easeOutCubic(progress);
+    const current = startVal + (targetVal - startVal) * eased;
+    el.textContent = `${prefix}${decimals > 0 ? current.toFixed(decimals) : Math.round(current)}${suffix}`;
+
+    if (progress < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      el.textContent = `${prefix}${decimals > 0 ? targetVal.toFixed(decimals) : Math.round(targetVal)}${suffix}`;
+      el.classList.remove('counting');
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
+function initNumberCounters() {
+  if (!('IntersectionObserver' in window)) return;
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        if (el.dataset.hasAnimated === 'true') return;
+        el.dataset.hasAnimated = 'true';
+
+        let rawVal = el.dataset.targetVal || el.textContent || '';
+        let numVal = parseFloat(rawVal.replace(/[^0-9.]/g, '')) || 0;
+        let decimals = 0;
+        let suffix = '';
+
+        if (el.id === 'hero-stat-1-value' || el.id === 'skm-main-score') {
+          decimals = 2;
+        } else if (el.id === 'hero-stat-2-value' || rawVal.includes('%')) {
+          suffix = '%';
+        } else if (rawVal.includes('Rp')) {
+          // Keep currency as is
+          return;
+        }
+
+        animateNumberCountUp(el, numVal, 1200, decimals, '', suffix);
+        observer.unobserve(el);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  ['hero-stat-1-value', 'hero-stat-2-value', 'skm-main-score', 'skm-respondents-count'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.dataset.hasAnimated !== 'true') {
+      observer.observe(el);
+    }
+  });
+
+  document.querySelectorAll('.counter-animate:not([data-has-animated="true"])').forEach(el => {
+    observer.observe(el);
+  });
+}
+
+// ============================================================================
+// 13. INTERACTIVE 5-STAR QUICK RATING (SKM CARD & MODAL)
+// ============================================================================
+let _selectedQuickStar = 0;
+
+function previewQuickStars(stars) {
+  const container = document.getElementById('quick-skm-stars');
+  if (!container) return;
+  const buttons = container.querySelectorAll('.quick-star-btn');
+  buttons.forEach((btn, idx) => {
+    if (idx < stars) {
+      btn.classList.add('active', 'text-amber-400');
+      btn.classList.remove('text-slate-300');
+    } else {
+      btn.classList.remove('active', 'text-amber-400');
+      btn.classList.add('text-slate-300');
+    }
+  });
+
+  const captions = [
+    'Pilih Bintang (1 - 5)',
+    '1 - Sangat Kurang ⭐',
+    '2 - Kurang ⭐⭐',
+    '3 - Cukup ⭐⭐⭐',
+    '4 - Baik ⭐⭐⭐⭐',
+    '5 - Sangat Baik! ⭐⭐⭐⭐⭐'
+  ];
+  const capEl = document.getElementById('quick-star-caption');
+  if (capEl) capEl.textContent = captions[stars] || captions[0];
+}
+
+function resetQuickStars() {
+  previewQuickStars(_selectedQuickStar);
+}
+
+function handleQuickStarRate(stars) {
+  _selectedQuickStar = stars;
+  previewQuickStars(stars);
+  const capEl = document.getElementById('quick-star-caption');
+  if (capEl) {
+    capEl.textContent = `Bintang ${stars} Terpilih`;
+  }
+
+  // Open the SKM survey modal and auto-select matching ratings
+  openModal('modal-skm-survey');
+
+  const modal = document.getElementById('modal-skm-survey');
+  if (modal) {
+    const radioVal = stars >= 5 ? '5' : (stars >= 4 ? '4' : '3');
+    ['score_persyaratan', 'score_waktu', 'score_biaya', 'score_petugas'].forEach(name => {
+      const radio = modal.querySelector(`input[name="${name}"][value="${radioVal}"]`);
+      if (radio) radio.checked = true;
+    });
+  }
+
+  showToast(`Bintang ${stars} dipilih! Silakan lengkapi formulir survei SKM.`, 'success');
+}
+
+// ============================================================================
+// 14. CLICK-TO-COPY TO CLIPBOARD WITH TOAST FEEDBACK
+// ============================================================================
+function copyToClipboard(text, label = 'Teks') {
+  if (!text) return;
+  const doShow = () => {
+    if (typeof showToast === 'function') {
+      showToast(`${label} berhasil disalin ke clipboard!`, 'success');
+    }
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(doShow).catch(() => {
+      fallbackCopy(text);
+      doShow();
+    });
+  } else {
+    fallbackCopy(text);
+    doShow();
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+  } catch (e) {}
+  document.body.removeChild(ta);
+}
+
+// Expose globals for HTML inline events
+window.animateNumberCountUp = animateNumberCountUp;
+intersectionObservers = initNumberCounters;
+window.initNumberCounters = initNumberCounters;
+window.previewQuickStars = previewQuickStars;
+window.resetQuickStars = resetQuickStars;
+window.handleQuickStarRate = handleQuickStarRate;
+window.copyToClipboard = copyToClipboard;
 
 // 11. Auto-initialize Floating Accessibility Widget (Bottom-Left)
 if (typeof window.A11Y === 'undefined' && !document.getElementById('a11y-widget-root')) {

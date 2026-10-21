@@ -248,11 +248,14 @@ KAJARI_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" wi
 with open(os.path.join(STATIC_DIR, 'kajari-portrait.svg'), 'w', encoding='utf-8') as f:
     f.write(KAJARI_SVG)
 
-# Also save as kajari-portrait.jpg fallback / alias
-with open(os.path.join(STATIC_DIR, 'kajari-portrait.jpg'), 'w', encoding='utf-8') as f:
-    f.write(KAJARI_SVG)
+# NOTE: kajari-portrait.jpg is the real (raster) official photo and must NOT be
+# overwritten with SVG text, otherwise browsers fail to decode it.
 
 # 3. News Images SVG
+# SVG sources are written to static/images/src/*.svg. The served .jpg/.png files
+# are real raster renders of these sources (browsers cannot decode SVG text that is
+# served with an image/jpeg or image/png content type).
+os.makedirs(os.path.join(STATIC_DIR, 'src'), exist_ok=True)
 NEWS_FEATURED_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
   <defs>
     <linearGradient id="officeBg" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -336,7 +339,7 @@ NEWS_FEATURED_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 
 </svg>
 """
 
-with open(os.path.join(STATIC_DIR, 'news-featured.jpg'), 'w', encoding='utf-8') as f:
+with open(os.path.join(STATIC_DIR, 'src', 'news-featured.svg'), 'w', encoding='utf-8') as f:
     f.write(NEWS_FEATURED_SVG)
 
 NEWS_JMS_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
@@ -368,7 +371,7 @@ NEWS_JMS_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" 
 </svg>
 """
 
-with open(os.path.join(STATIC_DIR, 'news-jms.jpg'), 'w', encoding='utf-8') as f:
+with open(os.path.join(STATIC_DIR, 'src', 'news-jms.svg'), 'w', encoding='utf-8') as f:
     f.write(NEWS_JMS_SVG)
 
 NEWS_BB_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
@@ -394,7 +397,7 @@ NEWS_BB_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" w
 </svg>
 """
 
-with open(os.path.join(STATIC_DIR, 'news-bb.jpg'), 'w', encoding='utf-8') as f:
+with open(os.path.join(STATIC_DIR, 'src', 'news-bb.svg'), 'w', encoding='utf-8') as f:
     f.write(NEWS_BB_SVG)
 
 NEWS_LELANG_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
@@ -409,7 +412,7 @@ NEWS_LELANG_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 40
 </svg>
 """
 
-with open(os.path.join(STATIC_DIR, 'news-lelang.jpg'), 'w', encoding='utf-8') as f:
+with open(os.path.join(STATIC_DIR, 'src', 'news-lelang.svg'), 'w', encoding='utf-8') as f:
     f.write(NEWS_LELANG_SVG)
 
 NEWS_RJ_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
@@ -423,7 +426,7 @@ NEWS_RJ_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" w
 </svg>
 """
 
-with open(os.path.join(STATIC_DIR, 'news-rj.jpg'), 'w', encoding='utf-8') as f:
+with open(os.path.join(STATIC_DIR, 'src', 'news-rj.svg'), 'w', encoding='utf-8') as f:
     f.write(NEWS_RJ_SVG)
 
 NEWS_WBK_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
@@ -437,7 +440,7 @@ NEWS_WBK_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" 
 </svg>
 """
 
-with open(os.path.join(STATIC_DIR, 'news-wbk.jpg'), 'w', encoding='utf-8') as f:
+with open(os.path.join(STATIC_DIR, 'src', 'news-wbk.svg'), 'w', encoding='utf-8') as f:
     f.write(NEWS_WBK_SVG)
 
 # 4. Map of Klungkung Vector SVG
@@ -514,7 +517,7 @@ MAP_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width
 </svg>
 """
 
-with open(os.path.join(STATIC_DIR, 'peta-klungkung.png'), 'w', encoding='utf-8') as f:
+with open(os.path.join(STATIC_DIR, 'src', 'peta-klungkung.svg'), 'w', encoding='utf-8') as f:
     f.write(MAP_SVG)
 
 print("All visual assets created successfully in", STATIC_DIR)

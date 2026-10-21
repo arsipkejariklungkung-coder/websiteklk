@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="oceanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2FE"/>
+      <stop offset="100%" stop-color="#BAE6FD"/>
+    </linearGradient>
+    <linearGradient id="landGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DCFCE7"/>
+      <stop offset="100%" stop-color="#BBF7D0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Ocean (Selat Badung & Laut Bali) -->
+  <rect width="800" height="500" fill="url(#oceanGrad)"/>
+  
+  <!-- Subtle water ripples -->
+  <path d="M 50,320 Q 200,310 350,330 T 650,320" fill="none" stroke="#7DD3FC" stroke-width="1.5" stroke-dasharray="8,8"/>
+  <path d="M 120,420 Q 300,410 480,430 T 780,415" fill="none" stroke="#7DD3FC" stroke-width="1.5" stroke-dasharray="8,8"/>
+  <text x="260" y="310" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" font-style="italic" fill="#0284C7" letter-spacing="3">SELAT BADUNG</text>
+  <text x="680" y="160" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" font-style="italic" fill="#0284C7" letter-spacing="3">SELAT LOMBOK</text>
+
+  <!-- Mainland Klungkung (Kecamatan Klungkung, Banjarangkan, Dawan) -->
+  <path d="M 0,0 L 480,0 Q 460,70 440,110 Q 410,160 360,190 Q 300,220 220,230 Q 150,225 80,240 Q 20,230 0,220 Z" fill="url(#landGrad)" stroke="#86EFAC" stroke-width="2"/>
+  
+  <!-- Roads network -->
+  <path d="M 40,90 Q 180,120 260,140 Q 340,160 410,120" fill="none" stroke="#FDE047" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 260,0 L 260,140 L 270,225" fill="none" stroke="#FED7AA" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- District labels on Mainland -->
+  <text x="130" y="90" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" font-weight="700" fill="#166534">KEC. BANJARANGKAN</text>
+  <text x="350" y="100" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" font-weight="700" fill="#166534">KEC. DAWAN</text>
+  <text x="210" y="180" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="800" fill="#065F46">SEMARAPURA</text>
+
+  <!-- Nusa Penida Island Group (Wilayah Hukum Kejari Klungkung) -->
+  <!-- Nusa Lembongan -->
+  <path d="M 440,320 Q 470,300 480,330 Q 460,355 435,340 Z" fill="#BBF7D0" stroke="#86EFAC" stroke-width="2"/>
+  <text x="440" y="325" font-family="'Plus Jakarta Sans', sans-serif" font-size="9" font-weight="700" fill="#166534">N. Lembongan</text>
+
+  <!-- Nusa Ceningan -->
+  <ellipse cx="485" cy="345" rx="12" ry="7" fill="#BBF7D0" stroke="#86EFAC" stroke-width="1.5"/>
+
+  <!-- Nusa Penida Big Island -->
+  <path d="M 500,340 Q 560,300 660,330 Q 740,380 710,430 Q 640,460 560,440 Q 510,410 495,370 Z" fill="url(#landGrad)" stroke="#86EFAC" stroke-width="2.5"/>
+  <text x="590" y="395" font-family="'Plus Jakarta Sans', sans-serif" font-size="16" font-weight="800" fill="#065F46" letter-spacing="1.5">KEC. NUSA PENIDA</text>
+  <text x="610" y="415" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#15803D">Kantor Cabjari Nusa Penida</text>
+  <!-- Small Star for Cabjari -->
+  <polygon points="595,410 598,417 605,417 600,421 602,428 595,424 588,428 590,421 585,417 592,417" fill="#EAB308"/>
+
+  <!-- Kejaksaan Negeri Klungkung Location PIN (Jl. Gajah Mada No. 32, Semarapura) -->
+  <g transform="translate(265, 140)">
+    <!-- Pulse ring animation circle -->
+    <circle cx="0" cy="-28" r="32" fill="#DC2626" opacity="0.2"/>
+    <!-- Shadow -->
+    <ellipse cx="0" cy="0" rx="10" ry="4" fill="#000000" opacity="0.3"/>
+    <!-- Red Pin -->
+    <path d="M 0,0 C -12,-16 -18,-24 -18,-36 A 18,18 0 1,1 18,-36 C 18,-24 12,-16 0,0 Z" fill="#DC2626" stroke="#FFFFFF" stroke-width="2.5"/>
+    <!-- Golden Star in Pin -->
+    <circle cx="0" cy="-36" r="7" fill="#FFFFFF"/>
+    <circle cx="0" cy="-36" r="5" fill="#EAB308"/>
+
+    <!-- Pin Callout Box -->
+    <rect x="-110" y="-88" width="220" height="42" rx="8" fill="#0B3B24" stroke="#FDE047" stroke-width="2"/>
+    <polygon points="-6,-46 6,-46 0,-40" fill="#0B3B24"/>
+    <text x="0" y="-70" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="800" fill="#FEF08A" text-anchor="middle">
+      KEJAKSAAN NEGERI KLUNGKUNG
+    </text>
+    <text x="0" y="-53" font-family="'Plus Jakarta Sans', sans-serif" font-size="9" font-weight="500" fill="#E2E8F0" text-anchor="middle">
+      Jl. Gajah Mada No. 32, Semarapura
+    </text>
+  </g>
+</svg>

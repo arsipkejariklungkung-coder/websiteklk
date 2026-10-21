@@ -18,19 +18,20 @@
 
       // Navigation
       nav_home: 'Beranda',
-      nav_profile: 'Profil Instansi',
+      nav_profile: 'Profil',
       nav_structure: 'Struktur Organisasi',
       nav_vision: 'Visi & Misi',
       nav_history: 'Sejarah Kejari',
       nav_logo: 'Logo & Makna',
       nav_duties: 'Tugas & Wewenang',
-      nav_services: 'Layanan Publik',
-      nav_news: 'Berita & Publikasi',
-      nav_accountability: 'Transparansi Kinerja',
+      nav_services: 'Pelayanan',
+      nav_news: 'Informasi',
+      nav_accountability: 'SAKIP',
       nav_sakip: 'SAKIP & Akuntabilitas',
       nav_ikm: 'Survei Kepuasan (IKM)',
       nav_jadwal_sidang: 'Jadwal Sidang',
-      nav_contact: 'Hubungi Kami',
+      nav_contact: 'Kontak',
+      nav_digital: 'Layanan Digital',
 
       // Hero
       hero_badge_1: 'KEJAKSAAN NEGERI KLUNGKUNG',
@@ -132,19 +133,20 @@
 
       // Navigation
       nav_home: 'Home',
-      nav_profile: 'Agency Profile',
+      nav_profile: 'Profile',
       nav_structure: 'Organization Structure',
       nav_vision: 'Vision & Mission',
       nav_history: 'History',
       nav_logo: 'Logo & Symbolism',
       nav_duties: 'Duties & Authorities',
-      nav_services: 'Public Services',
-      nav_news: 'News & Media',
-      nav_accountability: 'Accountability',
+      nav_services: 'Services',
+      nav_news: 'Information',
+      nav_accountability: 'SAKIP',
       nav_sakip: 'SAKIP & Performance',
       nav_ikm: 'Satisfaction Survey (IKM)',
       nav_jadwal_sidang: 'Court Schedules',
-      nav_contact: 'Contact Us',
+      nav_contact: 'Contact',
+      nav_digital: 'Digital Services',
 
       // Hero
       hero_badge_1: 'DISTRICT ATTORNEY OF KLUNGKUNG',

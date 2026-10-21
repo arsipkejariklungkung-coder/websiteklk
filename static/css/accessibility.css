@@ -302,6 +302,11 @@ body.a11y-align-center div:not(#a11y-widget-root *) {
   font-weight: 700;
   animation: a11yBounceIn 0.3s ease-out;
 }
+/* The ID selector above (display:flex) outranks Tailwind's .hidden, which made
+   the "Membacakan..." pill permanently visible. Hide it explicitly when idle. */
+#a11y-tts-indicator.hidden {
+  display: none !important;
+}
 @keyframes a11yBounceIn {
   from { opacity: 0; transform: translate(-50%, -15px); }
   to { opacity: 1; transform: translate(-50%, 0); }
@@ -363,15 +368,27 @@ body.a11y-align-center div:not(#a11y-widget-root *) {
   display: none !important;
 }
 
-/* Mobile Responsiveness for Bottom-Left Trigger */
-@media (max-width: 640px) {
+/* Mobile Responsiveness for Bottom-Left Trigger.
+   The mobile bottom dock is visible below 1024px (lg:hidden), so the trigger
+   must be lifted above it across phones AND tablets. */
+@media (max-width: 1023px) {
   #a11y-widget-trigger {
-    bottom: 76px; /* Sits above mobile bottom dock */
+    bottom: 84px; /* Sits above mobile bottom dock */
     left: 16px;
   }
   #a11y-restore-pill {
-    bottom: 76px;
+    bottom: 84px;
     left: 16px;
+  }
+  #a11y-widget-menu {
+    bottom: 148px;
+    left: 16px;
+  }
+}
+@media (max-width: 640px) {
+  #a11y-btn-toggle {
+    width: 46px;
+    height: 46px;
   }
   #a11y-widget-menu {
     bottom: 140px;

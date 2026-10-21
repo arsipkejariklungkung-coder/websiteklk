@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <rect width="600" height="400" fill="#1C1917"/>
+  <rect x="0" y="240" width="600" height="160" fill="#292524"/>
+  <!-- Incinerator / Destruction Barrel with Flame -->
+  <rect x="250" y="200" width="100" height="120" rx="8" fill="#44403C" stroke="#78716C" stroke-width="2"/>
+  <path d="M 270,200 Q 300,120 310,180 Q 320,100 335,200 Z" fill="#EF4444"/>
+  <path d="M 285,200 Q 300,145 315,200 Z" fill="#F59E0B"/>
+  
+  <text x="300" y="60" font-family="'Plus Jakarta Sans', sans-serif" font-size="16" font-weight="800" fill="#FEF08A" text-anchor="middle">PEMUSNAHAN BARANG BUKTI INKRACHT</text>
+  <text x="300" y="85" font-family="'Plus Jakarta Sans', sans-serif" font-size="12" fill="#D6D3D1" text-anchor="middle">TRIWULAN III - KEJARI KLUNGKUNG</text>
+  
+  <!-- Officers in Green uniform observing -->
+  <g transform="translate(180, 220)">
+    <circle cx="0" cy="-20" r="15" fill="#E7A87A"/>
+    <rect x="-16" y="0" width="32" height="50" rx="4" fill="#0B3B24"/>
+  </g>
+  <g transform="translate(420, 220)">
+    <circle cx="0" cy="-20" r="15" fill="#E7A87A"/>
+    <rect x="-16" y="0" width="32" height="50" rx="4" fill="#0B3B24"/>
+  </g>
+</svg>

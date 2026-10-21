@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <rect width="600" height="400" fill="#022C22"/>
+  <rect x="50" y="50" width="500" height="300" rx="12" fill="#064E3B" stroke="#34D399" stroke-width="2"/>
+  <text x="300" y="110" font-family="'Plus Jakarta Sans', sans-serif" font-size="18" font-weight="800" fill="#6EE7B7" text-anchor="middle">RESTORATIVE JUSTICE (RJ)</text>
+  <text x="300" y="140" font-family="'Plus Jakarta Sans', sans-serif" font-size="13" fill="#A7F3D0" text-anchor="middle">Penyelesaian Perkara Berkeadilan Humanis</text>
+  <!-- Handshake vector -->
+  <circle cx="300" cy="230" r="45" fill="#047857"/>
+  <path d="M 275,230 L 295,215 L 315,235 L 325,225" stroke="#ECFDF5" stroke-width="5" stroke-linecap="round" fill="none"/>
+</svg>

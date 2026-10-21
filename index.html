@@ -205,7 +205,7 @@
           </div>
         </div>
 
-        <a href="#layanan-digital" data-i18n="digital_title" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Layanan Digital</a>
+        <a href="#layanan-digital" data-i18n="nav_digital" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Layanan Digital</a>
         <a href="/akuntabilitas-kinerja" data-i18n="nav_accountability" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Akuntabilitas Kinerja</a>
         <a href="#kantor-peta" data-i18n="nav_contact" class="px-3 py-2 rounded-lg hover:bg-slate-100 text-slate-700 transition-colors">Kontak</a>
       </div>
@@ -600,8 +600,17 @@
             id="home-news-search" 
             oninput="handleHomeNewsSearch(this.value)" 
             placeholder="Cari judul atau topik berita..." 
-            class="w-full pl-9 pr-8 py-2 text-xs border border-slate-200 rounded-full bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 transition-all"
+            class="w-full pl-9 pr-8 py-2 text-xs border border-slate-200 rounded-full bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700 transition-all shadow-xs"
           >
+          <button 
+            type="button" 
+            id="home-news-search-clear" 
+            onclick="clearHomeNewsSearch()" 
+            class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-0.5 rounded-full hover:bg-slate-200"
+            title="Hapus Pencarian"
+          >
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
         </div>
       </div>
 
@@ -966,8 +975,9 @@
             <span id="control-board-source-note" data-cms-key="control_board_source_note" data-cms-label="Catatan Kaki Tabel Jagadita">
               Terakhir diperbarui: Hari ini, Pukul 10:15 WITA • Sumber: CMS Pengadilan Negeri &amp; Kejari Klungkung
             </span>
-            <a href="#papan-kendali" class="text-xs font-bold text-emerald-800 hover:text-emerald-700 flex items-center gap-1 whitespace-nowrap">
-              Buka Portal Penuh JAGADITA →
+            <a href="/informasi/jadwal-sidang" class="text-xs font-bold text-emerald-800 hover:text-emerald-700 flex items-center gap-1 whitespace-nowrap">
+              <span>Buka Portal Penuh JAGADITA</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-amber-500"></i>
             </a>
           </div>
         </div>
@@ -1012,16 +1022,52 @@
             </div>
 
             <!-- 4 Horizontal Progress Bars -->
-            <div id="skm-metrics-container" class="space-y-4 mb-6">
+            <div id="skm-metrics-container" class="space-y-4 mb-4">
               <!-- Populated by app.js -->
+            </div>
+
+            <!-- Interactive 5-Star Quick Citizen Rating -->
+            <div id="skm-quick-rating-box" class="p-3.5 rounded-xl bg-gradient-to-r from-amber-50/80 via-emerald-50/50 to-amber-50/80 border border-amber-200/90 shadow-2xs mb-4">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-[11px] font-bold text-slate-800 flex items-center gap-1.5">
+                  <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+                  <span>Beri Penilaian Cepat:</span>
+                </span>
+                <span id="quick-star-caption" class="text-[10px] font-extrabold text-amber-900 bg-amber-100/90 px-2 py-0.5 rounded-full border border-amber-300">
+                  Pilih Bintang (1 - 5)
+                </span>
+              </div>
+              <div id="quick-skm-stars" class="flex items-center justify-center gap-2 py-1" role="radiogroup" aria-label="Beri Penilaian Bintang">
+                <button type="button" class="quick-star-btn p-1 text-slate-300 hover:text-amber-400 focus:outline-none transition-all" data-star="1" onclick="handleQuickStarRate(1)" onmouseenter="previewQuickStars(1)" onmouseleave="resetQuickStars()" title="1 - Sangat Kurang">
+                  <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                </button>
+                <button type="button" class="quick-star-btn p-1 text-slate-300 hover:text-amber-400 focus:outline-none transition-all" data-star="2" onclick="handleQuickStarRate(2)" onmouseenter="previewQuickStars(2)" onmouseleave="resetQuickStars()" title="2 - Kurang">
+                  <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                </button>
+                <button type="button" class="quick-star-btn p-1 text-slate-300 hover:text-amber-400 focus:outline-none transition-all" data-star="3" onclick="handleQuickStarRate(3)" onmouseenter="previewQuickStars(3)" onmouseleave="resetQuickStars()" title="3 - Cukup">
+                  <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                </button>
+                <button type="button" class="quick-star-btn p-1 text-slate-300 hover:text-amber-400 focus:outline-none transition-all" data-star="4" onclick="handleQuickStarRate(4)" onmouseenter="previewQuickStars(4)" onmouseleave="resetQuickStars()" title="4 - Baik">
+                  <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                </button>
+                <button type="button" class="quick-star-btn p-1 text-slate-300 hover:text-amber-400 focus:outline-none transition-all" data-star="5" onclick="handleQuickStarRate(5)" onmouseenter="previewQuickStars(5)" onmouseleave="resetQuickStars()" title="5 - Sangat Baik">
+                  <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- Bottom Full Width Action Button -->
-          <button onclick="openModal('modal-skm-survey')" class="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-heading font-bold text-xs shadow-md transition-colors text-center flex items-center justify-center gap-2">
-            <i data-lucide="edit" class="w-4 h-4 text-slate-900"></i>
-            <span>Isi Kuesioner Survei (SKM)</span>
-          </button>
+          <div class="space-y-2 mt-4">
+            <button onclick="openModal('modal-skm-survey')" class="w-full py-3 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-heading font-bold text-xs shadow-md transition-all text-center flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99]">
+              <i data-lucide="edit" class="w-4 h-4 text-slate-900"></i>
+              <span>Isi Kuesioner Survei (SKM)</span>
+            </button>
+            <a href="/informasi/skm" class="w-full py-2 rounded-xl text-center text-xs font-bold text-emerald-800 hover:text-emerald-950 hover:bg-emerald-50 border border-emerald-200/80 flex items-center justify-center gap-1.5 transition-colors">
+              <span>Lihat Rincian 9 Unsur Pelayanan &amp; Laporan</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-amber-500"></i>
+            </a>
+          </div>
         </div>
 
       </div>
@@ -1491,6 +1537,20 @@
       </div>
 
       <form onsubmit="submitSurveyForm(event)" class="p-6 space-y-4 text-xs">
+        <!-- Quick Rating Stars inside Modal Header -->
+        <div class="p-3 bg-amber-50/70 rounded-xl border border-amber-200/90 flex items-center justify-between">
+          <div>
+            <span class="font-bold text-slate-800 block text-[11px]">Penilaian Keseluruhan</span>
+            <span class="text-[10px] text-slate-500">Klik bintang untuk menyetel semua pertanyaan otomatis:</span>
+          </div>
+          <div class="flex items-center gap-1" id="modal-skm-stars-selector">
+            <button type="button" onclick="handleQuickStarRate(1)" class="text-amber-400 hover:scale-125 transition-transform" title="1 Bintang"><i data-lucide="star" class="w-4 h-4 fill-current"></i></button>
+            <button type="button" onclick="handleQuickStarRate(2)" class="text-amber-400 hover:scale-125 transition-transform" title="2 Bintang"><i data-lucide="star" class="w-4 h-4 fill-current"></i></button>
+            <button type="button" onclick="handleQuickStarRate(3)" class="text-amber-400 hover:scale-125 transition-transform" title="3 Bintang"><i data-lucide="star" class="w-4 h-4 fill-current"></i></button>
+            <button type="button" onclick="handleQuickStarRate(4)" class="text-amber-400 hover:scale-125 transition-transform" title="4 Bintang"><i data-lucide="star" class="w-4 h-4 fill-current"></i></button>
+            <button type="button" onclick="handleQuickStarRate(5)" class="text-amber-400 hover:scale-125 transition-transform" title="5 Bintang"><i data-lucide="star" class="w-4 h-4 fill-current"></i></button>
+          </div>
+        </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block font-semibold text-slate-700 mb-1">Nama Lengkap (Opsional)</label>
@@ -1826,17 +1886,32 @@
         <button onclick="closeModal('modal-contact-details')" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
       <div class="space-y-3 text-xs text-slate-700">
-        <div class="flex items-center gap-2.5">
-          <i data-lucide="phone" class="w-4 h-4 text-emerald-800"></i>
-          <span><strong>Telepon:</strong> (0366) 21151</span>
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="phone" class="w-4 h-4 text-emerald-800"></i>
+            <span><strong>Telepon:</strong> (0366) 21151</span>
+          </div>
+          <button type="button" onclick="copyToClipboard('(0366) 21151', 'Nomor Telepon')" class="px-2 py-1 bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-900 rounded-lg border border-slate-200 text-[10px] font-bold flex items-center gap-1 shadow-2xs transition-all" title="Salin Nomor">
+            <i data-lucide="copy" class="w-3 h-3"></i> Salin
+          </button>
         </div>
-        <div class="flex items-center gap-2.5">
-          <i data-lucide="mail" class="w-4 h-4 text-emerald-800"></i>
-          <span><strong>Email:</strong> kejari.klungkung@kejaksaan.go.id</span>
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2.5 truncate pr-1">
+            <i data-lucide="mail" class="w-4 h-4 text-emerald-800 shrink-0"></i>
+            <span class="truncate"><strong>Email:</strong> kejari.klungkung@kejaksaan.go.id</span>
+          </div>
+          <button type="button" onclick="copyToClipboard('kejari.klungkung@kejaksaan.go.id', 'Alamat Email')" class="px-2 py-1 bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-900 rounded-lg border border-slate-200 text-[10px] font-bold flex items-center gap-1 shadow-2xs transition-all shrink-0" title="Salin Email">
+            <i data-lucide="copy" class="w-3 h-3"></i> Salin
+          </button>
         </div>
-        <div class="flex items-center gap-2.5">
-          <i data-lucide="globe" class="w-4 h-4 text-emerald-800"></i>
-          <span><strong>Website:</strong> kejari-klungkung.kejaksaan.go.id</span>
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="globe" class="w-4 h-4 text-emerald-800"></i>
+            <span><strong>Website:</strong> kejari-klungkung.kejaksaan.go.id</span>
+          </div>
+          <button type="button" onclick="copyToClipboard('https://kejari-klungkung.kejaksaan.go.id', 'Alamat Website')" class="px-2 py-1 bg-white hover:bg-emerald-50 text-slate-600 hover:text-emerald-900 rounded-lg border border-slate-200 text-[10px] font-bold flex items-center gap-1 shadow-2xs transition-all" title="Salin URL Website">
+            <i data-lucide="copy" class="w-3 h-3"></i> Salin
+          </button>
         </div>
       </div>
       <button onclick="closeModal('modal-contact-details')" class="w-full mt-5 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg text-xs hover:bg-slate-200">
@@ -2006,9 +2081,9 @@
   <!-- =========================================================================
        FLOATING QUICK-ASSIST WIDGET & BACK TO TOP BUTTON
        ========================================================================= -->
-  <div class="fixed bottom-5 right-5 z-40 flex flex-col items-end gap-2.5">
+  <div class="fixed bottom-20 lg:bottom-6 right-4 lg:right-6 z-40 flex flex-col items-end gap-2.5 no-print">
     <!-- Quick Assist Expandable Menu -->
-    <div id="quick-assist-menu" class="hidden bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 w-64 space-y-1.5 mb-1">
+    <div id="quick-assist-menu" class="hidden bg-white rounded-2xl shadow-2xl border border-slate-200 p-3 w-64 space-y-1.5 mb-1 animate-in fade-in slide-in-from-bottom-2 duration-200">
       <div class="px-2 py-1.5 border-b border-slate-100 flex items-center justify-between">
         <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-900">Akses Cepat KERTAGOSA</span>
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -2033,8 +2108,8 @@
 
     <div class="flex items-center gap-2">
       <!-- Scroll To Top Button -->
-      <button id="btn-back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Kembali ke Atas" class="hidden w-11 h-11 rounded-full bg-white hover:bg-slate-100 text-slate-800 border border-slate-200 shadow-lg items-center justify-center transition-all">
-        <i data-lucide="arrow-up" class="w-4 h-4"></i>
+      <button id="btn-back-to-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" title="Kembali ke Atas" class="hidden w-11 h-11 rounded-full bg-white hover:bg-emerald-50 text-emerald-900 border-2 border-amber-400 shadow-xl items-center justify-center transition-all hover:scale-105 active:scale-95">
+        <i data-lucide="arrow-up" class="w-4 h-4 text-emerald-800"></i>
       </button>
 
       <!-- Main Quick Assist FAB -->

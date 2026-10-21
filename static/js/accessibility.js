@@ -1053,11 +1053,12 @@
       }
     } catch (e) {}
 
-    // Default: Strictly bottom-left
-    trigger.style.left = '24px';
-    trigger.style.bottom = '24px';
-    trigger.style.top = 'auto';
-    trigger.style.right = 'auto';
+    // Default: Strictly bottom-left (clear inline styles so responsive CSS
+    // can lift the trigger above the mobile bottom dock on small screens)
+    trigger.style.left = '';
+    trigger.style.bottom = '';
+    trigger.style.top = '';
+    trigger.style.right = '';
   }
 
   function resetTriggerPosition() {
@@ -1067,10 +1068,10 @@
     restoreTriggerPosition();
     const menu = document.getElementById('a11y-widget-menu');
     if (menu) {
-      menu.style.left = '24px';
-      menu.style.bottom = '86px';
-      menu.style.top = 'auto';
-      menu.style.right = 'auto';
+      menu.style.left = '';
+      menu.style.bottom = '';
+      menu.style.top = '';
+      menu.style.right = '';
     }
   }
 

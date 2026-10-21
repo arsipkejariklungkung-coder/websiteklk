@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="100%" height="100%">
+  <rect width="600" height="400" fill="#0F172A"/>
+  <!-- School Hall stage -->
+  <rect x="40" y="40" width="520" height="180" rx="8" fill="#1E293B"/>
+  <rect x="180" y="60" width="240" height="80" rx="4" fill="#064E3B" stroke="#FDE047" stroke-width="1.5"/>
+  <text x="300" y="95" font-family="'Plus Jakarta Sans', sans-serif" font-size="14" font-weight="800" fill="#FEF08A" text-anchor="middle">JAKSA MASUK SEKOLAH (JMS)</text>
+  <text x="300" y="120" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" fill="#E2E8F0" text-anchor="middle">SMA NEGERI 1 SEMARAPURA</text>
+
+  <!-- Students in Auditorium -->
+  <g fill="#475569">
+    <circle cx="100" cy="300" r="22"/>
+    <circle cx="160" cy="290" r="22"/>
+    <circle cx="220" cy="305" r="22"/>
+    <circle cx="280" cy="295" r="22"/>
+    <circle cx="340" cy="300" r="22"/>
+    <circle cx="400" cy="290" r="22"/>
+    <circle cx="460" cy="305" r="22"/>
+    <circle cx="520" cy="295" r="22"/>
+  </g>
+
+  <!-- Prosecutor Speaker on Stage -->
+  <g transform="translate(300, 180)">
+    <circle cx="0" cy="-20" r="16" fill="#FCD34D"/>
+    <rect x="-18" y="0" width="36" height="50" rx="6" fill="#0B3B24"/>
+    <line x1="20" y1="10" x2="45" y2="-10" stroke="#FCD34D" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

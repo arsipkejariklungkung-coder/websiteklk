@@ -3080,7 +3080,7 @@ async function handleSaveOrgSettings(e) {
   }
 }
 
-function setStandardLevelTitles(scheme) {
+function setStandardLevelTitles(scheme = 'kejaksaan') {
   const l1 = document.getElementById('org-setting-level-1-title');
   const l2 = document.getElementById('org-setting-level-2-title');
   const l3 = document.getElementById('org-setting-level-3-title');

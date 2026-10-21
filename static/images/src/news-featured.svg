@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="officeBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E293B"/>
+      <stop offset="50%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#090D16"/>
+    </linearGradient>
+    <linearGradient id="deskGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#047857"/>
+      <stop offset="100%" stop-color="#064E3B"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="500" fill="url(#officeBg)"/>
+  
+  <!-- Backdrop flags & banner -->
+  <rect x="180" y="40" width="440" height="180" rx="8" fill="#0B3B24" stroke="#EAB308" stroke-width="2"/>
+  <circle cx="400" cy="110" r="45" fill="#062817" stroke="#EAB308" stroke-width="2"/>
+  <polygon points="400,85 407,100 424,100 410,111 415,127 400,117 385,127 390,111 376,100 393,100" fill="#FDE047"/>
+  <text x="400" y="175" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="14" font-weight="700" fill="#FEF08A" text-anchor="middle" letter-spacing="1.5">
+    KEJAKSAAN NEGERI KLUNGKUNG
+  </text>
+  <text x="400" y="195" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="12" fill="#E2E8F0" text-anchor="middle">
+    SEKSI PERDATA DAN TATA USAHA NEGARA (DATUN)
+  </text>
+
+  <!-- Indonesian Flag -->
+  <rect x="100" y="60" width="60" height="70" fill="#DC2626"/>
+  <rect x="100" y="130" width="60" height="70" fill="#F8FAFC"/>
+  <line x1="98" y1="50" x2="98" y2="280" stroke="#94A3B8" stroke-width="4"/>
+
+  <!-- Press Conference Desk -->
+  <ellipse cx="400" cy="380" rx="360" ry="140" fill="url(#deskGrad)" stroke="#10B981" stroke-width="3"/>
+  <path d="M 40,380 L 100,500 L 700,500 L 760,380 Z" fill="#064E3B"/>
+
+  <!-- Microphones on Desk -->
+  <g transform="translate(350, 320)">
+    <circle cx="0" cy="0" r="10" fill="#334155"/>
+    <line x1="0" y1="0" x2="-20" y2="-40" stroke="#64748B" stroke-width="4"/>
+    <ellipse cx="-22" cy="-44" rx="7" ry="11" fill="#0F172A" stroke="#94A3B8" stroke-width="1.5"/>
+  </g>
+  <g transform="translate(450, 320)">
+    <circle cx="0" cy="0" r="10" fill="#334155"/>
+    <line x1="0" y1="0" x2="20" y2="-40" stroke="#64748B" stroke-width="4"/>
+    <ellipse cx="22" cy="-44" rx="7" ry="11" fill="#0F172A" stroke="#94A3B8" stroke-width="1.5"/>
+  </g>
+
+  <!-- Officials Seated (Prosecutor Silhouette Figures) -->
+  <!-- Center: Kajari -->
+  <g transform="translate(400, 240)">
+    <ellipse cx="0" cy="0" rx="42" ry="50" fill="#E2E8F0"/>
+    <path d="M -70,120 L -50,60 L 50,60 L 70,120 Z" fill="#0B3B24"/>
+    <circle cx="0" cy="2" r="32" fill="#E7A87A"/>
+    <path d="M -32,2 Q -30,-30 0,-32 Q 30,-30 32,2 Z" fill="#1E293B"/>
+    <rect x="-10" y="60" width="20" height="30" fill="#FFFFFF"/>
+    <polygon points="-5,60 5,60 8,110 -8,110" fill="#047857"/>
+    <!-- Gold Epaulets -->
+    <rect x="-55" y="65" width="22" height="8" rx="2" fill="#EAB308"/>
+    <rect x="33" y="65" width="22" height="8" rx="2" fill="#EAB308"/>
+  </g>
+  <!-- Left Official: Kasi Datun -->
+  <g transform="translate(240, 255)">
+    <ellipse cx="0" cy="0" rx="36" ry="44" fill="#CBD5E1"/>
+    <path d="M -60,110 L -42,50 L 42,50 L 60,110 Z" fill="#0B3B24"/>
+    <circle cx="0" cy="2" r="28" fill="#E7A87A"/>
+    <path d="M -28,2 Q -25,-26 0,-28 Q 25,-26 28,2 Z" fill="#1E293B"/>
+  </g>
+  <!-- Right Official: Kasi Intel -->
+  <g transform="translate(560, 255)">
+    <ellipse cx="0" cy="0" rx="36" ry="44" fill="#CBD5E1"/>
+    <path d="M -60,110 L -42,50 L 42,50 L 60,110 Z" fill="#0B3B24"/>
+    <circle cx="0" cy="2" r="28" fill="#E7A87A"/>
+    <path d="M -28,2 Q -25,-26 0,-28 Q 25,-26 28,2 Z" fill="#1E293B"/>
+  </g>
+
+  <!-- Symbolic Recovery Cheque / State Asset Recovery Case File on Table -->
+  <g transform="translate(320, 360)">
+    <rect x="0" y="0" width="160" height="70" rx="4" fill="#FEF3C7" stroke="#D97706" stroke-width="2"/>
+    <text x="80" y="24" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="10" font-weight="700" fill="#92400E" text-anchor="middle">PEMULIHAN KEUANGAN NEGARA</text>
+    <text x="80" y="50" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="16" font-weight="900" fill="#065F46" text-anchor="middle">Rp 1.250.000.000,-</text>
+  </g>
+</svg>
