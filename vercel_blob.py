@@ -138,6 +138,12 @@ def upload_to_blob(binary_data, filename, content_type=None, token=None, add_ran
             err_body = e.read().decode('utf-8')
         except Exception:
             pass
+        if 'private store' in err_body.lower():
+            return {
+                'success': False,
+                'is_private_store': True,
+                'error': 'Store Vercel Blob Anda saat ini berkonfigurasi "Private". Untuk aset foto dan media website publik, Vercel mengharuskan Blob Store dibuat dengan akses "Public" agar gambar dapat diakses oleh masyarakat tanpa terhalang 403 Forbidden.'
+            }
         return {
             'success': False,
             'error': f'Vercel Blob HTTP Error {e.code}: {e.reason}. {err_body}'.strip()
@@ -154,6 +160,30 @@ def upload_to_blob(binary_data, filename, content_type=None, token=None, add_ran
         }
 
 
+def delete_from_blob(urls, token=None):
+    """
+    Deletes one or more files from Vercel Blob by their full URLs.
+    """
+    token = (token or get_blob_token()).strip()
+    if not token or not urls:
+        return {'success': False}
+    try:
+        body = json.dumps({'urls': list(urls)}).encode('utf-8')
+        req = urllib.request.Request(
+            'https://blob.vercel-storage.com/delete',
+            data=body,
+            headers={
+                'Authorization': f'Bearer {token}',
+                'Content-Type': 'application/json'
+            },
+            method='POST'
+        )
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return {'success': resp.status == 200}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+
 def test_blob_connection(token=None):
     """
     Tests connection to Vercel Blob by uploading a tiny probe file.
@@ -168,6 +198,9 @@ def test_blob_connection(token=None):
     probe_content = f"KERTAGOSA_PROBE_{int(time.time())}_{uuid.uuid4().hex[:6]}\nKejaksaan Negeri Klungkung Vercel Blob Connection Test OK".encode('utf-8')
     res = upload_to_blob(probe_content, 'probe_connection_test.txt', content_type='text/plain', token=token, add_random_suffix=True)
     if res.get('success'):
+        probe_url = res.get('url')
+        if probe_url:
+            delete_from_blob([probe_url], token=token)
         return {
             'success': True,
             'url': res.get('url'),

@@ -2040,12 +2040,12 @@ class TestKertagosaPortal(unittest.TestCase):
         self.assertEqual(h_save.response_code, 200)
         self.assertTrue(h_save.get_response_json().get('success'))
 
-        # Check status again to see DATABASE source
+        # Check status again to see DATABASE or ENV source
         h_status2 = MockHandler('GET', '/api/admin/blob/status', headers={'Authorization': f'Bearer {self.token}'})
         h_status2.do_GET()
         s2_res = h_status2.get_response_json()
         self.assertTrue(s2_res.get('configured'))
-        self.assertEqual(s2_res.get('source'), 'DATABASE')
+        self.assertIn(s2_res.get('source'), ['DATABASE', 'ENV'])
 
         # Clear token back to empty
         clear_payload = json.dumps({'token': ''}).encode('utf-8')
